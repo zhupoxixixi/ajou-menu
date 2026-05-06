@@ -62,10 +62,8 @@ def run(date_str: str = None):
         json.dump(output, f, ensure_ascii=False, indent=2)
     print(f"[main] Saved {json_path}")
 
-    # Save JS data file
-    site_dir = os.path.join(base_dir, "site")
-    os.makedirs(site_dir, exist_ok=True)
-    js_path = os.path.join(site_dir, "menu-data.js")
+    # Save JS data file to root (for GitHub Pages)
+    js_path = os.path.join(base_dir, "menu-data.js")
     with open(js_path, "w", encoding="utf-8") as f:
         f.write("const MENU_DATA = ")
         json.dump(output, f, ensure_ascii=False)

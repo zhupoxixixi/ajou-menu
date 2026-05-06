@@ -28,6 +28,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/ site/menu-data.js
+          git add data/ menu-data.js
           git diff --cached --quiet || git commit -m "Update menu for $(TZ=Asia/Seoul date +%Y-%m-%d)"
           git push
