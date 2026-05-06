@@ -2,7 +2,7 @@ name: Daily Menu Scrape
 
 on:
   schedule:
-    - cron: '0 20 * * *'  # 20:00 UTC = 05:00 KST next day
+    - cron: '0 15 * * *'  # 15:00 UTC = 00:00 KST next day
   workflow_dispatch:
 
 jobs:
