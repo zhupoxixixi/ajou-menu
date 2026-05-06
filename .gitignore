@@ -2,6 +2,8 @@ __pycache__/
 *.pyc
 .env
 data/translation_cache.json
+data/menu-*.json
 .venv/
 venv/
 *.egg-info/
+.claude/
