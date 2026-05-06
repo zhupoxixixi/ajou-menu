@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아주대학교 식단 | Ajou University Menu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'ko': ['"Noto Sans KR"', 'sans-serif'],
+                        'cn': ['"Noto Sans SC"', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': {
+                            50: '#f0f4ff',
+                            100: '#dbe4ff',
+                            200: '#bac8ff',
+                            300: '#91a7ff',
+                            400: '#748ffc',
+                            500: '#5c7cfa',
+                            600: '#4c6ef5',
+                            700: '#4263eb',
+                            800: '#3b5bdb',
+                            900: '#364fc7',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            -webkit-font-smoothing: antialiased;
+        }
+        body.lang-cn {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        .tab-active {
+            background: #4c6ef5;
+            color: white;
+            box-shadow: 0 1px 3px rgba(76, 110, 245, 0.3);
+        }
+        .card-enter {
+            animation: cardIn 0.2s ease-out;
+        }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-text {
+            transition: opacity 0.15s ease;
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+    </style>
+</head>
+<body class="min-h-screen pb-12">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-100 sticky top-0 z-50">
+        <div class="max-w-lg mx-auto px-4 py-4">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900">아주대학교 식단</h1>
+                    <p class="text-xs text-gray-400 mt-0.5 font-light">Ajou University Cafeteria</p>
+                </div>
+                <button id="langToggle" onclick="toggleLanguage()"
+                    class="px-3 py-1.5 text-xs font-medium rounded-full border border-gray-200 text-gray-600 hover:border-primary-400 hover:text-primary-600 transition-colors">
+                    中文
+                </button>
+            </div>
+            <!-- Date Navigation -->
+            <div class="flex items-center justify-center gap-3">
+                <button onclick="prevDate()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button onclick="goToday()" class="text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors" id="dateDisplay">--</button>
+                <button onclick="nextDate()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-lg mx-auto px-4 pt-4">
+        <!-- Restaurant Tabs -->
+        <div id="restaurantTabs" class="flex gap-2 mb-3"></div>
+
+        <!-- Meal Tabs -->
+        <div id="mealTabs" class="flex gap-1.5 mb-4 overflow-x-auto pb-1"></div>
+
+        <!-- Menu Content -->
+        <div id="menuContent" class="space-y-3"></div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-16">
+            <div class="text-4xl mb-3 opacity-30">🍽</div>
+            <p class="text-gray-400 text-sm">등록된 식단이 없습니다</p>
+            <p class="text-gray-300 text-xs mt-1">No menu available</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur border-t border-gray-100">
+        <div class="max-w-lg mx-auto px-4 py-2 flex items-center justify-between">
+            <span class="text-[10px] text-gray-300" id="updatedAt"></span>
+            <div class="flex items-center gap-1.5 text-[10px] text-gray-300">
+                <span id="totalCalories"></span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="menu-data.js"></script>
+    <script src="menu.js"></script>
+</body>
+</html>

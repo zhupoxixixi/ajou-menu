@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.ajou.ac.kr)",
+      "Bash(git -C \"e:/02_project/02_vscode/爬虫\" log --oneline -10)",
+      "Bash(git -C \"e:/02_project/02_vscode/爬虫\" show --stat HEAD)",
+      "Bash(curl -s \"https://www.ajou.ac.kr/_custom/ajou/resource/js/board.restaurant.js\")"
+    ]
+  }
+}
