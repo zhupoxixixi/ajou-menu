@@ -5,6 +5,9 @@ on:
     - cron: '0 15 * * *'  # 15:00 UTC = 00:00 KST next day
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   scrape:
     runs-on: ubuntu-latest
