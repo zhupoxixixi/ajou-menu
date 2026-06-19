@@ -2,7 +2,7 @@
 let currentLang = localStorage.getItem('menuLang') || 'ko';
 let currentRestaurant = parseInt(localStorage.getItem('menuRestaurant') || '0');
 let currentMeal = localStorage.getItem('menuMeal') || 'lunch';
-let currentDate = localStorage.getItem('menuDate') || null;
+let currentDateIndex = 0; // 0=周一, 4=周五
 
 const MEAL_ORDER = ['breakfast', 'lunch', 'dinner', 'snack'];
 const MEAL_ICONS = {
@@ -12,17 +12,40 @@ const MEAL_ICONS = {
     snack: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 00-7.35 16.76C6.23 17.1 8 15.36 8 13.2V8h8v5.2c0 2.16 1.77 3.9 3.35 5.56A10 10 0 0012 2z"/></svg>',
 };
 
+const WEEKDAY_NAMES = {
+    ko: ['월', '화', '수', '목', '금'],
+    cn: ['周一', '周二', '周三', '周四', '周五']
+};
+
+// 获取本周所有日期
+function getWeekDates() {
+    if (!MENU_DATA || !MENU_DATA.days) return [];
+    return Object.keys(MENU_DATA.days).sort();
+}
+
+// 获取当前日期的数据
+function getCurrentDayData() {
+    const dates = getWeekDates();
+    if (dates.length === 0) return null;
+    const date = dates[currentDateIndex];
+    return MENU_DATA.days[date];
+}
+
 function init() {
-    if (typeof MENU_DATA === 'undefined') {
+    if (typeof MENU_DATA === 'undefined' || !MENU_DATA.days) {
         document.getElementById('emptyState').classList.remove('hidden');
         return;
     }
 
-    if (currentDate !== MENU_DATA.date) {
-        currentDate = MENU_DATA.date;
-        localStorage.setItem('menuDate', currentDate);
+    // 设置初始日期为今天（如果在本周内）
+    const today = new Date().toISOString().split('T')[0];
+    const dates = getWeekDates();
+    const todayIndex = dates.indexOf(today);
+    if (todayIndex >= 0) {
+        currentDateIndex = todayIndex;
     }
 
+    renderWeekTabs();
     updateDateDisplay();
     renderRestaurantTabs();
     renderMealTabs();
@@ -30,8 +53,38 @@ function init() {
     updateFooter();
 }
 
+function renderWeekTabs() {
+    const container = document.getElementById('weekTabs');
+    const dates = getWeekDates();
+
+    container.innerHTML = dates.map((date, i) => {
+        const d = new Date(date + 'T00:00:00');
+        const day = d.getDate();
+        const month = d.getMonth() + 1;
+        const weekday = currentLang === 'cn' ? WEEKDAY_NAMES.cn[i] : WEEKDAY_NAMES.ko[i];
+        const isToday = date === new Date().toISOString().split('T')[0];
+        const isActive = i === currentDateIndex;
+
+        return `<button onclick="switchDate(${i})"
+            class="flex flex-col items-center py-2 px-3 rounded-xl transition-all ${
+                isActive
+                    ? 'bg-primary-500 text-white shadow-sm'
+                    : isToday
+                        ? 'bg-primary-50 text-primary-600 border border-primary-200'
+                        : 'bg-white text-gray-500 hover:bg-gray-50'
+            }">
+            <span class="text-[10px] font-medium">${weekday}</span>
+            <span class="text-sm font-bold mt-0.5">${day}</span>
+        </button>`;
+    }).join('');
+}
+
 function updateDateDisplay() {
-    const d = new Date(MENU_DATA.date + 'T00:00:00');
+    const dates = getWeekDates();
+    if (dates.length === 0) return;
+
+    const date = dates[currentDateIndex];
+    const d = new Date(date + 'T00:00:00');
     const month = d.getMonth() + 1;
     const day = d.getDate();
     const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
@@ -41,7 +94,10 @@ function updateDateDisplay() {
 
 function renderRestaurantTabs() {
     const container = document.getElementById('restaurantTabs');
-    const restaurants = MENU_DATA.restaurants;
+    const dayData = getCurrentDayData();
+    if (!dayData) return;
+
+    const restaurants = dayData.restaurants;
     container.innerHTML = restaurants.map((r, i) => {
         const name = currentLang === 'cn' && r.name_cn ? r.name_cn : r.name_ko;
         const active = i === currentRestaurant ? 'tab-active' : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-300';
@@ -54,7 +110,10 @@ function renderRestaurantTabs() {
 
 function renderMealTabs() {
     const container = document.getElementById('mealTabs');
-    const restaurant = MENU_DATA.restaurants[currentRestaurant];
+    const dayData = getCurrentDayData();
+    if (!dayData) return;
+
+    const restaurant = dayData.restaurants[currentRestaurant];
     if (!restaurant) return;
 
     container.innerHTML = MEAL_ORDER.map(meal => {
@@ -75,8 +134,15 @@ function renderMealTabs() {
 function render() {
     const container = document.getElementById('menuContent');
     const emptyState = document.getElementById('emptyState');
-    const restaurant = MENU_DATA.restaurants[currentRestaurant];
+    const dayData = getCurrentDayData();
 
+    if (!dayData) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+    }
+
+    const restaurant = dayData.restaurants[currentRestaurant];
     if (!restaurant) {
         container.innerHTML = '';
         emptyState.classList.remove('hidden');
@@ -127,16 +193,29 @@ function updateFooter() {
     }
 
     // Calculate total calories for current meal
-    const restaurant = MENU_DATA.restaurants[currentRestaurant];
-    if (restaurant) {
-        const meal = restaurant.meals[currentMeal];
-        if (meal && meal.sections) {
-            const total = meal.sections.reduce((sum, section) =>
-                sum + section.items.reduce((s, item) => s + (item.calories || 0), 0), 0);
-            const calEl = document.getElementById('totalCalories');
-            calEl.textContent = total > 0 ? `Total: ${total} kcal` : '';
+    const dayData = getCurrentDayData();
+    if (dayData) {
+        const restaurant = dayData.restaurants[currentRestaurant];
+        if (restaurant) {
+            const meal = restaurant.meals[currentMeal];
+            if (meal && meal.sections) {
+                const total = meal.sections.reduce((sum, section) =>
+                    sum + section.items.reduce((s, item) => s + (item.calories || 0), 0), 0);
+                const calEl = document.getElementById('totalCalories');
+                calEl.textContent = total > 0 ? `Total: ${total} kcal` : '';
+            }
         }
     }
+}
+
+function switchDate(index) {
+    currentDateIndex = index;
+    renderWeekTabs();
+    updateDateDisplay();
+    renderRestaurantTabs();
+    renderMealTabs();
+    render();
+    updateFooter();
 }
 
 function switchRestaurant(index) {
@@ -161,21 +240,32 @@ function toggleLanguage() {
     localStorage.setItem('menuLang', currentLang);
     document.body.classList.toggle('lang-cn', currentLang === 'cn');
     document.getElementById('langToggle').textContent = currentLang === 'ko' ? '中文' : '한국어';
+    renderWeekTabs();
     renderRestaurantTabs();
     renderMealTabs();
     render();
 }
 
 function prevDate() {
-    // Navigate would require loading different data; for now just show today
+    if (currentDateIndex > 0) {
+        switchDate(currentDateIndex - 1);
+    }
 }
 
 function nextDate() {
-    // Navigate would require loading different data; for now just show today
+    const dates = getWeekDates();
+    if (currentDateIndex < dates.length - 1) {
+        switchDate(currentDateIndex + 1);
+    }
 }
 
 function goToday() {
-    // Reset to today
+    const today = new Date().toISOString().split('T')[0];
+    const dates = getWeekDates();
+    const todayIndex = dates.indexOf(today);
+    if (todayIndex >= 0) {
+        switchDate(todayIndex);
+    }
 }
 
 // Init
