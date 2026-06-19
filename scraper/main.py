@@ -59,14 +59,14 @@ def run(date_str: str = None):
     data_dir = os.path.join(base_dir, "data")
     os.makedirs(data_dir, exist_ok=True)
 
-    # 爬取本周所有数据（周一到周五）
-    from datetime import datetime as dt, timedelta
-    today = dt.strptime(date_str, "%Y-%m-%d")
+    today = datetime.strptime(date_str, "%Y-%m-%d")
     weekday = today.weekday()  # 0=周一, 6=周日
+    is_weekend = weekday >= 5
 
     # 计算本周一的日期
     monday = today - timedelta(days=weekday)
 
+    # 爬取本周数据（周一到周五）
     week_data = {}
     for i in range(5):  # 周一到周五
         day = monday + timedelta(days=i)
@@ -80,15 +80,40 @@ def run(date_str: str = None):
             json.dump(day_data, f, ensure_ascii=False, indent=2)
         print(f"[main] Saved {json_path}")
 
-    # 保存一周数据到 JS 文件
+    # 如果是周末，也爬取下周数据作为预告
+    next_week_data = {}
+    if is_weekend:
+        next_monday = monday + timedelta(days=7)
+        for i in range(5):
+            day = next_monday + timedelta(days=i)
+            day_str = day.strftime("%Y-%m-%d")
+            day_data = fetch_single_day(day_str)
+            next_week_data[day_str] = day_data
+
+            json_path = os.path.join(data_dir, f"menu-{day_str}.json")
+            with open(json_path, "w", encoding="utf-8") as f:
+                json.dump(day_data, f, ensure_ascii=False, indent=2)
+            print(f"[main] Saved next week: {json_path}")
+
+    # 保存数据到 JS 文件
     js_path = os.path.join(base_dir, "menu-data.js")
+
+    output = {
+        "week_start": monday.strftime("%Y-%m-%d"),
+        "generated_at": datetime.now(KST).isoformat(),
+        "days": week_data,
+    }
+
+    # 如果有下周数据，添加到输出
+    if next_week_data:
+        output["next_week"] = {
+            "week_start": (monday + timedelta(days=7)).strftime("%Y-%m-%d"),
+            "days": next_week_data,
+        }
+
     with open(js_path, "w", encoding="utf-8") as f:
         f.write("const MENU_DATA = ")
-        json.dump({
-            "week_start": monday.strftime("%Y-%m-%d"),
-            "generated_at": datetime.now(KST).isoformat(),
-            "days": week_data,
-        }, f, ensure_ascii=False)
+        json.dump(output, f, ensure_ascii=False)
         f.write(";\n")
     print(f"[main] Saved {js_path}")
 
