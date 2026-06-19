@@ -79,14 +79,12 @@
                     中文
                 </button>
             </div>
-            <!-- Date Navigation -->
-            <div class="flex items-center justify-center gap-3">
-                <button onclick="prevDate()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </button>
-                <button onclick="goToday()" class="text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors" id="dateDisplay">--</button>
-                <button onclick="nextDate()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <!-- Week Tabs -->
+            <div id="weekTabs" class="flex gap-2 justify-center mt-3"></div>
+            <!-- Date Display -->
+            <div class="text-center mt-2">
+                <button onclick="goToday()" class="text-xs text-primary-500 hover:text-primary-600 transition-colors">
+                    <span id="dateDisplay">--</span>
                 </button>
             </div>
         </div>
