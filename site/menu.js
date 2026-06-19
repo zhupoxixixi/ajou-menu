@@ -128,13 +128,13 @@ function renderWeekTabs() {
         const isActive = i === currentDateIndex;
 
         return `<button onclick="switchDate(${i})"
-            class="flex-1 flex flex-col items-center py-2 px-1 rounded-xl transition-all ${
+            class="flex-1 flex flex-col items-center py-2 px-1 rounded-xl interactive-press stagger-${i + 1} ${
                 isActive
-                    ? 'bg-primary-500 text-white shadow-sm'
+                    ? 'tab-active'
                     : isToday
-                        ? 'bg-primary-50 text-primary-600 border border-primary-200'
-                        : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'
-            }">
+                        ? 'glass-tab text-primary-600 today-pulse'
+                        : 'glass-tab text-gray-500'
+            } animate-fade-in-up">
             <span class="text-[10px] font-medium opacity-80">${weekday}</span>
             <span class="text-xs font-bold mt-0.5">${day}日</span>
         </button>`;
@@ -176,9 +176,9 @@ function renderRestaurantTabs() {
     const restaurants = dayData.restaurants;
     container.innerHTML = restaurants.map((r, i) => {
         const name = currentLang === 'cn' && r.name_cn ? r.name_cn : r.name_ko;
-        const active = i === currentRestaurant ? 'tab-active' : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-300';
+        const active = i === currentRestaurant ? 'tab-active' : 'glass-tab text-gray-600';
         return `<button onclick="switchRestaurant(${i})"
-            class="flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all ${active}">
+            class="flex-1 py-2.5 px-3 rounded-xl text-sm font-medium interactive-press animate-fade-in-up stagger-${i + 1} ${active}">
             ${name}
         </button>`;
     }).join('');
@@ -196,11 +196,11 @@ function renderMealTabs() {
         const data = restaurant.meals[meal];
         if (!data) return '';
         const label = currentLang === 'cn' ? data.label_cn : data.label_ko;
-        const active = currentMeal === meal ? 'tab-active' : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-300';
+        const active = currentMeal === meal ? 'tab-active' : 'glass-tab text-gray-500';
         const hasItems = data.sections && data.sections.length > 0;
         const disabled = !hasItems ? 'opacity-40 cursor-not-allowed' : '';
         return `<button onclick="${hasItems ? `switchMeal('${meal}')` : ''}"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${active} ${disabled}">
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap interactive-press ${active} ${disabled}">
             ${MEAL_ICONS[meal] || ''}
             ${label}
         </button>`;
@@ -239,10 +239,10 @@ function render() {
         const sectionCalories = section.items.reduce((sum, item) => sum + (item.calories || 0), 0);
 
         return `
-        <div class="bg-white rounded-2xl border border-gray-100 p-4 card-enter" style="animation-delay: ${si * 50}ms">
+        <div class="glass-card rounded-2xl p-4 card-stagger" style="animation-delay: ${si * 80}ms">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-bold text-gray-800">
-                    <span class="text-primary-500 mr-1">&lt;</span>${sectionName}<span class="text-primary-500 ml-1">&gt;</span>
+                    <span class="text-primary-400 mr-1">&lt;</span>${sectionName}<span class="text-primary-400 ml-1">&gt;</span>
                 </h3>
                 ${sectionCalories > 0 ? `<span class="text-[10px] text-gray-300 font-medium">${sectionCalories} kcal</span>` : ''}
             </div>
@@ -251,7 +251,7 @@ function render() {
                     const name = currentLang === 'cn' && item.cn ? item.cn : item.ko;
                     const cal = item.calories || 0;
                     return `
-                <li class="flex items-center justify-between py-2 ${ii < section.items.length - 1 ? 'border-b border-gray-50' : ''}">
+                <li class="flex items-center justify-between py-2 ${ii < section.items.length - 1 ? 'border-b border-white/30' : ''}">
                     <span class="text-sm text-gray-700 leading-snug">${name}</span>
                     ${cal > 0 ? `<span class="text-[11px] text-gray-300 tabular-nums ml-3 shrink-0">${cal}</span>` : ''}
                 </li>`;

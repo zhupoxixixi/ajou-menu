@@ -38,52 +38,149 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Noto Sans KR', sans-serif;
-            background: #f8fafc;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 30%, #dbeafe 60%, #ede9fe 100%);
+            background-attachment: fixed;
             color: #1e293b;
             -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
         }
         body.lang-cn {
             font-family: 'Noto Sans SC', sans-serif;
         }
+
+        /* ===== Liquid Glass Effect ===== */
+        .glass {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .glass-strong {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        .glass-subtle {
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(12px) saturate(150%);
+            -webkit-backdrop-filter: blur(12px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            box-shadow: 0 4px 24px rgba(92, 124, 250, 0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+        }
+        .glass-tab {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(12px) saturate(160%);
+            -webkit-backdrop-filter: blur(12px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-tab:hover {
+            background: rgba(255, 255, 255, 0.7);
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 2px 12px rgba(92, 124, 250, 0.12);
+            transform: translateY(-1px);
+        }
+
+        /* ===== Tab Active State ===== */
         .tab-active {
-            background: #4c6ef5;
-            color: white;
-            box-shadow: 0 1px 3px rgba(76, 110, 245, 0.3);
+            background: linear-gradient(135deg, #5c7cfa, #748ffc) !important;
+            color: white !important;
+            border-color: rgba(255,255,255,0.3) !important;
+            box-shadow: 0 2px 12px rgba(76, 110, 245, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
         }
-        .card-enter {
-            animation: cardIn 0.2s ease-out;
-        }
-        @keyframes cardIn {
-            from { opacity: 0; transform: translateY(8px); }
+
+        /* ===== Animations ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .fade-text {
-            transition: opacity 0.15s ease;
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(92, 124, 250, 0.3); }
+            50% { box-shadow: 0 0 0 6px rgba(92, 124, 250, 0); }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+        .animate-fade-in-scale {
+            animation: fadeInScale 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+        .animate-slide-in-right {
+            animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+
+        /* Stagger delays */
+        .stagger-1 { animation-delay: 0.05s; }
+        .stagger-2 { animation-delay: 0.1s; }
+        .stagger-3 { animation-delay: 0.15s; }
+        .stagger-4 { animation-delay: 0.2s; }
+        .stagger-5 { animation-delay: 0.25s; }
+        .stagger-6 { animation-delay: 0.3s; }
+        .stagger-7 { animation-delay: 0.35s; }
+
+        /* Card stagger */
+        .card-stagger {
+            animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+
+        /* ===== Interactive States ===== */
+        .interactive-press {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .interactive-press:active {
+            transform: scale(0.97);
+        }
+
+        /* ===== Scrollbar ===== */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
+
+        /* ===== Today indicator pulse ===== */
+        .today-pulse {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
     </style>
 </head>
-<body class="min-h-screen pb-12">
+<body class="min-h-screen pb-14">
     <!-- Header -->
-    <header class="bg-white border-b border-gray-100 sticky top-0 z-50">
+    <header class="glass-strong sticky top-0 z-50 shadow-sm">
         <div class="max-w-lg mx-auto px-4 py-4">
-            <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center justify-between mb-3 animate-fade-in-up">
                 <div>
                     <h1 class="text-xl font-bold text-gray-900">아주대학교 식단</h1>
                     <p class="text-xs text-gray-400 mt-0.5 font-light">Ajou University Cafeteria</p>
                 </div>
                 <button id="langToggle" onclick="toggleLanguage()"
-                    class="px-3 py-1.5 text-xs font-medium rounded-full border border-gray-200 text-gray-600 hover:border-primary-400 hover:text-primary-600 transition-colors">
+                    class="glass-tab px-3 py-1.5 text-xs font-medium rounded-full text-gray-600 hover:text-primary-600 interactive-press">
                     中文
                 </button>
             </div>
             <!-- Week Tabs -->
-            <div id="weekTabs" class="mt-3"></div>
+            <div id="weekTabs" class="mt-3 animate-fade-in-up stagger-2"></div>
             <!-- Date Display -->
-            <div class="text-center mt-2">
-                <button onclick="goToday()" class="text-xs text-primary-500 hover:text-primary-600 transition-colors">
+            <div class="text-center mt-2 animate-fade-in-up stagger-3">
+                <button onclick="goToday()" class="text-xs text-primary-500 hover:text-primary-600 transition-colors interactive-press">
                     <span id="dateDisplay">--</span>
                 </button>
             </div>
@@ -92,27 +189,27 @@
 
     <main class="max-w-lg mx-auto px-4 pt-4">
         <!-- Restaurant Tabs -->
-        <div id="restaurantTabs" class="flex gap-2 mb-3"></div>
+        <div id="restaurantTabs" class="flex gap-2 mb-3 animate-fade-in-up stagger-4"></div>
 
         <!-- Meal Tabs -->
-        <div id="mealTabs" class="flex gap-1.5 mb-4 overflow-x-auto pb-1"></div>
+        <div id="mealTabs" class="flex gap-1.5 mb-4 overflow-x-auto pb-1 animate-fade-in-up stagger-5"></div>
 
         <!-- Menu Content -->
         <div id="menuContent" class="space-y-3"></div>
 
         <!-- Empty State -->
         <div id="emptyState" class="hidden text-center py-16">
-            <div class="text-4xl mb-3 opacity-30">🍽</div>
+            <div class="text-4xl mb-3 opacity-30 animate-fade-in-scale">🍽</div>
             <p class="text-gray-400 text-sm">등록된 식단이 없습니다</p>
             <p class="text-gray-300 text-xs mt-1">No menu available</p>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur border-t border-gray-100">
-        <div class="max-w-lg mx-auto px-4 py-2 flex items-center justify-between">
-            <span class="text-[10px] text-gray-300" id="updatedAt"></span>
-            <div class="flex items-center gap-1.5 text-[10px] text-gray-300">
+    <footer class="glass-strong fixed bottom-0 left-0 right-0 z-50 border-t border-white/30">
+        <div class="max-w-lg mx-auto px-4 py-2.5 flex items-center justify-between">
+            <span class="text-[10px] text-gray-400" id="updatedAt"></span>
+            <div class="flex items-center gap-1.5 text-[10px] text-gray-400">
                 <span id="totalCalories"></span>
             </div>
         </div>
