@@ -147,7 +147,7 @@ function renderWeekTabs() {
         const isActive = groupIndex === Math.floor(currentDateIndex / 2);
 
         const dateRange = group.length > 1
-            ? `${startWeekday} ${startDay}日 ~ ${endWeekday} ${endDay}日`
+            ? `${startWeekday} ${startDay} ~ ${endWeekday} ${endDay}`
             : `${startWeekday} ${startDay}日`;
 
         return `<button onclick="switchDateGroup(${groupIndex})"
