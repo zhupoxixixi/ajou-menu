@@ -65,6 +65,7 @@ function getDisplayDates() {
     if (isWeekend && nextWeek.length > 0) {
         return nextWeek;
     }
+    // 工作日：显示周一到周五
     return thisWeek.length > 0 ? thisWeek : Object.keys(MENU_DATA.days || {}).sort();
 }
 
@@ -80,7 +81,7 @@ function init() {
         return;
     }
 
-    // 设置初始日期为今天（如果在范围内）
+    // 如果是周末，自动跳到下周第一天
     const today = new Date().toISOString().split('T')[0];
     const todayIndex = dates.indexOf(today);
     if (todayIndex >= 0) {
@@ -114,60 +115,36 @@ function renderWeekTabs() {
         </div>
     ` : '';
 
-    // 合并相邻两天为一组按钮
-    const groups = [];
-    for (let i = 0; i < dates.length; i += 2) {
-        if (i + 1 < dates.length) {
-            groups.push([dates[i], dates[i + 1]]);
-        } else {
-            groups.push([dates[i]]);
-        }
-    }
+    // 每天单独一个按钮
+    const buttonsHtml = dates.map((date, i) => {
+        const d = new Date(date + 'T00:00:00');
+        const day = d.getDate();
+        const weekday = currentLang === 'cn'
+            ? ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()]
+            : ['일', '월', '화', '수', '목', '금', '토'][d.getDay()];
 
-    const buttonsHtml = groups.map((group, groupIndex) => {
-        const startDate = group[0];
-        const endDate = group[group.length - 1];
-        const startD = new Date(startDate + 'T00:00:00');
-        const endD = new Date(endDate + 'T00:00:00');
-
-        const startDay = startD.getDate();
-        const endDay = endD.getDate();
-        const month = startD.getMonth() + 1;
-
-        const startWeekday = currentLang === 'cn'
-            ? ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][startD.getDay()]
-            : ['일', '월', '화', '수', '목', '금', '토'][startD.getDay()];
-        const endWeekday = currentLang === 'cn'
-            ? ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][endD.getDay()]
-            : ['일', '월', '화', '수', '목', '금', '토'][endD.getDay()];
-
-        // 检查是否包含今天
         const today = new Date().toISOString().split('T')[0];
-        const containsToday = group.includes(today);
-        const isActive = groupIndex === Math.floor(currentDateIndex / 2);
+        const isToday = date === today;
+        const isActive = i === currentDateIndex;
 
-        const dateRange = group.length > 1
-            ? `${startWeekday} ${startDay} ~ ${endWeekday} ${endDay}`
-            : `${startWeekday} ${startDay}日`;
-
-        return `<button onclick="switchDateGroup(${groupIndex})"
-            class="flex-1 flex flex-col items-center py-2.5 px-2 rounded-xl transition-all ${
+        return `<button onclick="switchDate(${i})"
+            class="flex-1 flex flex-col items-center py-2 px-1 rounded-xl transition-all ${
                 isActive
                     ? 'bg-primary-500 text-white shadow-sm'
-                    : containsToday
+                    : isToday
                         ? 'bg-primary-50 text-primary-600 border border-primary-200'
                         : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'
             }">
-            <span class="text-[10px] font-medium opacity-80">${month}월</span>
-            <span class="text-xs font-bold mt-0.5 leading-tight">${dateRange}</span>
+            <span class="text-[10px] font-medium opacity-80">${weekday}</span>
+            <span class="text-xs font-bold mt-0.5">${day}日</span>
         </button>`;
     }).join('');
 
     container.innerHTML = headerHtml + `<div class="flex gap-2 w-full">${buttonsHtml}</div>`;
 }
 
-function switchDateGroup(groupIndex) {
-    currentDateIndex = groupIndex * 2;
+function switchDate(index) {
+    currentDateIndex = index;
     renderWeekTabs();
     updateDateDisplay();
     renderRestaurantTabs();
