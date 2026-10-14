@@ -21,24 +21,6 @@
 
 这是非官方菜单助手，实际供餐和临时调整以学校公告为准。`≈ kcal` 是根据菜名粗略估算的热量，并非官方营养数据；各窗口菜单供分别选择。
 
-## API 与隐私
-
-网页只读取已生成的菜单数据，**不会直接请求翻译 API，也不会向访问者提供 API 密钥**。中文翻译在菜单生成流程中完成。
-
-翻译密钥应保存在本地被 Git 忽略的 `.env` 或 GitHub Actions Secrets 中，不应写入网页、README 或公开代码。
-
-<details>
-<summary>网站维护说明（仅仓库管理员）</summary>
-
-日常使用网站不需要以下配置。
-
-- 自动翻译所需密钥：在仓库 **Settings → Secrets and variables → Actions** 中配置 Secret `TRANSLATE_API_KEY`。
-- 当前默认翻译模型为 `deepseek-v4.1-flash`。如需调整，可配置 Variable `TRANSLATE_MODEL`；网关地址可通过 Variable `TRANSLATE_API_ENDPOINT` 调整。
-- 手动更新菜单：进入 **Actions → Daily Menu Scrape → Run workflow**。
-- 自动更新失败时，查看对应工作流日志。整批翻译失败会阻止发布新数据，保留此前的菜单。
-
-</details>
-
 ## 界面来源
 
 界面参考 [Çukurova 大学食堂](https://www.cukurova.app/) 的紧凑菜单风格，引用部分保留原项目的 MIT 许可与版权说明，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
