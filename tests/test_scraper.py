@@ -4,8 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from scraper import translator, main
-from scraper.calories import estimate_calories
+from scraper import ai_client, translator, main
 from scraper.fetcher import _parse_menu_text, RESTAURANTS, MEAL_MAP, MEAL_CN
 from scraper.sync_site import sync_site, ASSETS
 
@@ -59,13 +58,13 @@ class TranslationTests(unittest.TestCase):
         limited = Mock(ok=False, status_code=429, headers={'Retry-After': '1'})
         client = Mock()
         client.post.side_effect = [limited, response]
-        with patch.object(translator, '_session', return_value=client), patch.object(translator.time, 'sleep'):
+        with patch.object(ai_client, '_session', return_value=client), patch.object(ai_client.time, 'sleep'):
             self.assertEqual(translator._call_batch(['김치'], 'test-key', 'https://example.invalid', 'test-model'), ['泡菜'])
         self.assertEqual(client.post.call_count, 2)
         client.post.reset_mock()
         client.post.side_effect = None
         client.post.return_value = Mock(ok=False, status_code=401)
-        with patch.object(translator, '_session', return_value=client), self.assertRaises(translator.TranslationError):
+        with patch.object(ai_client, '_session', return_value=client), self.assertRaises(translator.TranslationError):
             translator._call_batch(['김치'], 'test-key', 'https://example.invalid', 'test-model')
         self.assertEqual(client.post.call_count, 1)
 
@@ -97,11 +96,6 @@ class FetchTests(unittest.TestCase):
         self.assertEqual(len(sections), 2)
         self.assertEqual(sections[1]['items'][1]['ko'], '김치')
         self.assertEqual(_parse_menu_text('등록된 식단이 없습니다'), [])
-
-    def test_notices_unknowns_and_mixed_dishes_have_no_invented_calories(self):
-        for source in ['* 시험기간 식수 감소로 인하여 단일코너만 운영됩니다', '핫도그*케찹,머스타드', '알수없는음식', '탕평채']:
-            self.assertIsNone(estimate_calories(source), source)
-        self.assertEqual(estimate_calories('쌀밥'), 325)
 
     def test_sync_covers_every_public_asset(self):
         with tempfile.TemporaryDirectory() as directory:

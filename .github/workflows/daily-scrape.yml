@@ -21,6 +21,8 @@ jobs:
       TRANSLATE_MODEL: ${{ vars.TRANSLATE_MODEL || 'deepseek-v4.1-flash' }}
       TRANSLATE_API_ENDPOINT: ${{ vars.TRANSLATE_API_ENDPOINT || 'https://factchat-cloud.mindlogic.ai/v1/gateway' }}
       TRANSLATE_MAX_WORKERS: '4'
+      NUTRITION_ESTIMATION_ENABLED: ${{ vars.NUTRITION_ESTIMATION_ENABLED || '1' }}
+      NUTRITION_MAX_WORKERS: '3'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -43,6 +45,13 @@ jobs:
           key: menu-translations-v2-${{ runner.os }}-${{ env.TRANSLATE_MODEL }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             menu-translations-v2-${{ runner.os }}-${{ env.TRANSLATE_MODEL }}-
+      - name: Restore nutrition cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/nutrition_cache.json
+          key: menu-nutrition-v1-${{ runner.os }}-${{ env.TRANSLATE_MODEL }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            menu-nutrition-v1-${{ runner.os }}-${{ env.TRANSLATE_MODEL }}-
       - name: Run scraper
         env:
           TRANSLATE_API_KEY: ${{ secrets.TRANSLATE_API_KEY }}
@@ -54,6 +63,12 @@ jobs:
         with:
           path: data/translation_cache.json
           key: menu-translations-v2-${{ runner.os }}-${{ env.TRANSLATE_MODEL }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Save nutrition cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/nutrition_cache.json
+          key: menu-nutrition-v1-${{ runner.os }}-${{ env.TRANSLATE_MODEL }}-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"

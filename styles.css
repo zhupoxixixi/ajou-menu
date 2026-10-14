@@ -81,13 +81,15 @@ button:disabled { opacity: .35; }
 .dark .today-marker { color: #83c497; }
 .card-context { margin: 5px 0 0; font-size: 11px; line-height: 1.7; color: var(--muted-foreground); overflow-wrap: anywhere; }
 .menu-table { width: 100%; border-collapse: collapse; text-align: left; }
+.nutrition-heading { padding: 8px 13px 3px; text-align: right; font-size: 10px; color: var(--muted-foreground); }
 .dish-row + .dish-row { border-top: 1px solid color-mix(in srgb, var(--border) 58%, transparent); }
 .dish-row td { padding: 11px 13px; vertical-align: middle; }
 .dish-row td:last-child { text-align: right; width: 1%; padding-left: 4px; }
 .dish-name { min-width: 0; }
 .dish-name strong { display: block; font-weight: 500; font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
 .dish-original { display: block; font-size: 10px; margin-top: 3px; color: var(--muted-foreground); line-height: 1.6; overflow-wrap: anywhere; }
-.calorie-badge { display: inline-block; border-radius: 7px; background: var(--muted); color: var(--muted-foreground); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 10px; font-variant-numeric: tabular-nums; padding: 3px 6px; white-space: nowrap; }
+.calorie-badge { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 1px; border-radius: 7px; background: var(--muted); color: var(--muted-foreground); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; font-variant-numeric: tabular-nums; padding: 4px 6px; white-space: nowrap; line-height: 1.4; }
+.calorie-unit { font-size: 9px; }
 .dish-row:hover { background: color-mix(in srgb, var(--muted) 65%, var(--card)); }
 .dish-row.is-highlighted { background: color-mix(in srgb, #91ba9c 20%, var(--card)); }
 .card-notices { padding: 11px 14px; border-top: 1px solid var(--border); background: color-mix(in srgb, var(--muted) 45%, var(--card)); }
@@ -173,7 +175,7 @@ button:disabled { opacity: .35; }
   .dish-row td { padding: 12px; }
   .dish-row td:last-child { padding-left: 2px; }
   .dish-original { font-size: 11px; }
-  .calorie-badge { font-size: 9px; padding: 3px 5px; }
+  .calorie-badge { font-size: 10px; padding: 3px 5px; }
   .item-count { font-size: 9px; }
   .nav-stats p { font-size: 9px; }
   .nav-controls { min-height: 58px; }

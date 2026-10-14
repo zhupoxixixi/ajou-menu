@@ -2,19 +2,16 @@
 import json
 import os
 import re
-import threading
-import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-import requests
+from .ai_client import AIRequestError, request_batch
 
 CACHE_PATH = Path(__file__).resolve().parent.parent / 'data' / 'translation_cache.json'
 CACHE_VERSION = 2
 DEFAULT_ENDPOINT = 'https://factchat-cloud.mindlogic.ai/v1/gateway'
 DEFAULT_MODEL = 'deepseek-v4.1-flash'
 _HANGUL = re.compile(r'[가-힣]')
-_CLIENTS = threading.local()
 
 GLOSSARY = '''
 餐次：중식=午餐（不是中式）；석식=晚餐；조식/아침=早餐；점심=午餐；저녁=晚餐；분식=小吃。
@@ -38,8 +35,7 @@ SYSTEM_PROMPT = f'''你是韩国大学食堂菜单的专业译者。将用户提
 只返回与输入长度和顺序完全一致的JSON字符串数组，不要Markdown、说明或额外字段。'''
 
 
-class TranslationError(RuntimeError):
-    """A safe diagnostic that never contains credentials or response bodies."""
+TranslationError = AIRequestError
 
 
 def _setting(name: str, default: int, maximum: int) -> int:
@@ -84,12 +80,6 @@ def _save_cache(cache: dict, model: str = DEFAULT_MODEL, endpoint: str = DEFAULT
     temporary.replace(path)
 
 
-def _session() -> requests.Session:
-    if not hasattr(_CLIENTS, 'session'):
-        _CLIENTS.session = requests.Session()
-    return _CLIENTS.session
-
-
 def _parse_response(content: str, sources: list[str]) -> list[str]:
     if not isinstance(content, str):
         raise TranslationError('Empty translation response')
@@ -106,34 +96,7 @@ def _parse_response(content: str, sources: list[str]) -> list[str]:
 
 
 def _call_batch(texts: list[str], api_key: str, api_endpoint: str, model: str) -> list[str]:
-    endpoint = api_endpoint.rstrip('/')
-    if not endpoint.endswith('/chat/completions'):
-        endpoint += '/chat/completions'
-    payload = {'model': model, 'messages': [{'role': 'system', 'content': SYSTEM_PROMPT}, {'role': 'user', 'content': json.dumps(texts, ensure_ascii=False)}], 'temperature': 0.1}
-    last_error = 'Translation failed'
-    for attempt in range(3):
-        delay = 2 ** attempt
-        try:
-            response = _session().post(endpoint, headers={'Authorization': f'Bearer {api_key}'}, json=payload, timeout=(10, 90))
-            if response.status_code in (429, 500, 502, 503, 504):
-                last_error = f'Translation HTTP {response.status_code}'
-                try:
-                    delay = min(15, max(delay, float(response.headers.get('Retry-After', delay))))
-                except ValueError:
-                    pass
-            elif not response.ok:
-                raise TranslationError(f'Translation HTTP {response.status_code}')
-            else:
-                try:
-                    content = response.json()['choices'][0]['message']['content']
-                    return _parse_response(content, texts)
-                except (ValueError, KeyError, IndexError, TypeError, TranslationError) as error:
-                    last_error = str(error) if isinstance(error, TranslationError) else 'Unexpected translation response'
-        except requests.RequestException as error:
-            last_error = f'Translation network error: {type(error).__name__}'
-        if attempt < 2:
-            time.sleep(delay)
-    raise TranslationError(last_error)
+    return request_batch(texts, api_key, api_endpoint, model, SYSTEM_PROMPT, _parse_response)
 
 
 def translate_concurrent(texts: list[str], api_key: str, api_endpoint: str, cache: dict, model: str = DEFAULT_MODEL) -> list[str]:

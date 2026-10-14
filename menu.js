@@ -17,7 +17,7 @@ const COPY = {
     old: '저장된 식단을 표시하고 있습니다. 최신 메뉴는 학교 원문을 확인해 주세요.',
     staleRestaurant: '수집에 실패해 이전에 저장된 같은 날짜의 메뉴를 표시합니다. 변경 사항은 학교 원문을 확인해 주세요.',
     translationMissing: '일부 중국어 번역이 준비되지 않아 한국어 원문을 표시합니다.', noData: '메뉴 데이터를 불러오지 못했습니다. 잠시 후 새로고침하거나 학교 원문을 확인해 주세요.',
-    calorie: '≈ kcal는 음식 이름을 바탕으로 한 추정치이며 공식 영양 정보가 아닙니다. 코너별 메뉴는 별도 선택입니다.',
+    calorie: 'AI가 일반적인 조리법을 기준으로 추정한 100g당 열량 범위입니다. 이 식당의 실측값이나 1인분 열량이 아닙니다. 빈칸은 추정 불가입니다.', calorieLabel: 'AI 추정 열량', nutritionHeader: 'AI 추정 열량 · 100g당',
     updated: '업데이트', footer: '아주대학교와 독립적으로 운영되는 오픈소스 식단 안내',
     share: '메뉴 복사', copied: '메뉴와 링크를 복사했어요', copyHint: '자동 복사가 불가능합니다. 아래 내용을 선택해 복사해 주세요.',
     search: '메뉴 검색', searchPlaceholder: '메뉴 이름을 입력하세요...', searchHint: '한국어 또는 중국어로 검색하고 결과를 선택하세요.', searchEmpty: '검색 결과가 없습니다.', searchStart: '이번 주와 다음 주의 메뉴를 검색할 수 있어요.',
@@ -35,7 +35,7 @@ const COPY = {
     old: '当前显示的是已保存菜单，最新安排请以学校原文为准。',
     staleRestaurant: '本次获取失败，显示此前保存的同一天菜单；如有调整，请以学校原文为准。',
     translationMissing: '部分中文译文暂缺，先保留韩文原名。', noData: '菜单数据加载失败，请稍后刷新或查看学校原文。',
-    calorie: '≈ kcal 是根据菜名粗略估算的热量，并非官方营养数据。各窗口菜单供分别选择。',
+    calorie: 'AI 估算：常见做法下每 100g 熟食的热量参考范围，非本食堂实测，也不代表一份。空白表示暂无法估算。', calorieLabel: 'AI 热量估算', nutritionHeader: 'AI 参考热量 · 每 100g',
     updated: '更新于', footer: '独立于亚洲大学运营的开源菜单助手',
     share: '复制菜单', copied: '已复制菜单和链接', copyHint: '当前浏览器无法自动复制，请选中下面的内容后复制。',
     search: '搜索菜单', searchPlaceholder: '输入中文或韩文菜名…', searchHint: '搜索可用菜单，点击结果即可查看对应日期和窗口。', searchEmpty: '没有找到相关菜品。', searchStart: '可以搜索本周及下周已有的菜单。',
@@ -79,6 +79,10 @@ function buildSchedule(data, now = new Date()) {
 function isNotice(item) {
   if (item.kind === 'note') return true;
   return /^(?:\s*[*※]|\s*\()|위 메뉴|시장 상황|운영시간|예약 가능합니다|픽업시간|단일코너.*운영|원하는 토핑|간편식 판매|(?:중식|증식|석식|테이크아웃)\s*\([\d,]+원\)/.test(item.ko || '');
+}
+function nutritionRange(item) {
+  const value = item?.nutrition;
+  return value?.basis === '100g' && value.source === 'ai_estimate' && Number.isInteger(value.kcal_min) && Number.isInteger(value.kcal_max) && value.kcal_min >= 0 && value.kcal_min < value.kcal_max && value.kcal_max <= 900 ? value : null;
 }
 function availableMeals(restaurant) { return MEAL_ORDER.filter(key => restaurant?.meals?.[key]?.sections?.some(section => section.items?.length)); }
 function resolveMeal(restaurant, preferred) { const meals = availableMeals(restaurant); return meals.includes(preferred) ? preferred : meals.includes('lunch') ? 'lunch' : meals[0] || preferred; }
@@ -215,13 +219,21 @@ function renderMenu() {
   if (items.length) {
     const table = el('table', 'menu-table');
     table.setAttribute('aria-label', `${copy()[state.meal]} · ${localized(section.name_ko, section.name_cn)}`);
+    if (items.some(item => nutritionRange(item))) table.append(el('caption', 'nutrition-heading', copy().nutritionHeader));
     const body = el('tbody');
     for (const item of items) {
       const row = el('tr', `dish-row${state.highlight === item.ko ? ' is-highlighted' : ''}`);
       const name = el('td', 'dish-name'); name.append(el('strong', '', localized(item.ko, item.cn)));
       if (isChinese() && validTranslation(item.ko, item.cn)) name.append(el('span', 'dish-original', item.ko));
       const calories = el('td');
-      if (Number.isFinite(item.calories) && item.calories > 0) calories.append(el('span', 'calorie-badge', `≈ ${item.calories} kcal`));
+      const estimate = nutritionRange(item);
+      if (estimate) {
+        const badge = el('span', 'calorie-badge');
+        badge.setAttribute('aria-label', `${copy().calorieLabel}: ${estimate.kcal_min}–${estimate.kcal_max} kcal/100g`);
+        badge.title = copy().calorie;
+        badge.append(el('span', 'calorie-range', `≈ ${estimate.kcal_min}–${estimate.kcal_max}`), el('span', 'calorie-unit', 'kcal/100g'));
+        calories.append(badge);
+      }
       row.append(name, calories); body.append(row);
     }
     table.append(body); content.push(table);
@@ -229,7 +241,7 @@ function renderMenu() {
   if (notices.length) { const notice = el('div', 'card-notices'); notice.append(...notices.map(item => el('p', '', localized(item.ko, item.cn)))); content.push(notice); }
   $('menuContent').replaceChildren(...content);
   $('emptyState').hidden = !!section;
-  $('calorieNote').hidden = !items.some(item => item.calories > 0);
+  $('calorieNote').hidden = !items.some(item => nutritionRange(item));
   let message = '';
   if (!restaurant && state.date) message = copy().missing;
   else if (restaurant?.fetch_status === 'error') message = copy().fetchError;
@@ -334,4 +346,4 @@ function init() {
 }
 
 if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded', init);
-if (typeof module !== 'undefined' && module.exports) module.exports = { getKstDate, buildSchedule, isNotice, availableMeals, resolveMeal, validTranslation, resolveSection, stepDate, searchMenus };
+if (typeof module !== 'undefined' && module.exports) module.exports = { getKstDate, buildSchedule, isNotice, availableMeals, resolveMeal, validTranslation, resolveSection, stepDate, searchMenus, nutritionRange };
