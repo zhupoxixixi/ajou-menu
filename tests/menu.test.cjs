@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { getKstDate, buildSchedule, resolveMeal, isNotice, validTranslation, resolveSection, stepDate, searchMenus, nutritionRange } = require('../menu.js');
+const { getKstDate, buildSchedule, resolveMeal, isNotice, validTranslation, resolveSection, stepDate } = require('../menu.js');
 
 test('Korean midnight is independent of the browser timezone', () => {
   assert.equal(getKstDate(new Date('2026-10-13T15:30:00Z')), '2026-10-14');
@@ -58,30 +58,4 @@ test('window selection defaults to food and preserves a valid requested window',
   assert.equal(resolveSection(restaurant, 'lunch', null).name_ko, 'A');
   assert.equal(resolveSection(restaurant, 'lunch', 'B').name_ko, 'B');
   assert.equal(resolveSection(restaurant, 'dinner', 'B'), undefined);
-});
-
-test('Chinese and Korean search return exact menu coordinates and omit notices', () => {
-  const weeks = [{ key: 'this', days: { '2026-10-14': { restaurants: [{ id: 221904, meals: { lunch: { sections: [{ name_ko: 'A', items: [{ ko: '배추김치', cn: '白菜泡菜' }, { ko: '*김치 변경', cn: '泡菜调整说明' }] }] } } }] } } }];
-  const result = searchMenus(weeks, '泡 菜');
-  assert.equal(result.length, 1);
-  assert.equal(result[0].date, '2026-10-14');
-  assert.equal(result[0].restaurant.id, 221904);
-  assert.equal(result[0].meal, 'lunch');
-  assert.equal(result[0].section.name_ko, 'A');
-  assert.equal(searchMenus(weeks, '김치').length, 1);
-  assert.equal(searchMenus(weeks, '').length, 0);
-});
-
-test('nutrition accepts only explicit AI ranges per 100g, including near-zero drinks', () => {
-  const nutrition = { source: 'ai_estimate', basis: '100g', kcal_min: 0, kcal_max: 10 };
-  assert.deepEqual(nutritionRange({ nutrition }), nutrition);
-  assert.equal(nutritionRange({ calories: 325 }), null);
-  for (const invalid of [
-    { ...nutrition, basis: 'serving' },
-    { ...nutrition, source: 'estimate' },
-    { ...nutrition, kcal_min: -1 },
-    { ...nutrition, kcal_min: '5' },
-    { ...nutrition, kcal_max: 0 },
-    { ...nutrition, kcal_max: 901 },
-  ]) assert.equal(nutritionRange({ nutrition: invalid }), null);
 });

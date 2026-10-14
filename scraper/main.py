@@ -14,8 +14,7 @@ if _env_path.exists():
             key, value = line.split('=', 1)
             os.environ.setdefault(key.strip(), value.strip().strip('\"\''))
 
-from .fetcher import fetch_menu, RESTAURANTS, MEAL_MAP, MEAL_CN
-from .calories import annotate_menu_with_calories, classify_menu_items
+from .fetcher import fetch_menu, RESTAURANTS, MEAL_MAP, MEAL_CN, classify_menu_items
 from .translator import translate_menu, is_valid_translation, DEFAULT_ENDPOINT, DEFAULT_MODEL
 from .sync_site import sync_site
 
@@ -94,9 +93,8 @@ def run(date_str: str | None = None):
     print(f'[main] Chinese menu coverage: {summary["translated"]}/{summary["total"]}')
     if require_translation and summary['total'] and not summary['translated']:
         raise RuntimeError('No valid Chinese menu translations; keeping the previous published data')
-    nutrition = annotate_menu_with_calories(restaurants, api_key, endpoint, model)
 
-    output = {'week_start': monday.strftime('%Y-%m-%d'), 'generated_at': datetime.now(KST).isoformat(), 'translation': summary, 'nutrition': nutrition, 'days': weeks[0]}
+    output = {'week_start': monday.strftime('%Y-%m-%d'), 'generated_at': datetime.now(KST).isoformat(), 'translation': summary, 'days': weeks[0]}
     if len(weeks) > 1:
         output['next_week'] = {'week_start': (monday + timedelta(days=7)).strftime('%Y-%m-%d'), 'days': weeks[1]}
     for days in weeks:

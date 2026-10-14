@@ -14,6 +14,7 @@ MEAL_CN = {'breakfast': '早餐', 'lunch': '午餐', 'dinner': '晚餐', 'snack'
 MEAL_CSS_CLASS = {'breakfast': 'breakfast', 'lunch': 'lunch', 'dinner': 'dinner', 'snack': 'snackBar'}
 _SECTION_HEADER_RE = re.compile(r'^\s*[<\[]\s*(.+?)\s*[>\]]\s*$')
 _NO_MENU_RE = re.compile(r'등록된\s*식단이\s*없습니다')
+_NOTICE_RE = re.compile(r'^\s*(?:[*※]|\()|위 메뉴|시장 상황|운영시간|예약 가능합니다|픽업시간|단일코너.*운영|원하는 토핑|간편식 판매|(?:중식|증식|석식|테이크아웃)\s*\([\d,]+원\)')
 _SESSION = requests.Session()
 _SESSION.mount('https://', HTTPAdapter(max_retries=Retry(total=2, backoff_factor=.75, status_forcelist=(429, 500, 502, 503, 504), allowed_methods=('GET',))))
 
@@ -35,8 +36,19 @@ def _parse_menu_text(raw_text: str) -> list[dict]:
             if current_section is None:
                 current_section = {'name_ko': '메인', 'name_cn': '主菜单', 'items': []}
                 sections.append(current_section)
-            current_section['items'].append({'ko': stripped, 'cn': '', 'calories': None})
+            current_section['items'].append({'ko': stripped, 'cn': ''})
     return sections
+
+
+def classify_menu_items(menu_data: list[dict]):
+    """Keep only menu text and notice classification, including stale fallback data."""
+    for restaurant in menu_data:
+        for meal in restaurant['meals'].values():
+            for section in meal['sections']:
+                section['items'] = [
+                    {'ko': item['ko'], 'cn': item.get('cn', ''), 'kind': 'note' if _NOTICE_RE.search(item['ko']) else 'dish'}
+                    for item in section['items']
+                ]
 
 
 def fetch_menu(date_str: str, restaurant_id: int) -> dict:

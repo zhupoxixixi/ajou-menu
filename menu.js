@@ -17,11 +17,9 @@ const COPY = {
     old: '저장된 식단을 표시하고 있습니다. 최신 메뉴는 학교 원문을 확인해 주세요.',
     staleRestaurant: '수집에 실패해 이전에 저장된 같은 날짜의 메뉴를 표시합니다. 변경 사항은 학교 원문을 확인해 주세요.',
     translationMissing: '일부 중국어 번역이 준비되지 않아 한국어 원문을 표시합니다.', noData: '메뉴 데이터를 불러오지 못했습니다. 잠시 후 새로고침하거나 학교 원문을 확인해 주세요.',
-    calorie: 'AI가 일반적인 조리법을 기준으로 추정한 100g당 열량 범위입니다. 이 식당의 실측값이나 1인분 열량이 아닙니다. 빈칸은 추정 불가입니다.', calorieLabel: 'AI 추정 열량', nutritionHeader: 'AI 추정 열량 · 100g당',
     updated: '업데이트', footer: '아주대학교와 독립적으로 운영되는 오픈소스 식단 안내',
     share: '메뉴 복사', copied: '메뉴와 링크를 복사했어요', copyHint: '자동 복사가 불가능합니다. 아래 내용을 선택해 복사해 주세요.',
-    search: '메뉴 검색', searchPlaceholder: '메뉴 이름을 입력하세요...', searchHint: '한국어 또는 중국어로 검색하고 결과를 선택하세요.', searchEmpty: '검색 결과가 없습니다.', searchStart: '이번 주와 다음 주의 메뉴를 검색할 수 있어요.',
-    searchInput: '메뉴 이름', close: '닫기', previous: '이전 날짜', next: '다음 날짜', previousMonth: '이전 달', nextMonth: '다음 달',
+    close: '닫기', previous: '이전 날짜', next: '다음 날짜', previousMonth: '이전 달', nextMonth: '다음 달',
     dark: '어두운 테마로 전환', light: '밝은 테마로 전환', dishes: n => `${n}개 메뉴`, days: n => `메뉴 날짜: ${n}일`,
   },
   cn: {
@@ -35,11 +33,9 @@ const COPY = {
     old: '当前显示的是已保存菜单，最新安排请以学校原文为准。',
     staleRestaurant: '本次获取失败，显示此前保存的同一天菜单；如有调整，请以学校原文为准。',
     translationMissing: '部分中文译文暂缺，先保留韩文原名。', noData: '菜单数据加载失败，请稍后刷新或查看学校原文。',
-    calorie: 'AI 估算：常见做法下每 100g 熟食的热量参考范围，非本食堂实测，也不代表一份。空白表示暂无法估算。', calorieLabel: 'AI 热量估算', nutritionHeader: 'AI 参考热量 · 每 100g',
     updated: '更新于', footer: '独立于亚洲大学运营的开源菜单助手',
     share: '复制菜单', copied: '已复制菜单和链接', copyHint: '当前浏览器无法自动复制，请选中下面的内容后复制。',
-    search: '搜索菜单', searchPlaceholder: '输入中文或韩文菜名…', searchHint: '搜索可用菜单，点击结果即可查看对应日期和窗口。', searchEmpty: '没有找到相关菜品。', searchStart: '可以搜索本周及下周已有的菜单。',
-    searchInput: '菜品名称', close: '关闭', previous: '上一个日期', next: '下一个日期', previousMonth: '上一个月', nextMonth: '下一个月',
+    close: '关闭', previous: '上一个日期', next: '下一个日期', previousMonth: '上一个月', nextMonth: '下一个月',
     dark: '切换深色主题', light: '切换浅色主题', dishes: n => `${n} 道菜`, days: n => `可用日期：${n} 天`,
   },
 };
@@ -50,7 +46,6 @@ const ICONS = {
   dinner: '<path d="M20 15a8 8 0 0 1-11-11A9 9 0 1 0 20 15Z"/>',
   snack: '<path d="m7 3 2 6m8-6-2 6M4 10h16c0 7-3 11-8 11S4 17 4 10ZM3 10h18"/>',
   bowl: '<path d="M3 10h18c0 7-4 11-9 11S3 17 3 10ZM2 10h20M7 2v4m5-5v5m5-4v4"/>',
-  search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/>',
   moon: '<path d="M20 15a8 8 0 0 1-11-11A9 9 0 1 0 20 15Z"/>',
   calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M7 2v5m10-5v5"/>',
@@ -80,10 +75,6 @@ function isNotice(item) {
   if (item.kind === 'note') return true;
   return /^(?:\s*[*※]|\s*\()|위 메뉴|시장 상황|운영시간|예약 가능합니다|픽업시간|단일코너.*운영|원하는 토핑|간편식 판매|(?:중식|증식|석식|테이크아웃)\s*\([\d,]+원\)/.test(item.ko || '');
 }
-function nutritionRange(item) {
-  const value = item?.nutrition;
-  return value?.basis === '100g' && value.source === 'ai_estimate' && Number.isInteger(value.kcal_min) && Number.isInteger(value.kcal_max) && value.kcal_min >= 0 && value.kcal_min < value.kcal_max && value.kcal_max <= 900 ? value : null;
-}
 function availableMeals(restaurant) { return MEAL_ORDER.filter(key => restaurant?.meals?.[key]?.sections?.some(section => section.items?.length)); }
 function resolveMeal(restaurant, preferred) { const meals = availableMeals(restaurant); return meals.includes(preferred) ? preferred : meals.includes('lunch') ? 'lunch' : meals[0] || preferred; }
 function validTranslation(original, translated) { return typeof translated === 'string' && translated.trim() !== '' && !/[가-힣]/.test(translated) && (translated !== original || !/[가-힣]/.test(original)); }
@@ -91,20 +82,6 @@ function menuSections(restaurant, meal) { return (restaurant?.meals?.[meal]?.sec
 function resolveSection(restaurant, meal, preferred) { const sections = menuSections(restaurant, meal); return sections.find(section => section.name_ko === preferred) || sections.find(section => section.items.some(item => !isNotice(item))) || sections[0]; }
 function allDates(schedule) { return [...new Set(schedule.weeks.flatMap(week => week.dates))].sort(); }
 function stepDate(schedule, date, direction) { const dates = allDates(schedule); const index = dates.indexOf(date); return index < 0 ? date : dates[index + direction] || date; }
-function searchMenus(weeks, query) {
-  const normalize = text => String(text || '').normalize('NFKC').toLowerCase().replace(/\s+/g, '');
-  const needle = normalize(query);
-  if (!needle) return [];
-  const results = [];
-  for (const week of weeks) for (const [date, day] of Object.entries(week.days)) for (const restaurant of day.restaurants || []) {
-    for (const meal of MEAL_ORDER) for (const section of menuSections(restaurant, meal)) for (const item of section.items) {
-      if (!isNotice(item) && (normalize(item.ko).includes(needle) || normalize(item.cn).includes(needle))) results.push({ week: week.key, date, restaurant, meal, section, item });
-      if (results.length === 50) return results;
-    }
-  }
-  return results;
-}
-
 function storageRead(key) { try { return localStorage.getItem(key); } catch { return null; } }
 function storageWrite(key, value) { try { localStorage.setItem(key, value); } catch { /* Preferences are optional. */ } }
 let state, data, schedule, toastTimer;
@@ -129,7 +106,7 @@ function dateText(date, options) { return date ? new Intl.DateTimeFormat(isChine
 function showStatus(id, text) { $(id).textContent = text || ''; $(id).hidden = !text; }
 function closeDialogs() { for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close(); }
 function openDialog(id) { closeDialogs(); $(id).showModal(); }
-function chooseDate(date) { const week = schedule.weeks.find(item => item.dates.includes(date)); if (!week) return; state.week = week.key; state.calendarWeek = week.key; state.date = date; state.calendarMonth = date.slice(0, 7); state.highlight = null; renderAll(); if ($('dateDialog').open) $('dateDialog').close(); }
+function chooseDate(date) { const week = schedule.weeks.find(item => item.dates.includes(date)); if (!week) return; state.week = week.key; state.calendarWeek = week.key; state.date = date; state.calendarMonth = date.slice(0, 7); renderAll(); if ($('dateDialog').open) $('dateDialog').close(); }
 
 function renderDates() {
   const week = schedule.weeks.find(item => item.key === state.calendarWeek) || activeWeek();
@@ -174,20 +151,20 @@ function renderDates() {
 
 function renderSelectors() {
   $('restaurantTabs').replaceChildren(...RESTAURANTS.map(info => {
-    const node = button('restaurant-button', info.id === state.restaurantId, () => { state.restaurantId = info.id; state.sectionName = null; state.highlight = null; storageWrite('menuRestaurantId', info.id); renderAll(); });
+    const node = button('restaurant-button', info.id === state.restaurantId, () => { state.restaurantId = info.id; state.sectionName = null; storageWrite('menuRestaurantId', info.id); renderAll(); });
     node.append(icon('restaurant'), el('span', '', isChinese() ? info.name_cn : info.name_ko));
     return node;
   }));
   const available = availableMeals(currentRestaurant());
   $('mealTabs').replaceChildren(...MEAL_ORDER.map(meal => {
-    const node = button('meal-button', state.meal === meal, () => { state.meal = meal; state.sectionName = null; state.highlight = null; storageWrite('menuMeal', meal); renderAll(); });
+    const node = button('meal-button', state.meal === meal, () => { state.meal = meal; state.sectionName = null; storageWrite('menuMeal', meal); renderAll(); });
     node.disabled = !available.includes(meal); node.append(icon(meal), el('span', '', copy()[meal])); return node;
   }));
   const sections = menuSections(currentRestaurant(), state.meal);
   $('windowTabs').hidden = sections.length < 2;
   $('windowTabs').replaceChildren(...sections.map(section => {
     const note = section.items.every(isNotice);
-    const node = button(`window-button${note ? ' note-window' : ''}`, section.name_ko === state.sectionName, () => { state.sectionName = section.name_ko; state.highlight = null; renderAll(); });
+    const node = button(`window-button${note ? ' note-window' : ''}`, section.name_ko === state.sectionName, () => { state.sectionName = section.name_ko; renderAll(); });
     node.textContent = localized(section.name_ko, section.name_cn); return node;
   }));
   const info = restaurantInfo();
@@ -219,29 +196,18 @@ function renderMenu() {
   if (items.length) {
     const table = el('table', 'menu-table');
     table.setAttribute('aria-label', `${copy()[state.meal]} · ${localized(section.name_ko, section.name_cn)}`);
-    if (items.some(item => nutritionRange(item))) table.append(el('caption', 'nutrition-heading', copy().nutritionHeader));
     const body = el('tbody');
     for (const item of items) {
-      const row = el('tr', `dish-row${state.highlight === item.ko ? ' is-highlighted' : ''}`);
+      const row = el('tr', 'dish-row');
       const name = el('td', 'dish-name'); name.append(el('strong', '', localized(item.ko, item.cn)));
       if (isChinese() && validTranslation(item.ko, item.cn)) name.append(el('span', 'dish-original', item.ko));
-      const calories = el('td');
-      const estimate = nutritionRange(item);
-      if (estimate) {
-        const badge = el('span', 'calorie-badge');
-        badge.setAttribute('aria-label', `${copy().calorieLabel}: ${estimate.kcal_min}–${estimate.kcal_max} kcal/100g`);
-        badge.title = copy().calorie;
-        badge.append(el('span', 'calorie-range', `≈ ${estimate.kcal_min}–${estimate.kcal_max}`), el('span', 'calorie-unit', 'kcal/100g'));
-        calories.append(badge);
-      }
-      row.append(name, calories); body.append(row);
+      row.append(name); body.append(row);
     }
     table.append(body); content.push(table);
   }
   if (notices.length) { const notice = el('div', 'card-notices'); notice.append(...notices.map(item => el('p', '', localized(item.ko, item.cn)))); content.push(notice); }
   $('menuContent').replaceChildren(...content);
   $('emptyState').hidden = !!section;
-  $('calorieNote').hidden = !items.some(item => nutritionRange(item));
   let message = '';
   if (!restaurant && state.date) message = copy().missing;
   else if (restaurant?.fetch_status === 'error') message = copy().fetchError;
@@ -255,12 +221,11 @@ function renderMenu() {
 function renderText() {
   document.documentElement.lang = isChinese() ? 'zh-CN' : 'ko';
   document.title = `${copy().brand} · Ajou Menu`;
-  const text = { brandSubtitle: 'brand', pageTitle: 'brand', restaurantLabel: 'restaurant', mealLabel: 'meal', windowLabel: 'window', sourceLabel: 'source', skipLink: 'skip', noticeText: 'notice', emptyTitle: 'empty', emptyDescription: 'emptyDescription', calorieNote: 'calorie', footerNote: 'footer', shareLabel: 'share', searchLabel: 'searchPlaceholder', searchTitle: 'search', searchInputLabel: 'searchInput', searchHint: 'searchHint', calendarTitle: 'calendar', calendarHint: 'calendarHint', datePickerLabel: 'calendar', copyTitle: 'share', copyHint: 'copyHint' };
+  const text = { brandSubtitle: 'brand', pageTitle: 'brand', restaurantLabel: 'restaurant', mealLabel: 'meal', windowLabel: 'window', sourceLabel: 'source', skipLink: 'skip', noticeText: 'notice', emptyTitle: 'empty', emptyDescription: 'emptyDescription', footerNote: 'footer', shareLabel: 'share', calendarTitle: 'calendar', calendarHint: 'calendarHint', datePickerLabel: 'calendar', copyTitle: 'share', copyHint: 'copyHint' };
   for (const [id, key] of Object.entries(text)) $(id).textContent = copy()[key];
   $('languageLabel').textContent = isChinese() ? '한국어' : '中文';
   $('langToggle').setAttribute('aria-label', isChinese() ? '한국어로 전환' : '切换到中文');
-  $('searchQuery').placeholder = copy().searchPlaceholder;
-  const labels = { searchToggle: 'search', dateToggle: 'calendar', navDateLabel: 'calendar', prevDate: 'previous', nextDate: 'next', calendarPrev: 'previousMonth', calendarNext: 'nextMonth', noticeDismiss: 'dismiss', selectionPanel: 'restaurant', dateNavigation: 'calendar' };
+  const labels = { dateToggle: 'calendar', navDateLabel: 'calendar', prevDate: 'previous', nextDate: 'next', calendarPrev: 'previousMonth', calendarNext: 'nextMonth', noticeDismiss: 'dismiss', selectionPanel: 'restaurant', dateNavigation: 'calendar' };
   for (const [id, key] of Object.entries(labels)) $(id).setAttribute('aria-label', copy()[key]);
   for (const node of document.querySelectorAll('[data-close]')) node.setAttribute('aria-label', copy().close);
   renderThemeLabel();
@@ -277,24 +242,10 @@ function renderAll() {
   // Keep shared links aligned with subsequent choices, including a language change.
   const params = new URLSearchParams(window.location.search);
   if (['date','restaurant','meal','window','lang'].some(key => params.has(key))) window.history.replaceState(null, '', menuLink());
-  if ($('searchDialog').open) renderSearch();
 }
 function renderThemeLabel() { const dark = document.documentElement.classList.contains('dark'); $('themeToggle').replaceChildren(icon(dark ? 'sun' : 'moon')); $('themeToggle').setAttribute('aria-label', dark ? copy().light : copy().dark); }
 function notify(text) { clearTimeout(toastTimer); showStatus('actionStatus', text); toastTimer = setTimeout(() => showStatus('actionStatus', ''), 2400); }
 
-function renderSearch() {
-  const query = $('searchQuery').value;
-  const results = searchMenus(schedule.weeks, query);
-  if (!results.length) { $('searchResults').replaceChildren(el('p', 'search-empty', query.trim() ? copy().searchEmpty : copy().searchStart)); return; }
-  $('searchResults').replaceChildren(...results.map(result => {
-    const node = el('button', 'search-result'); node.type = 'button';
-    const info = RESTAURANTS.find(restaurant => restaurant.id === Number(result.restaurant.id)) || result.restaurant;
-    node.append(el('strong', '', localized(result.item.ko, result.item.cn)), el('small', '', `${dateText(result.date, { month: 'numeric', day: 'numeric' })} · ${localized(info.name_ko, info.name_cn)} · ${copy()[result.meal]} · ${localized(result.section.name_ko, result.section.name_cn)}`));
-    node.addEventListener('click', () => { state.week = result.week; state.date = result.date; state.restaurantId = Number(result.restaurant.id); state.meal = result.meal; state.sectionName = result.section.name_ko; state.highlight = result.item.ko; state.calendarMonth = result.date.slice(0, 7); storageWrite('menuRestaurantId', state.restaurantId); storageWrite('menuMeal', state.meal); $('searchDialog').close(); renderAll(); window.scrollTo({ top: 0, behavior: 'instant' }); });
-    return node;
-  }));
-}
-function openSearch() { openDialog('searchDialog'); renderSearch(); $('searchQuery').focus(); }
 function menuLink() { const url = new URL(window.location.href); url.search = ''; url.hash = ''; for (const [key, value] of Object.entries({ date: state.date, restaurant: state.restaurantId, meal: state.meal, window: state.sectionName, lang: state.lang })) if (value != null) url.searchParams.set(key, value); return url.href; }
 async function copyMenu() {
   const section = currentSection(); if (!section) return;
@@ -320,10 +271,9 @@ function init() {
     restaurantId: RESTAURANTS.some(info => info.id === requestedId) ? requestedId : RESTAURANTS.some(info => info.id === storedId) ? storedId : RESTAURANTS[legacyIndex]?.id || RESTAURANTS[0].id,
     meal: MEAL_ORDER.includes(preferredMeal) ? preferredMeal : 'lunch',
     week: requestedWeek?.key || schedule.initialWeek, date: requestedWeek ? params.get('date') : schedule.initialDate,
-    sectionName: params.get('window'), calendarMonth: null, highlight: null,
+    sectionName: params.get('window'), calendarMonth: null,
   };
   for (const node of document.querySelectorAll('[data-icon]')) node.replaceChildren(icon(node.dataset.icon));
-  $('searchShortcut').textContent = /Mac/.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
   $('projectNotice').hidden = storageRead('menuNoticeDismissed') === '1';
   $('noticeDismiss').addEventListener('click', () => { $('projectNotice').hidden = true; storageWrite('menuNoticeDismissed', '1'); });
   $('langToggle').addEventListener('click', () => { state.lang = isChinese() ? 'ko' : 'cn'; storageWrite('menuLang', state.lang); renderAll(); });
@@ -335,15 +285,12 @@ function init() {
   $('prevDate').addEventListener('click', () => chooseDate(stepDate(schedule, state.date, -1)));
   $('nextDate').addEventListener('click', () => chooseDate(stepDate(schedule, state.date, 1)));
   for (const [id, direction] of [['calendarPrev',-1],['calendarNext',1]]) $(id).addEventListener('click', () => { const months = [...new Set(activeWeek()?.dates.map(date => date.slice(0, 7)) || [])]; state.calendarMonth = months[months.indexOf(state.calendarMonth) + direction] || state.calendarMonth; renderDates(); });
-  $('searchToggle').addEventListener('click', openSearch);
-  $('searchQuery').addEventListener('input', renderSearch);
   $('shareButton').addEventListener('click', copyMenu);
   for (const node of document.querySelectorAll('[data-close]')) node.addEventListener('click', () => $(node.dataset.close).close());
   for (const dialog of document.querySelectorAll('dialog')) dialog.addEventListener('click', event => { const rect = dialog.getBoundingClientRect(); if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) dialog.close(); });
-  document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); openSearch(); } });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && getKstDate() !== schedule.today) { schedule = buildSchedule(data); state.week = schedule.initialWeek; state.date = schedule.initialDate; state.sectionName = null; renderAll(); } });
   renderAll();
 }
 
 if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded', init);
-if (typeof module !== 'undefined' && module.exports) module.exports = { getKstDate, buildSchedule, isNotice, availableMeals, resolveMeal, validTranslation, resolveSection, stepDate, searchMenus, nutritionRange };
+if (typeof module !== 'undefined' && module.exports) module.exports = { getKstDate, buildSchedule, isNotice, availableMeals, resolveMeal, validTranslation, resolveSection, stepDate };

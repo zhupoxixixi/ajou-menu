@@ -21,7 +21,6 @@
         <span class="brand-copy"><strong>AJOU MENU</strong><small id="brandSubtitle">아주대학교 식단</small></span>
       </a>
       <div class="header-actions">
-        <button class="search-trigger" id="searchToggle" type="button" aria-haspopup="dialog"><span data-icon="search"></span><span id="searchLabel">메뉴 검색...</span><kbd id="searchShortcut">Ctrl K</kbd></button>
         <a class="icon-button github-button" href="https://github.com/zhupoxixixi/ajou-menu" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><span data-icon="github"></span></a>
         <button class="language-toggle" id="langToggle" type="button"><span id="languageLabel">中文</span></button>
         <button class="icon-button" id="themeToggle" type="button"><span data-icon="sun"></span></button>
@@ -55,7 +54,6 @@
         <div id="emptyState" class="empty-state" hidden><span data-icon="bowl" class="empty-symbol"></span><h3 id="emptyTitle"></h3><p id="emptyDescription"></p></div>
         <div class="card-footer"><a id="sourceLink" class="small-button" href="https://www.ajou.ac.kr/kr/life/food.do" target="_blank" rel="noopener noreferrer"><span data-icon="external"></span><span id="sourceLabel">학교 원문</span></a><span id="menuCount" class="item-count"></span><button id="shareButton" class="small-button" type="button"><span data-icon="copy"></span><span id="shareLabel">메뉴 복사</span></button></div>
       </article>
-      <p class="calorie-note" id="calorieNote"></p>
     </section>
     <footer class="site-footer"><p id="footerNote"></p><a href="https://github.com/zhupoxixixi/ajou-menu" target="_blank" rel="noopener noreferrer">GitHub ↗</a></footer>
   </main>
@@ -75,14 +73,6 @@
     <div id="calendarWeekdays" class="calendar-weekdays" aria-hidden="true"></div>
     <div id="weekTabs" class="calendar-grid"></div>
     <p class="calendar-hint" id="calendarHint"></p>
-  </dialog>
-
-  <dialog id="searchDialog" class="app-dialog search-dialog" aria-labelledby="searchTitle">
-    <div class="dialog-heading"><h2 id="searchTitle">메뉴 검색</h2><button class="dialog-close icon-button" type="button" data-close="searchDialog"><span data-icon="close"></span></button></div>
-    <label class="sr-only" for="searchQuery" id="searchInputLabel">메뉴 이름</label>
-    <div class="search-input-wrap"><span data-icon="search"></span><input id="searchQuery" type="search" autocomplete="off" spellcheck="false"></div>
-    <p class="search-hint" id="searchHint"></p>
-    <div id="searchResults" class="search-results" aria-live="polite"></div>
   </dialog>
 
   <dialog id="copyDialog" class="app-dialog copy-dialog" aria-labelledby="copyTitle">

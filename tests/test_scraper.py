@@ -90,6 +90,9 @@ class FetchTests(unittest.TestCase):
         self.assertEqual(day['restaurants'][0]['fetch_status'], 'stale')
         self.assertEqual(other['restaurants'][0]['fetch_status'], 'error')
         self.assertNotIn('fetch_status', old)
+        item = day['restaurants'][0]['meals']['lunch']['sections'][0]['items'][0]
+        self.assertEqual(item, {'ko': '쌀밥', 'cn': '白米饭', 'kind': 'dish'})
+        self.assertEqual(old['meals']['lunch']['sections'][0]['items'][0]['calories'], 325)
 
     def test_parser_preserves_unsectioned_notices_and_menu_text(self):
         sections = _parse_menu_text('* 운영 안내\n<중식>\n쌀밥\n김치')
