@@ -7,3 +7,6 @@ data/menu-*.json
 venv/
 *.egg-info/
 .claude/
+output/
+.playwright-cli/
+data/*.tmp

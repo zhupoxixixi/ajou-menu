@@ -2,35 +2,64 @@ name: Daily Menu Scrape
 
 on:
   schedule:
-    - cron: '0 15 * * *'  # 15:00 UTC = 00:00 KST next day
+    - cron: '0 15 * * *'  # 00:00 KST the next day; scheduled execution can be delayed
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: daily-menu-scrape
+  cancel-in-progress: false
+
 jobs:
   scrape:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONUNBUFFERED: '1'
+      TRANSLATE_MODEL: ${{ vars.TRANSLATE_MODEL || 'deepseek-v4.1-flash' }}
+      TRANSLATE_API_ENDPOINT: ${{ vars.TRANSLATE_API_ENDPOINT || 'https://factchat-cloud.mindlogic.ai/v1/gateway' }}
+      TRANSLATE_MAX_WORKERS: '4'
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - name: Install dependencies
         run: pip install -r requirements.txt
-
+      - name: Check menu regressions
+        run: |
+          python -m unittest discover -s tests -p 'test_*.py'
+          node --test tests/menu.test.cjs
+      - name: Restore translation cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/translation_cache.json
+          key: menu-translations-v2-${{ runner.os }}-${{ env.TRANSLATE_MODEL }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            menu-translations-v2-${{ runner.os }}-${{ env.TRANSLATE_MODEL }}-
       - name: Run scraper
         env:
           TRANSLATE_API_KEY: ${{ secrets.TRANSLATE_API_KEY }}
-          TRANSLATE_API_ENDPOINT: ${{ secrets.TRANSLATE_API_ENDPOINT }}
+          REQUIRE_TRANSLATION: '1'
         run: python -m scraper.main
-
+      - name: Save translation cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/translation_cache.json
+          key: menu-translations-v2-${{ runner.os }}-${{ env.TRANSLATE_MODEL }}-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/ menu-data.js
-          git diff --cached --quiet || git commit -m "Update weekly menu for $(TZ=Asia/Seoul date +%Y-%m-%d)"
-          git push
+          git add menu-data.js site/
+          if ! git diff --cached --quiet; then
+            git commit -m "Update weekly menu for $(TZ=Asia/Seoul date +%Y-%m-%d)"
+            git push
+          fi

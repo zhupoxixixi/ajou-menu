@@ -1,122 +1,110 @@
+"""Fetch the week's menus, translate once, and publish complete static assets."""
+import copy
 import json
 import os
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
 
-# Load .env file for local development
-_env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
-if os.path.exists(_env_path):
-    with open(_env_path) as f:
-        for line in f:
-            line = line.strip()
-            if line and not line.startswith("#") and "=" in line:
-                k, v = line.split("=", 1)
-                os.environ.setdefault(k.strip(), v.strip())
+BASE_DIR = Path(__file__).resolve().parent.parent
+_env_path = BASE_DIR / '.env'
+if _env_path.exists():
+    for line in _env_path.read_text(encoding='utf-8').splitlines():
+        line = line.strip()
+        if line and not line.startswith('#') and '=' in line:
+            key, value = line.split('=', 1)
+            os.environ.setdefault(key.strip(), value.strip().strip('\"\''))
 
-from .fetcher import fetch_menu, RESTAURANTS
+from .fetcher import fetch_menu, RESTAURANTS, MEAL_MAP, MEAL_CN
 from .calories import annotate_menu_with_calories
-from .translator import translate_menu
+from .translator import translate_menu, is_valid_translation, DEFAULT_ENDPOINT, DEFAULT_MODEL
+from .sync_site import sync_site
 
 KST = timezone(timedelta(hours=9))
 
-RESTAURANT_IDS = [363910, 221904]
 
-API_KEY = os.environ.get("TRANSLATE_API_KEY", "")
-API_ENDPOINT = os.environ.get("TRANSLATE_API_ENDPOINT", "")
+def _load_previous() -> dict:
+    try:
+        text = (BASE_DIR / 'menu-data.js').read_text(encoding='utf-8')
+        return json.loads(text.removeprefix('const MENU_DATA = ').strip().removesuffix(';'))
+    except (OSError, ValueError):
+        return {}
 
 
-def fetch_single_day(date_str: str) -> dict:
-    """爬取单天菜单"""
-    print(f"[main] Fetching menus for {date_str}")
-
-    menu_data = []
-    for rid in RESTAURANT_IDS:
+def fetch_single_day(date_str: str, previous: dict | None = None) -> dict:
+    print(f'[main] Fetching {date_str}')
+    restaurants = []
+    old_days = {**(previous or {}).get('days', {}), **(previous or {}).get('next_week', {}).get('days', {})}
+    old_day = old_days.get(date_str, {})
+    for rid, info in RESTAURANTS.items():
         try:
-            data = fetch_menu(date_str, rid)
-            menu_data.append(data)
-            print(f"[main] Fetched restaurant {rid}")
-        except Exception as e:
-            print(f"[main] Failed to fetch restaurant {rid}: {e}")
-
-    annotate_menu_with_calories(menu_data)
-
-    if API_ENDPOINT:
-        translate_menu(menu_data, API_KEY, API_ENDPOINT)
-    else:
-        print("[main] No translation API endpoint set, using Korean only")
-
-    return {
-        "date": date_str,
-        "generated_at": datetime.now(KST).isoformat(),
-        "restaurants": menu_data,
-    }
+            restaurant = fetch_menu(date_str, rid)
+            restaurant['fetch_status'] = 'ok'
+            restaurant['fetched_at'] = datetime.now(KST).isoformat()
+        except Exception as error:
+            print(f'[main] Restaurant {rid} unavailable ({type(error).__name__})')
+            old = next((entry for entry in old_day.get('restaurants', []) if entry['id'] == rid and entry.get('fetch_status') != 'error'), None)
+            if old:
+                restaurant = copy.deepcopy(old)
+                restaurant['fetch_status'] = 'stale'
+                restaurant.setdefault('fetched_at', old_day.get('generated_at'))
+            else:
+                restaurant = {'id': rid, **info, 'fetch_status': 'error', 'meals': {key: {'label_ko': label, 'label_cn': MEAL_CN[key], 'sections': []} for key, label in MEAL_MAP.items()}}
+        restaurants.append(restaurant)
+    annotate_menu_with_calories(restaurants)
+    return {'date': date_str, 'generated_at': datetime.now(KST).isoformat(), 'restaurants': restaurants}
 
 
-def run(date_str: str = None):
-    if date_str is None:
-        date_str = datetime.now(KST).strftime("%Y-%m-%d")
-
-    base_dir = os.path.join(os.path.dirname(__file__), "..")
-    data_dir = os.path.join(base_dir, "data")
-    os.makedirs(data_dir, exist_ok=True)
-
-    today = datetime.strptime(date_str, "%Y-%m-%d")
-    weekday = today.weekday()  # 0=周一, 6=周日
-    is_weekend = weekday >= 5
-
-    # 计算本周一的日期
-    monday = today - timedelta(days=weekday)
-
-    # 爬取本周数据（周一到周五）
-    week_data = {}
-    for i in range(5):  # 周一到周五
-        day = monday + timedelta(days=i)
-        day_str = day.strftime("%Y-%m-%d")
-        day_data = fetch_single_day(day_str)
-        week_data[day_str] = day_data
-
-        # 保存单天 JSON
-        json_path = os.path.join(data_dir, f"menu-{day_str}.json")
-        with open(json_path, "w", encoding="utf-8") as f:
-            json.dump(day_data, f, ensure_ascii=False, indent=2)
-        print(f"[main] Saved {json_path}")
-
-    # 如果是周末，也爬取下周数据作为预告
-    next_week_data = {}
-    if is_weekend:
-        next_monday = monday + timedelta(days=7)
-        for i in range(5):
-            day = next_monday + timedelta(days=i)
-            day_str = day.strftime("%Y-%m-%d")
-            day_data = fetch_single_day(day_str)
-            next_week_data[day_str] = day_data
-
-            json_path = os.path.join(data_dir, f"menu-{day_str}.json")
-            with open(json_path, "w", encoding="utf-8") as f:
-                json.dump(day_data, f, ensure_ascii=False, indent=2)
-            print(f"[main] Saved next week: {json_path}")
-
-    # 保存数据到 JS 文件
-    js_path = os.path.join(base_dir, "menu-data.js")
-
-    output = {
-        "week_start": monday.strftime("%Y-%m-%d"),
-        "generated_at": datetime.now(KST).isoformat(),
-        "days": week_data,
-    }
-
-    # 如果有下周数据，添加到输出
-    if next_week_data:
-        output["next_week"] = {
-            "week_start": (monday + timedelta(days=7)).strftime("%Y-%m-%d"),
-            "days": next_week_data,
-        }
-
-    with open(js_path, "w", encoding="utf-8") as f:
-        f.write("const MENU_DATA = ")
-        json.dump(output, f, ensure_ascii=False)
-        f.write(";\n")
-    print(f"[main] Saved {js_path}")
+def translation_summary(restaurants: list[dict], model: str) -> dict:
+    items = [item for restaurant in restaurants for meal in restaurant['meals'].values() for section in meal['sections'] for item in section['items']]
+    translated = sum(is_valid_translation(item['ko'], item.get('cn', '')) for item in items)
+    return {'model': model, 'total': len(items), 'translated': translated, 'status': 'complete' if translated == len(items) else 'partial' if translated else 'unavailable'}
 
 
-if __name__ == "__main__":
+def _write_json(path: Path, data: dict, javascript: bool = False):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix('.tmp')
+    content = json.dumps(data, ensure_ascii=False, indent=None if javascript else 2)
+    temporary.write_text(f'const MENU_DATA = {content};\n' if javascript else content + '\n', encoding='utf-8')
+    temporary.replace(path)
+
+
+def run(date_str: str | None = None):
+    today = datetime.strptime(date_str, '%Y-%m-%d') if date_str else datetime.now(KST)
+    monday = today - timedelta(days=today.weekday())
+    previous = _load_previous()
+    weeks = []
+    for offset in ([0, 7] if today.weekday() >= 5 else [0]):
+        days = {}
+        for number in range(5):
+            day = (monday + timedelta(days=offset + number)).strftime('%Y-%m-%d')
+            days[day] = fetch_single_day(day, previous)
+        weeks.append(days)
+    restaurants = [restaurant for days in weeks for day in days.values() for restaurant in day['restaurants']]
+    if not any(restaurant.get('fetch_status') == 'ok' for restaurant in restaurants):
+        raise RuntimeError('All restaurant fetches failed; keeping the previous published data')
+
+    api_key = os.environ.get('TRANSLATE_API_KEY', '')
+    endpoint = os.environ.get('TRANSLATE_API_ENDPOINT') or DEFAULT_ENDPOINT
+    model = os.environ.get('TRANSLATE_MODEL') or DEFAULT_MODEL
+    require_translation = os.environ.get('REQUIRE_TRANSLATION') == '1'
+    if require_translation and not api_key:
+        raise RuntimeError('TRANSLATE_API_KEY is required; configure the GitHub Actions secret')
+    translate_menu(restaurants, api_key, endpoint, model)
+    summary = translation_summary(restaurants, model)
+    print(f'[main] Chinese menu coverage: {summary["translated"]}/{summary["total"]}')
+    if require_translation and summary['total'] and not summary['translated']:
+        raise RuntimeError('No valid Chinese menu translations; keeping the previous published data')
+
+    output = {'week_start': monday.strftime('%Y-%m-%d'), 'generated_at': datetime.now(KST).isoformat(), 'translation': summary, 'days': weeks[0]}
+    if len(weeks) > 1:
+        output['next_week'] = {'week_start': (monday + timedelta(days=7)).strftime('%Y-%m-%d'), 'days': weeks[1]}
+    for days in weeks:
+        for date, day in days.items():
+            _write_json(BASE_DIR / 'data' / f'menu-{date}.json', day)
+    _write_json(BASE_DIR / 'menu-data.js', output, javascript=True)
+    sync_site(BASE_DIR)
+    print('[main] Saved root and site/ menus')
+
+
+if __name__ == '__main__':
     run()

@@ -1,100 +1,55 @@
 import re
 import requests
 from bs4 import BeautifulSoup
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 RESTAURANTS = {
-    363910: {"name_ko": "기숙사식당", "location_ko": "아주대학교 기숙사식당1층"},
-    221904: {"name_ko": "교직원식당", "location_ko": "기숙사식당동 2층"},
+    363910: {'name_ko': '기숙사식당', 'name_cn': '宿舍食堂', 'location_ko': '아주대학교 기숙사식당 1층', 'location_cn': '亚洲大学宿舍食堂 1 楼'},
+    221904: {'name_ko': '교직원식당', 'name_cn': '教职工食堂', 'location_ko': '기숙사식당동 2층', 'location_cn': '宿舍食堂楼 2 层'},
 }
-
-URL_TEMPLATE = "https://www.ajou.ac.kr/kr/life/food.do?mode=view&articleNo={article_no}&date={date}"
-
-MEAL_MAP = {
-    "breakfast": "아침",
-    "lunch": "점심",
-    "dinner": "저녁",
-    "snack": "분식",
-}
-
-MEAL_CN = {
-    "breakfast": "早餐",
-    "lunch": "午餐",
-    "dinner": "晚餐",
-    "snack": "小吃",
-}
-
-MEAL_CSS_CLASS = {
-    "breakfast": "breakfast",
-    "lunch": "lunch",
-    "dinner": "dinner",
-    "snack": "snackBar",
-}
-
-# Section header patterns - must match full trimmed line
-_SECTION_HEADER_RE = re.compile(r"^\s*[<\[]\s*(.+?)\s*[>\]]\s*$")
-_NO_MENU_RE = re.compile(r"등록된\s*식단이\s*없습니다")
+URL_TEMPLATE = 'https://www.ajou.ac.kr/kr/life/food.do?mode=view&articleNo={article_no}&date={date}'
+MEAL_MAP = {'breakfast': '아침', 'lunch': '점심', 'dinner': '저녁', 'snack': '분식'}
+MEAL_CN = {'breakfast': '早餐', 'lunch': '午餐', 'dinner': '晚餐', 'snack': '小吃'}
+MEAL_CSS_CLASS = {'breakfast': 'breakfast', 'lunch': 'lunch', 'dinner': 'dinner', 'snack': 'snackBar'}
+_SECTION_HEADER_RE = re.compile(r'^\s*[<\[]\s*(.+?)\s*[>\]]\s*$')
+_NO_MENU_RE = re.compile(r'등록된\s*식단이\s*없습니다')
+_SESSION = requests.Session()
+_SESSION.mount('https://', HTTPAdapter(max_retries=Retry(total=2, backoff_factor=.75, status_forcelist=(429, 500, 502, 503, 504), allowed_methods=('GET',))))
 
 
 def _parse_menu_text(raw_text: str) -> list[dict]:
     if not raw_text or _NO_MENU_RE.search(raw_text):
         return []
-
     sections = []
     current_section = None
-
-    for line in raw_text.split("\n"):
+    for line in raw_text.splitlines():
         stripped = line.strip()
         if not stripped:
             continue
-
         match = _SECTION_HEADER_RE.match(stripped)
         if match:
-            current_section = {"name_ko": match.group(1), "name_cn": "", "items": []}
+            current_section = {'name_ko': match.group(1), 'name_cn': '', 'items': []}
             sections.append(current_section)
         else:
             if current_section is None:
-                current_section = {"name_ko": "메인", "name_cn": "主菜", "items": []}
+                current_section = {'name_ko': '메인', 'name_cn': '主菜单', 'items': []}
                 sections.append(current_section)
-            current_section["items"].append({"ko": stripped, "cn": "", "calories": 0})
-
+            current_section['items'].append({'ko': stripped, 'cn': '', 'calories': None})
     return sections
 
 
 def fetch_menu(date_str: str, restaurant_id: int) -> dict:
     info = RESTAURANTS[restaurant_id]
     url = URL_TEMPLATE.format(article_no=restaurant_id, date=date_str)
-
-    resp = requests.get(url, timeout=15)
-    resp.raise_for_status()
-
-    soup = BeautifulSoup(resp.text, "lxml")
-
+    response = _SESSION.get(url, timeout=(10, 20))
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, 'lxml')
+    if not soup.select('div.b-menu-day'):
+        raise ValueError('School page does not contain the expected menu structure')
     meals = {}
-    for meal_key, css_class in MEAL_CSS_CLASS.items():
-        container = soup.find("div", class_=f"b-menu-day {css_class}")
-        if not container:
-            meals[meal_key] = {
-                "label_ko": MEAL_MAP[meal_key],
-                "label_cn": MEAL_CN[meal_key],
-                "sections": [],
-            }
-            continue
-
-        pre = container.find("pre")
-        raw = pre.get_text("\n") if pre else ""
-        sections = _parse_menu_text(raw)
-
-        meals[meal_key] = {
-            "label_ko": MEAL_MAP[meal_key],
-            "label_cn": MEAL_CN[meal_key],
-            "sections": sections,
-        }
-
-    return {
-        "id": restaurant_id,
-        "name_ko": info["name_ko"],
-        "name_cn": "",
-        "location_ko": info["location_ko"],
-        "location_cn": "",
-        "meals": meals,
-    }
+    for key, css_class in MEAL_CSS_CLASS.items():
+        container = soup.select_one(f'div.b-menu-day.{css_class}')
+        pre = container.find('pre') if container else None
+        meals[key] = {'label_ko': MEAL_MAP[key], 'label_cn': MEAL_CN[key], 'sections': _parse_menu_text(pre.get_text('\n') if pre else '')}
+    return {'id': restaurant_id, **info, 'source_url': url, 'meals': meals}
