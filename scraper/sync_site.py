@@ -2,7 +2,7 @@
 from pathlib import Path
 import shutil
 
-ASSETS = ('index.html', 'styles.css', 'menu.js', 'menu-data.js', 'favicon.svg')
+ASSETS = ('index.html', 'styles.css', 'menu.js', 'menu-data.js', 'favicon.svg', 'THIRD_PARTY_NOTICES.md')
 
 
 def sync_site(base_dir: Path | None = None):

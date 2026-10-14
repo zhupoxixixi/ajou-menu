@@ -7,38 +7,40 @@ const RESTAURANTS = [
 ];
 const COPY = {
   ko: {
-    brand: '아주대학교 식단', campus: '우리의 캠퍼스, 오늘의 한 끼', title: '오늘, 뭐 먹을까요',
-    subtitle: '이번 주 식단을 한눈에. 맛있는 캠퍼스 생활의 시작.', today: '오늘로', todayLabel: '오늘',
-    restaurant: '어디에서 먹을까요?', meal: '어떤 식사를 찾으세요?', source: '학교 원문 보기 ↗',
-    thisWeek: '이번 주', nextWeek: '다음 주', calendar: '날짜 선택', skip: '메뉴로 바로가기',
-    breakfast: '아침', lunch: '점심', dinner: '저녁', snack: '분식', menu: '메뉴',
-    count: n => `${n}개 코너`, dishes: n => `${n}개 메뉴`, notice: '안내',
-    empty: '아직 등록된 식단이 없어요', emptyDescription: '다른 날짜나 식사를 선택하거나 학교 원문을 확인해 주세요.',
-    fetchError: '식단을 불러오지 못했어요. 학교 원문에서 확인해 주세요.',
-    missing: '이 식당의 해당 날짜 데이터가 없습니다. 학교 원문을 확인해 주세요.',
+    brand: '아주대학교 식단', restaurant: '식당 선택', meal: '식사 선택', window: '코너 선택',
+    breakfast: '아침', lunch: '점심', dinner: '저녁', snack: '분식',
+    menu: '식단', today: '오늘로', todayLabel: '오늘', source: '학교 원문',
+    thisWeek: '이번 주', nextWeek: '다음 주 미리보기', calendar: '날짜 선택', calendarHint: '회색 날짜에는 메뉴가 없습니다.',
+    skip: '메뉴로 바로가기', notice: '비공식 식단 안내입니다. 실제 공급 메뉴는 학교 공지를 확인해 주세요.', dismiss: '안내 닫기',
+    empty: '등록된 식단이 없어요', emptyDescription: '다른 날짜나 식사를 선택하거나 학교 원문을 확인해 주세요.',
+    fetchError: '식단을 불러오지 못했습니다. 학교 원문을 확인해 주세요.', missing: '이 식당의 해당 날짜 데이터가 없습니다. 학교 원문을 확인해 주세요.',
     old: '저장된 식단을 표시하고 있습니다. 최신 메뉴는 학교 원문을 확인해 주세요.',
-    staleRestaurant: '수집에 실패해 이전에 저장된 같은 날짜의 식단을 표시합니다. 변경 사항은 학교 원문을 확인해 주세요.',
-    translationMissing: '일부 중국어 번역이 아직 준비되지 않아 한국어 원문을 표시합니다.',
-    noData: '메뉴 데이터를 불러오지 못했습니다. 잠시 후 새로고침하거나 학교 원문을 확인해 주세요.',
-    calorie: '≈ kcal는 음식 이름을 바탕으로 한 대략적인 추정치입니다. 공식 영양 정보가 아니며, 코너별 메뉴는 별도 선택입니다.',
-    updated: '업데이트', footer: '비공식 식단 안내 · 실제 메뉴는 학교 공지 기준',
+    staleRestaurant: '수집에 실패해 이전에 저장된 같은 날짜의 메뉴를 표시합니다. 변경 사항은 학교 원문을 확인해 주세요.',
+    translationMissing: '일부 중국어 번역이 준비되지 않아 한국어 원문을 표시합니다.', noData: '메뉴 데이터를 불러오지 못했습니다. 잠시 후 새로고침하거나 학교 원문을 확인해 주세요.',
+    calorie: '≈ kcal는 음식 이름을 바탕으로 한 추정치이며 공식 영양 정보가 아닙니다. 코너별 메뉴는 별도 선택입니다.',
+    updated: '업데이트', footer: '아주대학교와 독립적으로 운영되는 오픈소스 식단 안내',
+    share: '메뉴 복사', copied: '메뉴와 링크를 복사했어요', copyHint: '자동 복사가 불가능합니다. 아래 내용을 선택해 복사해 주세요.',
+    search: '메뉴 검색', searchPlaceholder: '메뉴 이름을 입력하세요...', searchHint: '한국어 또는 중국어로 검색하고 결과를 선택하세요.', searchEmpty: '검색 결과가 없습니다.', searchStart: '이번 주와 다음 주의 메뉴를 검색할 수 있어요.',
+    searchInput: '메뉴 이름', close: '닫기', previous: '이전 날짜', next: '다음 날짜', previousMonth: '이전 달', nextMonth: '다음 달',
+    dark: '어두운 테마로 전환', light: '밝은 테마로 전환', dishes: n => `${n}개 메뉴`, days: n => `메뉴 날짜: ${n}일`,
   },
   cn: {
-    brand: '亚洲大学食堂菜单', campus: '校园里的每一餐', title: '今天，吃点什么',
-    subtitle: '一周菜单，一目了然。让每一餐都值得期待。', today: '回到今天', todayLabel: '今天',
-    restaurant: '选一间食堂', meal: '想看哪一餐？', source: '查看学校原文 ↗',
-    thisWeek: '本周', nextWeek: '下周', calendar: '选择日期', skip: '跳到菜单',
-    breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '小吃', menu: '菜单',
-    count: n => `${n} 个窗口`, dishes: n => `${n} 道菜`, notice: '须知',
-    empty: '这份菜单还没有发布', emptyDescription: '可以换个日期或餐次，或查看学校的原始公告。',
-    fetchError: '这间食堂的菜单暂时获取失败，请查看学校原文。',
-    missing: '暂时没有这间食堂当天的数据，请查看学校原文。',
-    old: '当前显示的是已保存的菜单，最新安排请以学校原文为准。',
+    brand: '亚洲大学食堂菜单', restaurant: '选择食堂', meal: '选择餐次', window: '选择窗口',
+    breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '小吃',
+    menu: '菜单', today: '回到今天', todayLabel: '今天', source: '学校原文',
+    thisWeek: '本周', nextWeek: '下周预告', calendar: '选择日期', calendarHint: '灰色日期暂无菜单。',
+    skip: '跳到菜单', notice: '这是非官方食堂菜单助手，实际供应请以学校公告为准。', dismiss: '关闭提示',
+    empty: '暂时没有这份菜单', emptyDescription: '可以换个日期或餐次，或查看学校的原始公告。',
+    fetchError: '这间食堂的菜单暂时获取失败，请查看学校原文。', missing: '暂时没有这间食堂当天的数据，请查看学校原文。',
+    old: '当前显示的是已保存菜单，最新安排请以学校原文为准。',
     staleRestaurant: '本次获取失败，显示此前保存的同一天菜单；如有调整，请以学校原文为准。',
-    translationMissing: '部分中文译文暂缺，先为你保留韩文原名。',
-    noData: '菜单数据加载失败，请稍后刷新或查看学校原文。',
+    translationMissing: '部分中文译文暂缺，先保留韩文原名。', noData: '菜单数据加载失败，请稍后刷新或查看学校原文。',
     calorie: '≈ kcal 是根据菜名粗略估算的热量，并非官方营养数据。各窗口菜单供分别选择。',
-    updated: '更新于', footer: '非官方菜单助手 · 实际供应以学校公告为准',
+    updated: '更新于', footer: '独立于亚洲大学运营的开源菜单助手',
+    share: '复制菜单', copied: '已复制菜单和链接', copyHint: '当前浏览器无法自动复制，请选中下面的内容后复制。',
+    search: '搜索菜单', searchPlaceholder: '输入中文或韩文菜名…', searchHint: '搜索可用菜单，点击结果即可查看对应日期和窗口。', searchEmpty: '没有找到相关菜品。', searchStart: '可以搜索本周及下周已有的菜单。',
+    searchInput: '菜品名称', close: '关闭', previous: '上一个日期', next: '下一个日期', previousMonth: '上一个月', nextMonth: '下一个月',
+    dark: '切换深色主题', light: '切换浅色主题', dishes: n => `${n} 道菜`, days: n => `可用日期：${n} 天`,
   },
 };
 const ICONS = {
@@ -47,6 +49,15 @@ const ICONS = {
   lunch: '<path d="M4 2v6a3 3 0 0 0 6 0V2M7 2v20M20 2c-4 2-5 6-5 10h5M20 2v20"/>',
   dinner: '<path d="M20 15a8 8 0 0 1-11-11A9 9 0 1 0 20 15Z"/>',
   snack: '<path d="m7 3 2 6m8-6-2 6M4 10h16c0 7-3 11-8 11S4 17 4 10ZM3 10h18"/>',
+  bowl: '<path d="M3 10h18c0 7-4 11-9 11S3 17 3 10ZM2 10h20M7 2v4m5-5v5m5-4v4"/>',
+  search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/>',
+  moon: '<path d="M20 15a8 8 0 0 1-11-11A9 9 0 1 0 20 15Z"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M7 2v5m10-5v5"/>',
+  left: '<path d="m14 6-6 6 6 6"/>', right: '<path d="m10 6 6 6-6 6"/>', close: '<path d="m6 6 12 12M6 18 18 6"/>',
+  external: '<path d="M14 3h7v7m0-7L10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/>',
+  copy: '<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',
+  github: '<path d="M9 19c-4 1-4-2-6-2m12 5v-4a3 3 0 0 0-1-2c3-.3 6-1.5 6-6a5 5 0 0 0-1.5-3.5A5 5 0 0 0 18 3s-1.5-.5-4 1a14 14 0 0 0-6 0C5.5 2.5 4 3 4 3a5 5 0 0 0-.5 3.5A5 5 0 0 0 2 10c0 4.5 3 5.7 6 6a3 3 0 0 0-1 2v4"/>',
 };
 
 function getKstDate(now = new Date()) {
@@ -57,10 +68,8 @@ function getKstDate(now = new Date()) {
 
 function buildSchedule(data, now = new Date()) {
   const validDays = days => Object.fromEntries(Object.entries(days || {}).filter(([date]) => /^\d{4}-\d{2}-\d{2}$/.test(date)).sort(([a], [b]) => a.localeCompare(b)));
-  const weeks = [
-    { key: 'this', days: validDays(data?.days) },
-    { key: 'next', days: validDays(data?.next_week?.days) },
-  ].map(week => ({ ...week, dates: Object.keys(week.days) })).filter(week => week.dates.length);
+  const weeks = [{ key: 'this', days: validDays(data?.days) }, { key: 'next', days: validDays(data?.next_week?.days) }]
+    .map(week => ({ ...week, dates: Object.keys(week.days) })).filter(week => week.dates.length);
   const today = getKstDate(now);
   const day = new Date(`${today}T12:00:00+09:00`).getUTCDay();
   const activeWeek = weeks.find(week => week.dates.includes(today)) || ((day === 0 || day === 6) && weeks.find(week => week.key === 'next')) || weeks[0];
@@ -71,203 +80,258 @@ function isNotice(item) {
   if (item.kind === 'note') return true;
   return /^(?:\s*[*※]|\s*\()|위 메뉴|시장 상황|운영시간|예약 가능합니다|픽업시간|단일코너.*운영|원하는 토핑|간편식 판매|(?:중식|증식|석식|테이크아웃)\s*\([\d,]+원\)/.test(item.ko || '');
 }
-
-function availableMeals(restaurant) {
-  return MEAL_ORDER.filter(key => restaurant?.meals?.[key]?.sections?.some(section => section.items?.length));
-}
-
-function resolveMeal(restaurant, preferred) {
-  const meals = availableMeals(restaurant);
-  return meals.includes(preferred) ? preferred : meals.includes('lunch') ? 'lunch' : meals[0] || preferred;
-}
-
-function validTranslation(original, translated) {
-  return typeof translated === 'string' && translated.trim() !== '' && !/[가-힣]/.test(translated) && (translated !== original || !/[가-힣]/.test(original));
+function availableMeals(restaurant) { return MEAL_ORDER.filter(key => restaurant?.meals?.[key]?.sections?.some(section => section.items?.length)); }
+function resolveMeal(restaurant, preferred) { const meals = availableMeals(restaurant); return meals.includes(preferred) ? preferred : meals.includes('lunch') ? 'lunch' : meals[0] || preferred; }
+function validTranslation(original, translated) { return typeof translated === 'string' && translated.trim() !== '' && !/[가-힣]/.test(translated) && (translated !== original || !/[가-힣]/.test(original)); }
+function menuSections(restaurant, meal) { return (restaurant?.meals?.[meal]?.sections || []).filter(section => section.items?.length); }
+function resolveSection(restaurant, meal, preferred) { const sections = menuSections(restaurant, meal); return sections.find(section => section.name_ko === preferred) || sections.find(section => section.items.some(item => !isNotice(item))) || sections[0]; }
+function allDates(schedule) { return [...new Set(schedule.weeks.flatMap(week => week.dates))].sort(); }
+function stepDate(schedule, date, direction) { const dates = allDates(schedule); const index = dates.indexOf(date); return index < 0 ? date : dates[index + direction] || date; }
+function searchMenus(weeks, query) {
+  const normalize = text => String(text || '').normalize('NFKC').toLowerCase().replace(/\s+/g, '');
+  const needle = normalize(query);
+  if (!needle) return [];
+  const results = [];
+  for (const week of weeks) for (const [date, day] of Object.entries(week.days)) for (const restaurant of day.restaurants || []) {
+    for (const meal of MEAL_ORDER) for (const section of menuSections(restaurant, meal)) for (const item of section.items) {
+      if (!isNotice(item) && (normalize(item.ko).includes(needle) || normalize(item.cn).includes(needle))) results.push({ week: week.key, date, restaurant, meal, section, item });
+      if (results.length === 50) return results;
+    }
+  }
+  return results;
 }
 
 function storageRead(key) { try { return localStorage.getItem(key); } catch { return null; } }
 function storageWrite(key, value) { try { localStorage.setItem(key, value); } catch { /* Preferences are optional. */ } }
-let state;
-let data;
-let schedule;
+let state, data, schedule, toastTimer;
 const $ = id => document.getElementById(id);
-const el = (tag, className, text) => { const element = document.createElement(tag); if (className) element.className = className; if (text != null) element.textContent = text; return element; };
+const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text != null) node.textContent = text; return node; };
 const copy = () => COPY[state.lang];
-const activeWeek = () => schedule.weeks.find(week => week.key === state.week);
-const currentDay = () => activeWeek()?.days[state.date];
-const currentRestaurant = () => currentDay()?.restaurants?.find(restaurant => Number(restaurant.id) === state.restaurantId);
 const isChinese = () => state.lang === 'cn';
+const activeWeek = () => schedule.weeks.find(week => week.key === state.week);
+const currentRestaurant = () => activeWeek()?.days[state.date]?.restaurants?.find(restaurant => Number(restaurant.id) === state.restaurantId);
+const currentSection = () => resolveSection(currentRestaurant(), state.meal, state.sectionName);
+const restaurantInfo = () => RESTAURANTS.find(restaurant => restaurant.id === state.restaurantId) || RESTAURANTS[0];
 const localized = (original, translated) => isChinese() && validTranslation(original, translated) ? translated : original || '';
 
 function icon(name) {
   const span = el('span');
-  // Only static, trusted SVG constants are inserted as markup. All menu text uses textContent.
-  span.innerHTML = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
+  // Markup is limited to these static SVG paths. External menu text always uses textContent.
+  span.innerHTML = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ICONS.bowl}</svg>`;
   return span.firstChild;
 }
-
-function button(className, pressed, action) {
-  const element = el('button', className);
-  element.type = 'button';
-  element.setAttribute('aria-pressed', String(pressed));
-  element.addEventListener('click', action);
-  return element;
-}
-
-function dateText(date, options) {
-  if (!date) return '';
-  return new Intl.DateTimeFormat(isChinese() ? 'zh-CN' : 'ko-KR', { timeZone: 'Asia/Seoul', ...options }).format(new Date(`${date}T12:00:00+09:00`));
-}
+function button(className, pressed, action) { const node = el('button', className); node.type = 'button'; node.setAttribute('aria-pressed', String(pressed)); node.addEventListener('click', action); return node; }
+function dateText(date, options) { return date ? new Intl.DateTimeFormat(isChinese() ? 'zh-CN' : 'ko-KR', { timeZone: 'Asia/Seoul', ...options }).format(new Date(`${date}T12:00:00+09:00`)) : ''; }
+function showStatus(id, text) { $(id).textContent = text || ''; $(id).hidden = !text; }
+function closeDialogs() { for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close(); }
+function openDialog(id) { closeDialogs(); $(id).showModal(); }
+function chooseDate(date) { const week = schedule.weeks.find(item => item.dates.includes(date)); if (!week) return; state.week = week.key; state.calendarWeek = week.key; state.date = date; state.calendarMonth = date.slice(0, 7); state.highlight = null; renderAll(); if ($('dateDialog').open) $('dateDialog').close(); }
 
 function renderDates() {
-  const week = activeWeek();
-  $('weekLabel').textContent = state.week === 'next' ? 'NEXT WEEK' : 'THIS WEEK';
-  const formatShort = date => dateText(date, { month: 'numeric', day: 'numeric' });
-  $('weekRange').textContent = week ? `${formatShort(week.dates[0])} — ${formatShort(week.dates.at(-1))}` : '—';
+  const week = schedule.weeks.find(item => item.key === state.calendarWeek) || activeWeek();
+  const months = [...new Set((week?.dates || []).map(date => date.slice(0, 7)))];
+  if (!months.includes(state.calendarMonth)) state.calendarMonth = months.includes(state.date.slice(0, 7)) ? state.date.slice(0, 7) : months[0];
   $('weekSwitch').hidden = schedule.weeks.length < 2;
   $('weekSwitch').replaceChildren(...schedule.weeks.map(item => {
-    const element = button('', state.week === item.key, () => { state.week = item.key; state.date = item.dates.includes(schedule.today) ? schedule.today : item.dates[0]; renderAll(); });
-    element.textContent = item.key === 'next' ? copy().nextWeek : copy().thisWeek;
-    return element;
+    const node = button('', week?.key === item.key, () => { state.calendarWeek = item.key; state.calendarMonth = item.dates[0].slice(0, 7); renderDates(); });
+    node.textContent = item.key === 'next' ? copy().nextWeek : copy().thisWeek;
+    return node;
   }));
-  $('weekTabs').replaceChildren(...(week?.dates || []).map(date => {
-    const today = date === schedule.today;
-    const element = button(`date-button${today ? ' is-today' : ''}`, date === state.date, () => { state.date = date; renderAll(); });
-    element.setAttribute('aria-label', `${dateText(date, { month: 'long', day: 'numeric', weekday: 'long' })}${today ? ` · ${copy().todayLabel}` : ''}`);
-    element.append(el('span', 'weekday', dateText(date, { weekday: 'short' })), el('span', 'day', Number(date.slice(-2))));
-    if (today) element.append(el('span', 'today-dot'));
-    return element;
-  }));
-  $('todayButton').disabled = !schedule.weeks.some(item => item.dates.includes(schedule.today));
   $('todayButton').textContent = copy().today;
-  $('heroMonth').textContent = state.date ? dateText(state.date, { month: 'long' }) : '—';
-  $('heroDay').textContent = state.date ? Number(state.date.slice(-2)) : '—';
-  $('heroWeekday').textContent = state.date ? dateText(state.date, { weekday: 'long' }) : '—';
-  $('dateDisplay').textContent = dateText(state.date, { month: 'long', day: 'numeric', weekday: 'long' });
+  $('todayButton').disabled = !schedule.weeks.some(item => item.dates.includes(schedule.today));
+  $('calendarWeekdays').replaceChildren(...(isChinese() ? ['一','二','三','四','五','六','日'] : ['월','화','수','목','금','토','일']).map(day => el('span', '', day)));
+  const monthIndex = months.indexOf(state.calendarMonth);
+  $('calendarPrev').disabled = monthIndex <= 0;
+  $('calendarNext').disabled = monthIndex < 0 || monthIndex >= months.length - 1;
+  const cells = [];
+  if (state.calendarMonth) {
+    const [year, month] = state.calendarMonth.split('-').map(Number);
+    const offset = (new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7;
+    const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    $('calendarMonth').textContent = dateText(`${state.calendarMonth}-01`, { year: 'numeric', month: 'long' });
+    for (let i = 0; i < offset; i++) cells.push(el('span'));
+    for (let number = 1; number <= days; number++) {
+      const date = `${state.calendarMonth}-${String(number).padStart(2, '0')}`;
+      if (week.dates.includes(date)) {
+        const node = button(`date-button${date === schedule.today ? ' is-today' : ''}`, date === state.date, () => chooseDate(date));
+        node.textContent = number;
+        node.setAttribute('aria-label', dateText(date, { month: 'long', day: 'numeric', weekday: 'long' }));
+        cells.push(node);
+      } else { const node = el('span', 'calendar-unavailable', number); node.setAttribute('aria-hidden', 'true'); cells.push(node); }
+    }
+  } else $('calendarMonth').textContent = '—';
+  $('weekTabs').replaceChildren(...cells);
+  $('navDateDisplay').textContent = dateText(state.date, { month: 'long', day: 'numeric' }) || '—';
+  const dates = allDates(schedule);
+  const index = dates.indexOf(state.date);
+  $('prevDate').disabled = index <= 0;
+  $('nextDate').disabled = index < 0 || index === dates.length - 1;
 }
 
 function renderSelectors() {
-  const restaurant = currentRestaurant();
   $('restaurantTabs').replaceChildren(...RESTAURANTS.map(info => {
-    const element = button('restaurant-button', info.id === state.restaurantId, () => { state.restaurantId = info.id; storageWrite('menuRestaurantId', info.id); renderAll(); });
-    const mark = el('span', 'restaurant-icon'); mark.append(icon('restaurant'));
-    element.append(mark, el('span', '', isChinese() ? info.name_cn : info.name_ko), el('span', 'arrow', '›'));
-    return element;
+    const node = button('restaurant-button', info.id === state.restaurantId, () => { state.restaurantId = info.id; state.sectionName = null; state.highlight = null; storageWrite('menuRestaurantId', info.id); renderAll(); });
+    node.append(icon('restaurant'), el('span', '', isChinese() ? info.name_cn : info.name_ko));
+    return node;
   }));
-  const meals = availableMeals(restaurant);
+  const available = availableMeals(currentRestaurant());
   $('mealTabs').replaceChildren(...MEAL_ORDER.map(meal => {
-    const element = button('meal-button', state.meal === meal, () => { state.meal = meal; storageWrite('menuMeal', meal); renderAll(); });
-    element.disabled = !meals.includes(meal);
-    element.append(icon(meal), el('span', '', copy()[meal]));
-    return element;
+    const node = button('meal-button', state.meal === meal, () => { state.meal = meal; state.sectionName = null; state.highlight = null; storageWrite('menuMeal', meal); renderAll(); });
+    node.disabled = !available.includes(meal); node.append(icon(meal), el('span', '', copy()[meal])); return node;
   }));
-  const info = RESTAURANTS.find(item => item.id === state.restaurantId) || RESTAURANTS[0];
+  const sections = menuSections(currentRestaurant(), state.meal);
+  $('windowTabs').hidden = sections.length < 2;
+  $('windowTabs').replaceChildren(...sections.map(section => {
+    const note = section.items.every(isNotice);
+    const node = button(`window-button${note ? ' note-window' : ''}`, section.name_ko === state.sectionName, () => { state.sectionName = section.name_ko; state.highlight = null; renderAll(); });
+    node.textContent = localized(section.name_ko, section.name_cn); return node;
+  }));
+  const info = restaurantInfo();
   $('restaurantName').textContent = isChinese() ? info.name_cn : info.name_ko;
   $('restaurantLocation').textContent = isChinese() ? info.location_cn : info.location_ko;
+  $('weekPreview').textContent = copy().nextWeek;
+  $('weekPreview').hidden = state.week !== 'next';
   const source = new URL('https://www.ajou.ac.kr/kr/life/food.do');
   source.searchParams.set('mode', 'view'); source.searchParams.set('articleNo', info.id);
   if (state.date) source.searchParams.set('date', state.date);
   $('sourceLink').href = source.href;
 }
 
-function renderCard(section, index) {
-  const card = el('article', 'menu-card');
-  const items = (section.items || []).filter(item => !isNotice(item));
-  const notices = (section.items || []).filter(isNotice);
-  const title = el('div', 'card-title');
-  title.append(el('h3', '', localized(section.name_ko, section.name_cn) || copy().notice));
-  if (isChinese() && validTranslation(section.name_ko, section.name_cn)) title.append(el('p', '', section.name_ko));
-  const header = el('div', 'card-header');
-  header.append(el('span', 'card-number', String(index + 1).padStart(2, '0')), title, el('span', 'item-count', items.length ? copy().dishes(items.length) : copy().notice));
-  card.append(header);
-  if (items.length) {
-    const list = el('ul', 'dish-list');
-    for (const item of items) {
-      const row = el('li', 'dish-row');
-      const name = el('div', 'dish-name');
-      name.append(el('strong', '', localized(item.ko, item.cn)));
-      if (isChinese() && validTranslation(item.ko, item.cn)) name.append(el('span', 'dish-original', item.ko));
-      row.append(name);
-      if (Number.isFinite(item.calories) && item.calories > 0) {
-        const calories = el('span', 'dish-calories', `≈ ${item.calories}`);
-        calories.append(el('small', '', 'kcal')); row.append(calories);
-      }
-      list.append(row);
-    }
-    card.append(list);
-  }
-  if (notices.length) {
-    const notice = el('div', 'card-notices');
-    notice.append(...notices.map(item => el('p', '', localized(item.ko, item.cn))));
-    card.append(notice);
-  }
-  return card;
-}
-
-function showStatus(id, text) { const element = $(id); element.textContent = text || ''; element.hidden = !text; }
-
 function renderMenu() {
   const restaurant = currentRestaurant();
-  const sections = (restaurant?.meals?.[state.meal]?.sections || []).filter(section => section.items?.length);
-  const corners = sections.filter(section => section.items.some(item => !isNotice(item))).length;
-  $('menuHeading').textContent = `${copy()[state.meal]} ${copy().menu}`;
-  $('menuCount').textContent = copy().count(corners);
-  $('menuCount').hidden = !corners;
-  $('menuContent').replaceChildren(...sections.map(renderCard));
-  $('emptyState').hidden = sections.length > 0;
-  $('calorieNote').hidden = !sections.some(section => section.items.some(item => !isNotice(item) && item.calories > 0));
+  const section = currentSection();
+  const items = (section?.items || []).filter(item => !isNotice(item));
+  const notices = (section?.items || []).filter(isNotice);
+  $('menuHeading').textContent = `${dateText(state.date, { weekday: 'long' })}${isChinese() ? '' : ' '}${copy().menu}`;
+  $('dateDisplay').textContent = state.date.replaceAll('-', '.') || '—';
+  $('mealContext').textContent = copy()[state.meal];
+  $('windowContext').textContent = localized(section?.name_ko, section?.name_cn) || '—';
+  $('todayMarker').textContent = copy().todayLabel;
+  $('todayMarker').hidden = state.date !== schedule.today;
+  $('menuCount').textContent = copy().dishes(items.length);
+  $('menuCount').hidden = !items.length;
+  $('shareButton').disabled = !section;
+  const content = [];
+  if (items.length) {
+    const table = el('table', 'menu-table');
+    table.setAttribute('aria-label', `${copy()[state.meal]} · ${localized(section.name_ko, section.name_cn)}`);
+    const body = el('tbody');
+    for (const item of items) {
+      const row = el('tr', `dish-row${state.highlight === item.ko ? ' is-highlighted' : ''}`);
+      const name = el('td', 'dish-name'); name.append(el('strong', '', localized(item.ko, item.cn)));
+      if (isChinese() && validTranslation(item.ko, item.cn)) name.append(el('span', 'dish-original', item.ko));
+      const calories = el('td');
+      if (Number.isFinite(item.calories) && item.calories > 0) calories.append(el('span', 'calorie-badge', `≈ ${item.calories} kcal`));
+      row.append(name, calories); body.append(row);
+    }
+    table.append(body); content.push(table);
+  }
+  if (notices.length) { const notice = el('div', 'card-notices'); notice.append(...notices.map(item => el('p', '', localized(item.ko, item.cn)))); content.push(notice); }
+  $('menuContent').replaceChildren(...content);
+  $('emptyState').hidden = !!section;
+  $('calorieNote').hidden = !items.some(item => item.calories > 0);
   let message = '';
   if (!restaurant && state.date) message = copy().missing;
   else if (restaurant?.fetch_status === 'error') message = copy().fetchError;
   else if (restaurant?.fetch_status === 'stale') message = copy().staleRestaurant;
-  else if (isChinese() && sections.some(section => !validTranslation(section.name_ko, section.name_cn) || section.items.some(item => !validTranslation(item.ko, item.cn)))) message = copy().translationMissing;
+  else if (isChinese() && section && (!validTranslation(section.name_ko, section.name_cn) || section.items.some(item => !validTranslation(item.ko, item.cn)))) message = copy().translationMissing;
   showStatus('restaurantStatus', message);
-  if (!data || !schedule.weeks.length) showStatus('dataStatus', copy().noData);
-  else {
-    const generated = new Date(data.generated_at);
-    const age = Date.now() - generated.getTime();
-    showStatus('dataStatus', !Number.isFinite(age) || age > 36 * 60 * 60 * 1000 ? copy().old : '');
-  }
+  const age = Date.now() - new Date(data?.generated_at).getTime();
+  showStatus('dataStatus', !data || !schedule.weeks.length ? copy().noData : !Number.isFinite(age) || age > 36 * 60 * 60 * 1000 ? copy().old : '');
 }
 
 function renderText() {
   document.documentElement.lang = isChinese() ? 'zh-CN' : 'ko';
   document.title = `${copy().brand} · Ajou Menu`;
-  const text = { brandSubtitle: 'brand', campusTag: 'campus', pageSubtitle: 'subtitle', restaurantLabel: 'restaurant', mealLabel: 'meal', sourceLink: 'source', skipLink: 'skip', emptyTitle: 'empty', emptyDescription: 'emptyDescription', calorieNote: 'calorie', footerNote: 'footer' };
+  const text = { brandSubtitle: 'brand', pageTitle: 'brand', restaurantLabel: 'restaurant', mealLabel: 'meal', windowLabel: 'window', sourceLabel: 'source', skipLink: 'skip', noticeText: 'notice', emptyTitle: 'empty', emptyDescription: 'emptyDescription', calorieNote: 'calorie', footerNote: 'footer', shareLabel: 'share', searchLabel: 'searchPlaceholder', searchTitle: 'search', searchInputLabel: 'searchInput', searchHint: 'searchHint', calendarTitle: 'calendar', calendarHint: 'calendarHint', datePickerLabel: 'calendar', copyTitle: 'share', copyHint: 'copyHint' };
   for (const [id, key] of Object.entries(text)) $(id).textContent = copy()[key];
-  $('pageTitle').replaceChildren(document.createTextNode(copy().title), el('span', '', '？'));
   $('languageLabel').textContent = isChinese() ? '한국어' : '中文';
   $('langToggle').setAttribute('aria-label', isChinese() ? '한국어로 전환' : '切换到中文');
-  $('calendarPanel').setAttribute('aria-label', copy().calendar);
+  $('searchQuery').placeholder = copy().searchPlaceholder;
+  const labels = { searchToggle: 'search', dateToggle: 'calendar', navDateLabel: 'calendar', prevDate: 'previous', nextDate: 'next', calendarPrev: 'previousMonth', calendarNext: 'nextMonth', noticeDismiss: 'dismiss', selectionPanel: 'restaurant', dateNavigation: 'calendar' };
+  for (const [id, key] of Object.entries(labels)) $(id).setAttribute('aria-label', copy()[key]);
+  for (const node of document.querySelectorAll('[data-close]')) node.setAttribute('aria-label', copy().close);
+  renderThemeLabel();
   const generated = new Date(data?.generated_at);
   $('updatedAt').textContent = Number.isFinite(generated.getTime()) ? `${copy().updated} ${new Intl.DateTimeFormat(isChinese() ? 'zh-CN' : 'ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(generated)} · KST` : '';
+  $('dateCount').textContent = copy().days(allDates(schedule).length);
 }
 
 function renderAll() {
   state.meal = resolveMeal(currentRestaurant(), state.meal);
+  state.sectionName = currentSection()?.name_ko || null;
+  if (!$('dateDialog').open) state.calendarWeek = state.week;
   renderText(); renderDates(); renderSelectors(); renderMenu();
+  // Keep shared links aligned with subsequent choices, including a language change.
+  const params = new URLSearchParams(window.location.search);
+  if (['date','restaurant','meal','window','lang'].some(key => params.has(key))) window.history.replaceState(null, '', menuLink());
+  if ($('searchDialog').open) renderSearch();
+}
+function renderThemeLabel() { const dark = document.documentElement.classList.contains('dark'); $('themeToggle').replaceChildren(icon(dark ? 'sun' : 'moon')); $('themeToggle').setAttribute('aria-label', dark ? copy().light : copy().dark); }
+function notify(text) { clearTimeout(toastTimer); showStatus('actionStatus', text); toastTimer = setTimeout(() => showStatus('actionStatus', ''), 2400); }
+
+function renderSearch() {
+  const query = $('searchQuery').value;
+  const results = searchMenus(schedule.weeks, query);
+  if (!results.length) { $('searchResults').replaceChildren(el('p', 'search-empty', query.trim() ? copy().searchEmpty : copy().searchStart)); return; }
+  $('searchResults').replaceChildren(...results.map(result => {
+    const node = el('button', 'search-result'); node.type = 'button';
+    const info = RESTAURANTS.find(restaurant => restaurant.id === Number(result.restaurant.id)) || result.restaurant;
+    node.append(el('strong', '', localized(result.item.ko, result.item.cn)), el('small', '', `${dateText(result.date, { month: 'numeric', day: 'numeric' })} · ${localized(info.name_ko, info.name_cn)} · ${copy()[result.meal]} · ${localized(result.section.name_ko, result.section.name_cn)}`));
+    node.addEventListener('click', () => { state.week = result.week; state.date = result.date; state.restaurantId = Number(result.restaurant.id); state.meal = result.meal; state.sectionName = result.section.name_ko; state.highlight = result.item.ko; state.calendarMonth = result.date.slice(0, 7); storageWrite('menuRestaurantId', state.restaurantId); storageWrite('menuMeal', state.meal); $('searchDialog').close(); renderAll(); window.scrollTo({ top: 0, behavior: 'instant' }); });
+    return node;
+  }));
+}
+function openSearch() { openDialog('searchDialog'); renderSearch(); $('searchQuery').focus(); }
+function menuLink() { const url = new URL(window.location.href); url.search = ''; url.hash = ''; for (const [key, value] of Object.entries({ date: state.date, restaurant: state.restaurantId, meal: state.meal, window: state.sectionName, lang: state.lang })) if (value != null) url.searchParams.set(key, value); return url.href; }
+async function copyMenu() {
+  const section = currentSection(); if (!section) return;
+  const info = restaurantInfo();
+  const heading = `${copy().brand}\n${dateText(state.date, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}\n${localized(info.name_ko, info.name_cn)} · ${copy()[state.meal]} · ${localized(section.name_ko, section.name_cn)}`;
+  const text = `${heading}\n\n${section.items.map(item => localized(item.ko, item.cn)).join('\n')}\n\n${copy().notice}\n${menuLink()}`;
+  try { await navigator.clipboard.writeText(text); notify(copy().copied); }
+  catch { $('copyText').value = text; openDialog('copyDialog'); $('copyText').focus(); $('copyText').select(); }
 }
 
 function init() {
   data = typeof MENU_DATA === 'undefined' ? null : MENU_DATA;
   schedule = buildSchedule(data);
-  const storedLang = storageRead('menuLang');
+  const params = new URLSearchParams(window.location.search);
+  const requestedWeek = schedule.weeks.find(week => week.dates.includes(params.get('date')));
   const storedId = Number(storageRead('menuRestaurantId'));
   const legacyIndex = Number(storageRead('menuRestaurant'));
+  const requestedId = Number(params.get('restaurant'));
+  const preferredMeal = params.get('meal') || storageRead('menuMeal');
+  const language = params.get('lang') || storageRead('menuLang');
   state = {
-    lang: storedLang === 'cn' ? 'cn' : 'ko',
-    restaurantId: RESTAURANTS.some(info => info.id === storedId) ? storedId : RESTAURANTS[legacyIndex]?.id || RESTAURANTS[0].id,
-    meal: MEAL_ORDER.includes(storageRead('menuMeal')) ? storageRead('menuMeal') : 'lunch',
-    week: schedule.initialWeek, date: schedule.initialDate,
+    lang: language === 'cn' ? 'cn' : 'ko',
+    restaurantId: RESTAURANTS.some(info => info.id === requestedId) ? requestedId : RESTAURANTS.some(info => info.id === storedId) ? storedId : RESTAURANTS[legacyIndex]?.id || RESTAURANTS[0].id,
+    meal: MEAL_ORDER.includes(preferredMeal) ? preferredMeal : 'lunch',
+    week: requestedWeek?.key || schedule.initialWeek, date: requestedWeek ? params.get('date') : schedule.initialDate,
+    sectionName: params.get('window'), calendarMonth: null, highlight: null,
   };
+  for (const node of document.querySelectorAll('[data-icon]')) node.replaceChildren(icon(node.dataset.icon));
+  $('searchShortcut').textContent = /Mac/.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
+  $('projectNotice').hidden = storageRead('menuNoticeDismissed') === '1';
+  $('noticeDismiss').addEventListener('click', () => { $('projectNotice').hidden = true; storageWrite('menuNoticeDismissed', '1'); });
   $('langToggle').addEventListener('click', () => { state.lang = isChinese() ? 'ko' : 'cn'; storageWrite('menuLang', state.lang); renderAll(); });
-  $('todayButton').addEventListener('click', () => { const week = schedule.weeks.find(item => item.dates.includes(schedule.today)); if (week) { state.week = week.key; state.date = schedule.today; renderAll(); } });
+  $('themeToggle').addEventListener('click', () => { const dark = !document.documentElement.classList.contains('dark'); document.documentElement.classList.toggle('dark', dark); storageWrite('menuTheme', dark ? 'dark' : 'light'); renderThemeLabel(); });
+  const media = matchMedia('(prefers-color-scheme: dark)');
+  media.addEventListener('change', event => { if (!['light','dark'].includes(storageRead('menuTheme'))) { document.documentElement.classList.toggle('dark', event.matches); renderThemeLabel(); } });
+  for (const id of ['dateToggle','navDateLabel']) $(id).addEventListener('click', () => { state.calendarWeek = state.week; state.calendarMonth = state.date.slice(0, 7); renderDates(); openDialog('dateDialog'); });
+  $('todayButton').addEventListener('click', () => chooseDate(schedule.today));
+  $('prevDate').addEventListener('click', () => chooseDate(stepDate(schedule, state.date, -1)));
+  $('nextDate').addEventListener('click', () => chooseDate(stepDate(schedule, state.date, 1)));
+  for (const [id, direction] of [['calendarPrev',-1],['calendarNext',1]]) $(id).addEventListener('click', () => { const months = [...new Set(activeWeek()?.dates.map(date => date.slice(0, 7)) || [])]; state.calendarMonth = months[months.indexOf(state.calendarMonth) + direction] || state.calendarMonth; renderDates(); });
+  $('searchToggle').addEventListener('click', openSearch);
+  $('searchQuery').addEventListener('input', renderSearch);
+  $('shareButton').addEventListener('click', copyMenu);
+  for (const node of document.querySelectorAll('[data-close]')) node.addEventListener('click', () => $(node.dataset.close).close());
+  for (const dialog of document.querySelectorAll('dialog')) dialog.addEventListener('click', event => { const rect = dialog.getBoundingClientRect(); if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) dialog.close(); });
+  document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); openSearch(); } });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && getKstDate() !== schedule.today) { schedule = buildSchedule(data); state.week = schedule.initialWeek; state.date = schedule.initialDate; state.sectionName = null; renderAll(); } });
   renderAll();
-  // An open tab should use the next day's calendar after Korean midnight.
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && getKstDate() !== schedule.today) { schedule = buildSchedule(data); state.week = schedule.initialWeek; state.date = schedule.initialDate; renderAll(); }
-  });
 }
 
 if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded', init);
-if (typeof module !== 'undefined' && module.exports) module.exports = { getKstDate, buildSchedule, isNotice, availableMeals, resolveMeal, validTranslation };
+if (typeof module !== 'undefined' && module.exports) module.exports = { getKstDate, buildSchedule, isNotice, availableMeals, resolveMeal, validTranslation, resolveSection, stepDate, searchMenus };

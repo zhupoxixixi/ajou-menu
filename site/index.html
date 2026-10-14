@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#4562e8">
+  <meta name="theme-color" content="#111111">
   <meta name="description" content="아주대학교 식당의 주간 메뉴를 한국어와 중국어로 확인하세요. 查看亚洲大学食堂每周菜单，支持中韩双语。">
   <title>아주대학교 식단 · Ajou Menu</title>
+  <script>try{const t=localStorage.getItem('menuTheme');document.documentElement.classList.toggle('dark',t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches));}catch{}</script>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="styles.css">
   <script defer src="menu-data.js"></script>
@@ -14,69 +15,81 @@
 <body>
   <a class="skip-link" href="#menuHeading" id="skipLink">메뉴로 바로가기</a>
   <header class="site-header">
-    <div class="shell header-inner">
+    <div class="wide-shell header-inner">
       <a class="brand" href="./" aria-label="Ajou Menu">
         <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M6 15h20c0 7-4 11-10 11S6 22 6 15Z" stroke="currentColor" stroke-width="2"/><path d="M4 15h24M11 6v4m5-6v6m5-4v4M10 27h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
-        <span><strong>AJOU <span>MENU</span></strong><small id="brandSubtitle">아주대학교 식단</small></span>
+        <span class="brand-copy"><strong>AJOU MENU</strong><small id="brandSubtitle">아주대학교 식단</small></span>
       </a>
       <div class="header-actions">
-        <span class="campus-tag" id="campusTag">우리의 캠퍼스, 오늘의 한 끼</span>
-        <button class="language-toggle" id="langToggle" type="button" aria-label="Switch to Chinese"><span aria-hidden="true">文</span><span id="languageLabel">中文</span></button>
+        <button class="search-trigger" id="searchToggle" type="button" aria-haspopup="dialog"><span data-icon="search"></span><span id="searchLabel">메뉴 검색...</span><kbd id="searchShortcut">Ctrl K</kbd></button>
+        <a class="icon-button github-button" href="https://github.com/zhupoxixixi/ajou-menu" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><span data-icon="github"></span></a>
+        <button class="language-toggle" id="langToggle" type="button"><span id="languageLabel">中文</span></button>
+        <button class="icon-button" id="themeToggle" type="button"><span data-icon="sun"></span></button>
       </div>
     </div>
   </header>
 
-  <main class="shell">
-    <section class="hero" aria-labelledby="pageTitle">
-      <div class="hero-copy">
-        <p class="eyebrow">CAMPUS DINING</p>
-        <h1 id="pageTitle">오늘, 뭐 먹을까요<span>?</span></h1>
-        <p id="pageSubtitle">이번 주 식단을 한눈에. 맛있는 캠퍼스 생활의 시작.</p>
-      </div>
-      <div class="hero-date" aria-hidden="true"><span id="heroMonth">--</span><strong id="heroDay">--</strong><span id="heroWeekday">--</span></div>
-    </section>
-
-    <section class="calendar-panel" aria-label="날짜 선택" id="calendarPanel">
-      <div class="calendar-heading">
-        <div class="week-info"><span class="eyebrow" id="weekLabel">THIS WEEK</span><span id="weekRange"></span></div>
-        <div class="calendar-actions"><div id="weekSwitch" class="week-switch" hidden></div><button id="todayButton" class="today-button" type="button">오늘로</button></div>
-      </div>
-      <div id="weekTabs" class="date-tabs"></div>
-    </section>
-
+  <main class="page-shell">
+    <h1 class="sr-only" id="pageTitle">아주대학교 식단</h1>
+    <aside class="project-notice" id="projectNotice"><p id="noticeText"></p><button class="notice-close" id="noticeDismiss" type="button"><span data-icon="close"></span></button></aside>
     <div id="dataStatus" class="status-banner" role="status" hidden></div>
 
-    <div class="workspace-grid">
-      <aside class="selection-panel">
-        <div class="selection-group">
-          <h2 class="field-label" id="restaurantLabel">어디에서 먹을까요?</h2>
-          <div id="restaurantTabs" class="restaurant-tabs" role="group" aria-labelledby="restaurantLabel"></div>
-        </div>
-        <div class="selection-group">
-          <h2 class="field-label" id="mealLabel">어떤 식사를 찾으세요?</h2>
-          <div id="mealTabs" class="meal-tabs" role="group" aria-labelledby="mealLabel"></div>
-        </div>
-        <div class="restaurant-detail">
-          <span class="detail-symbol" aria-hidden="true">↗</span>
-          <strong id="restaurantName"></strong>
-          <p id="restaurantLocation"></p>
-          <a id="sourceLink" class="text-link" href="https://www.ajou.ac.kr/kr/life/food.do" target="_blank" rel="noopener noreferrer">학교 원문 보기 ↗</a>
-        </div>
-      </aside>
+    <section class="selection-panel" aria-label="식당 및 식사 선택" id="selectionPanel">
+      <h2 class="sr-only" id="restaurantLabel">식당 선택</h2>
+      <div id="restaurantTabs" class="restaurant-tabs" role="group" aria-labelledby="restaurantLabel"></div>
+      <h2 class="sr-only" id="mealLabel">식사 선택</h2>
+      <div id="mealTabs" class="meal-tabs" role="group" aria-labelledby="mealLabel"></div>
+      <div class="selection-meta"><span id="restaurantLocation"></span><span id="weekPreview" class="preview-label" hidden></span></div>
+    </section>
 
-      <section class="menu-panel" aria-labelledby="menuHeading">
-        <div class="menu-heading">
-          <div><p id="dateDisplay" class="menu-date"></p><h2 id="menuHeading" tabindex="-1">오늘의 메뉴</h2></div>
-          <span id="menuCount" class="count-badge"></span>
+    <section class="menu-panel" aria-labelledby="menuHeading">
+      <h2 class="sr-only" id="windowLabel">코너 선택</h2>
+      <div id="windowTabs" class="window-tabs" role="group" aria-labelledby="windowLabel"></div>
+      <div id="restaurantStatus" class="status-banner" role="status" hidden></div>
+      <article class="menu-card">
+        <div class="card-header">
+          <div class="card-title-line"><h2 id="menuHeading" tabindex="-1">오늘의 메뉴</h2><span id="dateDisplay" class="date-badge"></span><span id="todayMarker" class="today-marker" hidden></span></div>
+          <p class="card-context"><span id="restaurantName"></span><span aria-hidden="true"> · </span><span id="mealContext"></span><span aria-hidden="true"> · </span><span id="windowContext"></span></p>
         </div>
-        <div id="restaurantStatus" class="status-banner" role="status" hidden></div>
-        <div id="menuContent" class="menu-grid"></div>
-        <div id="emptyState" class="empty-state" hidden><span class="empty-symbol" aria-hidden="true">◌</span><h3 id="emptyTitle">등록된 식단이 없습니다</h3><p id="emptyDescription"></p></div>
-        <p class="calorie-note" id="calorieNote"></p>
-      </section>
-    </div>
-    <footer class="site-footer"><p id="updatedAt"></p><p id="footerNote"></p><a href="https://github.com/zhupoxixixi/ajou-menu" target="_blank" rel="noopener noreferrer">GitHub ↗</a></footer>
+        <div id="menuContent"></div>
+        <div id="emptyState" class="empty-state" hidden><span data-icon="bowl" class="empty-symbol"></span><h3 id="emptyTitle"></h3><p id="emptyDescription"></p></div>
+        <div class="card-footer"><a id="sourceLink" class="small-button" href="https://www.ajou.ac.kr/kr/life/food.do" target="_blank" rel="noopener noreferrer"><span data-icon="external"></span><span id="sourceLabel">학교 원문</span></a><span id="menuCount" class="item-count"></span><button id="shareButton" class="small-button" type="button"><span data-icon="copy"></span><span id="shareLabel">메뉴 복사</span></button></div>
+      </article>
+      <p class="calorie-note" id="calorieNote"></p>
+    </section>
+    <footer class="site-footer"><p id="footerNote"></p><a href="https://github.com/zhupoxixixi/ajou-menu" target="_blank" rel="noopener noreferrer">GitHub ↗</a></footer>
   </main>
+
+  <nav class="date-navigation" aria-label="날짜 탐색" id="dateNavigation">
+    <div class="nav-stats"><div class="wide-shell nav-stats-inner"><p id="updatedAt"></p><p id="dateCount"></p></div></div>
+    <div class="wide-shell nav-controls">
+      <div class="date-stepper"><button class="icon-button" id="prevDate" type="button"><span data-icon="left"></span></button><button class="nav-current-date" id="navDateLabel" type="button" aria-haspopup="dialog"><span id="navDateDisplay">—</span></button><button class="icon-button" id="nextDate" type="button"><span data-icon="right"></span></button></div>
+      <button class="date-picker-trigger" id="dateToggle" type="button" aria-haspopup="dialog"><span data-icon="calendar"></span><span id="datePickerLabel">날짜 선택</span></button>
+    </div>
+  </nav>
+
+  <dialog id="dateDialog" class="app-dialog date-dialog" aria-labelledby="calendarTitle">
+    <div class="dialog-heading"><h2 id="calendarTitle">날짜 선택</h2><button class="dialog-close icon-button" type="button" data-close="dateDialog"><span data-icon="close"></span></button></div>
+    <div class="calendar-heading"><div id="weekSwitch" class="week-switch" hidden></div><button id="todayButton" class="small-button" type="button">오늘로</button></div>
+    <div class="calendar-month-row"><button id="calendarPrev" class="icon-button" type="button"><span data-icon="left"></span></button><strong id="calendarMonth"></strong><button id="calendarNext" class="icon-button" type="button"><span data-icon="right"></span></button></div>
+    <div id="calendarWeekdays" class="calendar-weekdays" aria-hidden="true"></div>
+    <div id="weekTabs" class="calendar-grid"></div>
+    <p class="calendar-hint" id="calendarHint"></p>
+  </dialog>
+
+  <dialog id="searchDialog" class="app-dialog search-dialog" aria-labelledby="searchTitle">
+    <div class="dialog-heading"><h2 id="searchTitle">메뉴 검색</h2><button class="dialog-close icon-button" type="button" data-close="searchDialog"><span data-icon="close"></span></button></div>
+    <label class="sr-only" for="searchQuery" id="searchInputLabel">메뉴 이름</label>
+    <div class="search-input-wrap"><span data-icon="search"></span><input id="searchQuery" type="search" autocomplete="off" spellcheck="false"></div>
+    <p class="search-hint" id="searchHint"></p>
+    <div id="searchResults" class="search-results" aria-live="polite"></div>
+  </dialog>
+
+  <dialog id="copyDialog" class="app-dialog copy-dialog" aria-labelledby="copyTitle">
+    <div class="dialog-heading"><h2 id="copyTitle"></h2><button class="dialog-close icon-button" type="button" data-close="copyDialog"><span data-icon="close"></span></button></div>
+    <p id="copyHint"></p><textarea id="copyText" readonly aria-labelledby="copyTitle"></textarea>
+  </dialog>
+  <div id="actionStatus" class="toast" role="status" hidden></div>
   <noscript><p class="noscript-note">JavaScript를 켜면 메뉴를 확인할 수 있습니다. 请启用 JavaScript 查看菜单。</p></noscript>
 </body>
 </html>
