@@ -3,9 +3,10 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
+from bs4 import BeautifulSoup
 
 from scraper import ai_client, translator, main
-from scraper.fetcher import _parse_menu_text, RESTAURANTS, MEAL_MAP, MEAL_CN
+from scraper.fetcher import _parse_menu_text, extract_service_hours, RESTAURANTS, MEAL_MAP, MEAL_CN
 from scraper.sync_site import sync_site, ASSETS
 
 
@@ -108,6 +109,21 @@ class FetchTests(unittest.TestCase):
             sync_site(base)
             for asset in ASSETS:
                 self.assertEqual((base / 'site' / asset).read_text(encoding='utf-8'), asset)
+
+    def test_service_hours_prefer_daily_notices_over_location_and_fallbacks(self):
+        soup = BeautifulSoup('<div class="b-location-box"><pre>아침 08:00 - 09:50\n점심 11:00 - 14:00\n저녁 16:30 - 18:30</pre></div><div class="b-menu-day breakfast"><pre>조식: 7:00~8:00\n중식(6500원): 11:00~13:30</pre></div>', 'lxml')
+        hours = extract_service_hours(soup, 363910)
+        self.assertEqual(hours['breakfast'], {'start': '07:00', 'end': '08:00', 'source': 'daily_menu'})
+        self.assertEqual(hours['lunch']['end'], '13:30')
+        self.assertEqual(hours['dinner']['end'], '18:30')
+
+    def test_staff_hours_ignore_seasonal_overview_and_handle_typo_and_closure(self):
+        soup = BeautifulSoup('<div class="b-location-box"><pre>중식: 11:00~14:00 / 석식: 17:00~19:00\n방학중 석식: 미운영</pre></div><div class="b-menu-day breakfast"><pre>증식(6,500원): 11:00~14:00\n석식(6500원): 16:30~18:40\n테이크아웃: 11:00~14:00</pre></div>', 'lxml')
+        hours = extract_service_hours(soup, 221904)
+        self.assertNotIn('breakfast', hours)
+        self.assertEqual(hours['dinner'], {'start': '16:30', 'end': '18:40', 'source': 'daily_menu'})
+        closed = BeautifulSoup('<div class="b-menu-day"><pre>석식: 미운영</pre></div>', 'lxml')
+        self.assertIsNone(extract_service_hours(closed, 221904)['dinner'])
 
 
 if __name__ == '__main__':

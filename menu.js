@@ -5,15 +5,20 @@ const RESTAURANTS = [
   { id: 363910, name_ko: '기숙사식당', name_cn: '宿舍食堂', location_ko: '기숙사식당 1층', location_cn: '宿舍食堂 1 楼' },
   { id: 221904, name_ko: '교직원식당', name_cn: '教职工食堂', location_ko: '기숙사식당동 2층', location_cn: '宿舍食堂楼 2 层' },
 ];
+const DEFAULT_SERVICE_HOURS = {
+  363910: { breakfast: { start: '08:00', end: '09:50' }, lunch: { start: '11:00', end: '14:00' }, dinner: { start: '16:30', end: '18:30' } },
+  221904: { lunch: { start: '11:00', end: '14:00' }, dinner: { start: '17:00', end: '18:40' } },
+};
 const COPY = {
   ko: {
     brand: '아주대학교 식단', restaurant: '식당 선택', meal: '식사 선택', window: '코너 선택',
     breakfast: '아침', lunch: '점심', dinner: '저녁', snack: '분식',
-    menu: '식단', today: '오늘로', todayLabel: '오늘', source: '학교 원문',
+    menu: '식단', today: '현재 식사로', todayLabel: '오늘', tomorrowLabel: '내일', source: '학교 원문', servingHours: '운영시간', fallbackHours: '참고 운영시간',
     thisWeek: '이번 주', nextWeek: '다음 주 미리보기', calendar: '날짜 선택', calendarHint: '회색 날짜에는 메뉴가 없습니다.',
     skip: '메뉴로 바로가기', notice: '비공식 식단 안내입니다. 실제 공급 메뉴는 학교 공지를 확인해 주세요.', dismiss: '안내 닫기',
     empty: '등록된 식단이 없어요', emptyDescription: '다른 날짜나 식사를 선택하거나 학교 원문을 확인해 주세요.',
     fetchError: '식단을 불러오지 못했습니다. 학교 원문을 확인해 주세요.', missing: '이 식당의 해당 날짜 데이터가 없습니다. 학교 원문을 확인해 주세요.',
+    futureMissing: '다음 날짜의 식단 정보가 없습니다. 학교 원문을 확인해 주세요.',
     old: '저장된 식단을 표시하고 있습니다. 최신 메뉴는 학교 원문을 확인해 주세요.',
     staleRestaurant: '수집에 실패해 이전에 저장된 같은 날짜의 메뉴를 표시합니다. 변경 사항은 학교 원문을 확인해 주세요.',
     translationMissing: '일부 중국어 번역이 준비되지 않아 한국어 원문을 표시합니다.', noData: '메뉴 데이터를 불러오지 못했습니다. 잠시 후 새로고침하거나 학교 원문을 확인해 주세요.',
@@ -25,11 +30,12 @@ const COPY = {
   cn: {
     brand: '亚洲大学食堂菜单', restaurant: '选择食堂', meal: '选择餐次', window: '选择窗口',
     breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '小吃',
-    menu: '菜单', today: '回到今天', todayLabel: '今天', source: '学校原文',
+    menu: '菜单', today: '回到当前餐次', todayLabel: '今天', tomorrowLabel: '明天', source: '学校原文', servingHours: '供餐时间', fallbackHours: '参考供餐时间',
     thisWeek: '本周', nextWeek: '下周预告', calendar: '选择日期', calendarHint: '灰色日期暂无菜单。',
     skip: '跳到菜单', notice: '这是非官方食堂菜单助手，实际供应请以学校公告为准。', dismiss: '关闭提示',
     empty: '暂时没有这份菜单', emptyDescription: '可以换个日期或餐次，或查看学校的原始公告。',
     fetchError: '这间食堂的菜单暂时获取失败，请查看学校原文。', missing: '暂时没有这间食堂当天的数据，请查看学校原文。',
+    futureMissing: '下一天暂无菜单数据，请查看学校原文。',
     old: '当前显示的是已保存菜单，最新安排请以学校原文为准。',
     staleRestaurant: '本次获取失败，显示此前保存的同一天菜单；如有调整，请以学校原文为准。',
     translationMissing: '部分中文译文暂缺，先保留韩文原名。', noData: '菜单数据加载失败，请稍后刷新或查看学校原文。',
@@ -61,6 +67,47 @@ function getKstDate(now = new Date()) {
   return `${value('year')}-${value('month')}-${value('day')}`;
 }
 
+function getKstMinutes(now = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(now);
+  return Number(parts.find(part => part.type === 'hour').value) * 60 + Number(parts.find(part => part.type === 'minute').value);
+}
+function nextDate(date) { const value = new Date(`${date}T12:00:00Z`); value.setUTCDate(value.getUTCDate() + 1); return value.toISOString().slice(0, 10); }
+function validDate(date) { return typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date) && Number.isFinite(new Date(`${date}T12:00:00Z`).getTime()) && new Date(`${date}T12:00:00Z`).toISOString().slice(0, 10) === date; }
+function clockMinutes(clock) { const [hour, minute] = clock.split(':').map(Number); return hour * 60 + minute; }
+function serviceHours(restaurant, restaurantId) {
+  const hours = Object.fromEntries(Object.entries(DEFAULT_SERVICE_HOURS[restaurantId] || DEFAULT_SERVICE_HOURS[363910]).map(([meal, value]) => [meal, { ...value, source: 'fallback' }]));
+  for (const meal of ['breakfast', 'lunch', 'dinner']) {
+    const value = restaurant?.service_hours?.[meal];
+    if (value === null) hours[meal] = null;
+    else if (value && /^[0-2]\d:[0-5]\d$/.test(value.start) && /^[0-2]\d:[0-5]\d$/.test(value.end) && clockMinutes(value.start) < clockMinutes(value.end) && clockMinutes(value.end) < 1440) hours[meal] = { start: value.start, end: value.end, source: ['daily_menu', 'restaurant_notice'].includes(value.source) ? value.source : 'fallback' };
+  }
+  return hours;
+}
+function findRestaurant(schedule, date, restaurantId) { return schedule.weeks.find(week => week.days[date])?.days[date]?.restaurants?.find(restaurant => Number(restaurant.id) === restaurantId); }
+function firstServiceMeal(schedule, date, restaurantId) {
+  const hours = serviceHours(findRestaurant(schedule, date, restaurantId), restaurantId);
+  return ['breakfast', 'lunch', 'dinner'].find(meal => hours[meal]) || Object.keys(DEFAULT_SERVICE_HOURS[restaurantId] || DEFAULT_SERVICE_HOURS[363910])[0];
+}
+function selectDefaultMenu(data, restaurantId = 363910, now = new Date()) {
+  const schedule = buildSchedule(data, now);
+  const today = schedule.today;
+  const hours = serviceHours(findRestaurant(schedule, today, restaurantId), restaurantId);
+  const minutes = getKstMinutes(now);
+  const meal = ['breakfast', 'lunch', 'dinner'].find(key => hours[key] && minutes < clockMinutes(hours[key].end));
+  const date = meal ? today : nextDate(today);
+  return { restaurantId, date, meal: meal || firstServiceMeal(schedule, date, restaurantId), week: schedule.weeks.find(week => week.days[date])?.key || schedule.initialWeek };
+}
+function initialSelection(data, query = '', now = new Date()) {
+  const params = new URLSearchParams(query);
+  const requestedId = Number(params.get('restaurant'));
+  const restaurantId = RESTAURANTS.some(info => info.id === requestedId) ? requestedId : 363910;
+  const automatic = selectDefaultMenu(data, restaurantId, now);
+  const date = validDate(params.get('date')) ? params.get('date') : automatic.date;
+  const meal = MEAL_ORDER.includes(params.get('meal')) ? params.get('meal') : date === automatic.date ? automatic.meal : firstServiceMeal(buildSchedule(data, now), date, restaurantId);
+  const linked = validDate(params.get('date')) || MEAL_ORDER.includes(params.get('meal')) || params.has('window');
+  return { restaurantId, date, meal, week: buildSchedule(data, now).weeks.find(week => week.days[date])?.key || automatic.week, sectionName: params.get('window'), automatic: !linked, linked };
+}
+
 function buildSchedule(data, now = new Date()) {
   const validDays = days => Object.fromEntries(Object.entries(days || {}).filter(([date]) => /^\d{4}-\d{2}-\d{2}$/.test(date)).sort(([a], [b]) => a.localeCompare(b)));
   const weeks = [{ key: 'this', days: validDays(data?.days) }, { key: 'next', days: validDays(data?.next_week?.days) }]
@@ -79,9 +126,9 @@ function availableMeals(restaurant) { return MEAL_ORDER.filter(key => restaurant
 function resolveMeal(restaurant, preferred) { const meals = availableMeals(restaurant); return meals.includes(preferred) ? preferred : meals.includes('lunch') ? 'lunch' : meals[0] || preferred; }
 function validTranslation(original, translated) { return typeof translated === 'string' && translated.trim() !== '' && !/[가-힣]/.test(translated) && (translated !== original || !/[가-힣]/.test(original)); }
 function menuSections(restaurant, meal) { return (restaurant?.meals?.[meal]?.sections || []).filter(section => section.items?.length); }
-function resolveSection(restaurant, meal, preferred) { const sections = menuSections(restaurant, meal); return sections.find(section => section.name_ko === preferred) || sections.find(section => section.items.some(item => !isNotice(item))) || sections[0]; }
+function resolveSection(restaurant, meal, preferred) { const sections = menuSections(restaurant, meal); const hasFood = section => section.items.some(item => !isNotice(item)); return sections.find(section => section.name_ko === preferred) || sections.find(section => /^A(?:코너|창구|窗口)?$/i.test(section.name_ko.replace(/\s/g, '')) && hasFood(section)) || sections.find(hasFood) || sections[0]; }
 function allDates(schedule) { return [...new Set(schedule.weeks.flatMap(week => week.dates))].sort(); }
-function stepDate(schedule, date, direction) { const dates = allDates(schedule); const index = dates.indexOf(date); return index < 0 ? date : dates[index + direction] || date; }
+function stepDate(schedule, date, direction) { const dates = [...new Set([...allDates(schedule), date].filter(Boolean))].sort(); const index = dates.indexOf(date); return dates[index + direction] || date; }
 function storageRead(key) { try { return localStorage.getItem(key); } catch { return null; } }
 function storageWrite(key, value) { try { localStorage.setItem(key, value); } catch { /* Preferences are optional. */ } }
 let state, data, schedule, toastTimer;
@@ -106,7 +153,24 @@ function dateText(date, options) { return date ? new Intl.DateTimeFormat(isChine
 function showStatus(id, text) { $(id).textContent = text || ''; $(id).hidden = !text; }
 function closeDialogs() { for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close(); }
 function openDialog(id) { closeDialogs(); $(id).showModal(); }
-function chooseDate(date) { const week = schedule.weeks.find(item => item.dates.includes(date)); if (!week) return; state.week = week.key; state.calendarWeek = week.key; state.date = date; state.calendarMonth = date.slice(0, 7); renderAll(); if ($('dateDialog').open) $('dateDialog').close(); }
+function chooseDate(date) { const week = schedule.weeks.find(item => item.dates.includes(date)); if (!week) return; state.automatic = false; state.week = week.key; state.calendarWeek = week.key; state.date = date; state.calendarMonth = date.slice(0, 7); state.sectionName = null; renderAll(); if ($('dateDialog').open) $('dateDialog').close(); }
+
+function refreshAutomaticSelection(force = false) {
+  const now = new Date();
+  const previousToday = schedule.today;
+  schedule = buildSchedule(data, now);
+  if (!state.automatic && !force) { if (previousToday !== schedule.today) renderAll(); return; }
+  const selected = selectDefaultMenu(data, state.restaurantId, now);
+  const changed = selected.date !== state.date || selected.meal !== state.meal || selected.week !== state.week || previousToday !== schedule.today;
+  if (force) {
+    state.automatic = true; state.linked = false;
+    const url = new URL(window.location.href);
+    for (const key of ['date', 'meal', 'window']) url.searchParams.delete(key);
+    if (url.searchParams.has('restaurant')) url.searchParams.set('restaurant', state.restaurantId);
+    window.history.replaceState(null, '', url);
+  }
+  if (changed || force) { Object.assign(state, selected); state.sectionName = null; state.calendarMonth = selected.date.slice(0, 7); renderAll(); }
+}
 
 function renderDates() {
   const week = schedule.weeks.find(item => item.key === state.calendarWeek) || activeWeek();
@@ -119,7 +183,7 @@ function renderDates() {
     return node;
   }));
   $('todayButton').textContent = copy().today;
-  $('todayButton').disabled = !schedule.weeks.some(item => item.dates.includes(schedule.today));
+  $('todayButton').disabled = !data;
   $('calendarWeekdays').replaceChildren(...(isChinese() ? ['一','二','三','四','五','六','日'] : ['월','화','수','목','금','토','일']).map(day => el('span', '', day)));
   const monthIndex = months.indexOf(state.calendarMonth);
   $('calendarPrev').disabled = monthIndex <= 0;
@@ -143,7 +207,7 @@ function renderDates() {
   } else $('calendarMonth').textContent = '—';
   $('weekTabs').replaceChildren(...cells);
   $('navDateDisplay').textContent = dateText(state.date, { month: 'long', day: 'numeric' }) || '—';
-  const dates = allDates(schedule);
+  const dates = [...new Set([...allDates(schedule), state.date].filter(Boolean))].sort();
   const index = dates.indexOf(state.date);
   $('prevDate').disabled = index <= 0;
   $('nextDate').disabled = index < 0 || index === dates.length - 1;
@@ -151,20 +215,20 @@ function renderDates() {
 
 function renderSelectors() {
   $('restaurantTabs').replaceChildren(...RESTAURANTS.map(info => {
-    const node = button('restaurant-button', info.id === state.restaurantId, () => { state.restaurantId = info.id; state.sectionName = null; storageWrite('menuRestaurantId', info.id); renderAll(); });
+    const node = button('restaurant-button', info.id === state.restaurantId, () => { state.restaurantId = info.id; state.sectionName = null; if (state.automatic || state.date === getKstDate()) refreshAutomaticSelection(true); else renderAll(); });
     node.append(icon('restaurant'), el('span', '', isChinese() ? info.name_cn : info.name_ko));
     return node;
   }));
   const available = availableMeals(currentRestaurant());
   $('mealTabs').replaceChildren(...MEAL_ORDER.map(meal => {
-    const node = button('meal-button', state.meal === meal, () => { state.meal = meal; state.sectionName = null; storageWrite('menuMeal', meal); renderAll(); });
+    const node = button('meal-button', state.meal === meal, () => { state.automatic = false; state.meal = meal; state.sectionName = null; renderAll(); });
     node.disabled = !available.includes(meal); node.append(icon(meal), el('span', '', copy()[meal])); return node;
   }));
   const sections = menuSections(currentRestaurant(), state.meal);
   $('windowTabs').hidden = sections.length < 2;
   $('windowTabs').replaceChildren(...sections.map(section => {
     const note = section.items.every(isNotice);
-    const node = button(`window-button${note ? ' note-window' : ''}`, section.name_ko === state.sectionName, () => { state.sectionName = section.name_ko; renderAll(); });
+    const node = button(`window-button${note ? ' note-window' : ''}`, section.name_ko === state.sectionName, () => { state.automatic = false; state.sectionName = section.name_ko; renderAll(); });
     node.textContent = localized(section.name_ko, section.name_cn); return node;
   }));
   const info = restaurantInfo();
@@ -187,8 +251,11 @@ function renderMenu() {
   $('dateDisplay').textContent = state.date.replaceAll('-', '.') || '—';
   $('mealContext').textContent = copy()[state.meal];
   $('windowContext').textContent = localized(section?.name_ko, section?.name_cn) || '—';
-  $('todayMarker').textContent = copy().todayLabel;
-  $('todayMarker').hidden = state.date !== schedule.today;
+  $('todayMarker').textContent = state.date === schedule.today ? copy().todayLabel : copy().tomorrowLabel;
+  $('todayMarker').hidden = state.date !== schedule.today && state.date !== nextDate(schedule.today);
+  const hours = serviceHours(restaurant, state.restaurantId)[state.meal];
+  $('serviceHours').textContent = hours ? `${hours.source === 'fallback' || !section ? copy().fallbackHours : copy().servingHours} ${hours.start}–${hours.end}` : '';
+  $('serviceHours').hidden = !hours;
   $('menuCount').textContent = copy().dishes(items.length);
   $('menuCount').hidden = !items.length;
   $('shareButton').disabled = !section;
@@ -209,9 +276,10 @@ function renderMenu() {
   $('menuContent').replaceChildren(...content);
   $('emptyState').hidden = !!section;
   let message = '';
-  if (!restaurant && state.date) message = copy().missing;
+  if (!restaurant && state.date) message = state.date > schedule.today ? copy().futureMissing : copy().missing;
   else if (restaurant?.fetch_status === 'error') message = copy().fetchError;
   else if (restaurant?.fetch_status === 'stale') message = copy().staleRestaurant;
+  else if (!section && state.date > schedule.today) message = copy().futureMissing;
   else if (isChinese() && section && (!validTranslation(section.name_ko, section.name_cn) || section.items.some(item => !validTranslation(item.ko, item.cn)))) message = copy().translationMissing;
   showStatus('restaurantStatus', message);
   const age = Date.now() - new Date(data?.generated_at).getTime();
@@ -235,13 +303,12 @@ function renderText() {
 }
 
 function renderAll() {
-  state.meal = resolveMeal(currentRestaurant(), state.meal);
+  if (!state.automatic) state.meal = resolveMeal(currentRestaurant(), state.meal);
   state.sectionName = currentSection()?.name_ko || null;
   if (!$('dateDialog').open) state.calendarWeek = state.week;
   renderText(); renderDates(); renderSelectors(); renderMenu();
   // Keep shared links aligned with subsequent choices, including a language change.
-  const params = new URLSearchParams(window.location.search);
-  if (['date','restaurant','meal','window','lang'].some(key => params.has(key))) window.history.replaceState(null, '', menuLink());
+  if (state.linked) window.history.replaceState(null, '', menuLink());
 }
 function renderThemeLabel() { const dark = document.documentElement.classList.contains('dark'); $('themeToggle').replaceChildren(icon(dark ? 'sun' : 'moon')); $('themeToggle').setAttribute('aria-label', dark ? copy().light : copy().dark); }
 function notify(text) { clearTimeout(toastTimer); showStatus('actionStatus', text); toastTimer = setTimeout(() => showStatus('actionStatus', ''), 2400); }
@@ -260,18 +327,11 @@ function init() {
   data = typeof MENU_DATA === 'undefined' ? null : MENU_DATA;
   schedule = buildSchedule(data);
   const params = new URLSearchParams(window.location.search);
-  const requestedWeek = schedule.weeks.find(week => week.dates.includes(params.get('date')));
-  const storedId = Number(storageRead('menuRestaurantId'));
-  const legacyIndex = Number(storageRead('menuRestaurant'));
-  const requestedId = Number(params.get('restaurant'));
-  const preferredMeal = params.get('meal') || storageRead('menuMeal');
   const language = params.get('lang') || storageRead('menuLang');
   state = {
+    ...initialSelection(data, params),
     lang: language === 'cn' ? 'cn' : 'ko',
-    restaurantId: RESTAURANTS.some(info => info.id === requestedId) ? requestedId : RESTAURANTS.some(info => info.id === storedId) ? storedId : RESTAURANTS[legacyIndex]?.id || RESTAURANTS[0].id,
-    meal: MEAL_ORDER.includes(preferredMeal) ? preferredMeal : 'lunch',
-    week: requestedWeek?.key || schedule.initialWeek, date: requestedWeek ? params.get('date') : schedule.initialDate,
-    sectionName: params.get('window'), calendarMonth: null,
+    calendarMonth: null,
   };
   for (const node of document.querySelectorAll('[data-icon]')) node.replaceChildren(icon(node.dataset.icon));
   $('projectNotice').hidden = storageRead('menuNoticeDismissed') === '1';
@@ -281,16 +341,17 @@ function init() {
   const media = matchMedia('(prefers-color-scheme: dark)');
   media.addEventListener('change', event => { if (!['light','dark'].includes(storageRead('menuTheme'))) { document.documentElement.classList.toggle('dark', event.matches); renderThemeLabel(); } });
   for (const id of ['dateToggle','navDateLabel']) $(id).addEventListener('click', () => { state.calendarWeek = state.week; state.calendarMonth = state.date.slice(0, 7); renderDates(); openDialog('dateDialog'); });
-  $('todayButton').addEventListener('click', () => chooseDate(schedule.today));
+  $('todayButton').addEventListener('click', () => { refreshAutomaticSelection(true); $('dateDialog').close(); });
   $('prevDate').addEventListener('click', () => chooseDate(stepDate(schedule, state.date, -1)));
   $('nextDate').addEventListener('click', () => chooseDate(stepDate(schedule, state.date, 1)));
   for (const [id, direction] of [['calendarPrev',-1],['calendarNext',1]]) $(id).addEventListener('click', () => { const months = [...new Set(activeWeek()?.dates.map(date => date.slice(0, 7)) || [])]; state.calendarMonth = months[months.indexOf(state.calendarMonth) + direction] || state.calendarMonth; renderDates(); });
   $('shareButton').addEventListener('click', copyMenu);
   for (const node of document.querySelectorAll('[data-close]')) node.addEventListener('click', () => $(node.dataset.close).close());
   for (const dialog of document.querySelectorAll('dialog')) dialog.addEventListener('click', event => { const rect = dialog.getBoundingClientRect(); if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) dialog.close(); });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && getKstDate() !== schedule.today) { schedule = buildSchedule(data); state.week = schedule.initialWeek; state.date = schedule.initialDate; state.sectionName = null; renderAll(); } });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshAutomaticSelection(); });
+  setInterval(refreshAutomaticSelection, 30000);
   renderAll();
 }
 
 if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded', init);
-if (typeof module !== 'undefined' && module.exports) module.exports = { getKstDate, buildSchedule, isNotice, availableMeals, resolveMeal, validTranslation, resolveSection, stepDate };
+if (typeof module !== 'undefined' && module.exports) module.exports = { getKstDate, getKstMinutes, buildSchedule, isNotice, availableMeals, resolveMeal, validTranslation, resolveSection, stepDate, serviceHours, selectDefaultMenu, initialSelection };

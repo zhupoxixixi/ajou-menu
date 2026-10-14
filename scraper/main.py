@@ -74,7 +74,7 @@ def run(date_str: str | None = None):
     weeks = []
     for offset in ([0, 7] if today.weekday() >= 5 else [0]):
         days = {}
-        for number in range(5):
+        for number in range(7):
             day = (monday + timedelta(days=offset + number)).strftime('%Y-%m-%d')
             days[day] = fetch_single_day(day, previous)
         weeks.append(days)

@@ -15,6 +15,15 @@ MEAL_CSS_CLASS = {'breakfast': 'breakfast', 'lunch': 'lunch', 'dinner': 'dinner'
 _SECTION_HEADER_RE = re.compile(r'^\s*[<\[]\s*(.+?)\s*[>\]]\s*$')
 _NO_MENU_RE = re.compile(r'등록된\s*식단이\s*없습니다')
 _NOTICE_RE = re.compile(r'^\s*(?:[*※]|\()|위 메뉴|시장 상황|운영시간|예약 가능합니다|픽업시간|단일코너.*운영|원하는 토핑|간편식 판매|(?:중식|증식|석식|테이크아웃)\s*\([\d,]+원\)')
+_CLOCK = r'(?:[01]?\d|2[0-3]):[0-5]\d'
+_SERVICE_RE = re.compile(rf'(?P<label>조식|아침|중식|증식|점심|석식|저녁)\s*(?:\([^)]*\))?\s*:?\s*(?P<start>{_CLOCK})\s*[~–-]\s*(?P<end>{_CLOCK})')
+_CLOSED_RE = re.compile(r'(조식|아침|중식|증식|점심|석식|저녁)\s*(?:\([^)]*\))?\s*:?\s*(?:미운영|휴무|운영하지 않습니다)')
+_SERVICE_MEALS = {'조식': 'breakfast', '아침': 'breakfast', '중식': 'lunch', '증식': 'lunch', '점심': 'lunch', '석식': 'dinner', '저녁': 'dinner'}
+# Fallbacks from the university's facility notice; daily notices take precedence.
+DEFAULT_SERVICE_HOURS = {
+    363910: {'breakfast': ('08:00', '09:50'), 'lunch': ('11:00', '14:00'), 'dinner': ('16:30', '18:30')},
+    221904: {'lunch': ('11:00', '14:00'), 'dinner': ('17:00', '18:40')},
+}
 _SESSION = requests.Session()
 _SESSION.mount('https://', HTTPAdapter(max_retries=Retry(total=2, backoff_factor=.75, status_forcelist=(429, 500, 502, 503, 504), allowed_methods=('GET',))))
 
@@ -51,6 +60,30 @@ def classify_menu_items(menu_data: list[dict]):
                 ]
 
 
+def _parse_service_hours(text: str, source: str) -> dict:
+    hours = {}
+    for match in _SERVICE_RE.finditer(text):
+        start = ':'.join(f'{int(part):02d}' for part in match['start'].split(':'))
+        end = ':'.join(f'{int(part):02d}' for part in match['end'].split(':'))
+        if start < end:
+            hours.setdefault(_SERVICE_MEALS[match['label']], {'start': start, 'end': end, 'source': source})
+    for match in _CLOSED_RE.finditer(text):
+        hours[_SERVICE_MEALS[match[1]]] = None
+    return hours
+
+
+def extract_service_hours(soup: BeautifulSoup, restaurant_id: int) -> dict:
+    hours = {meal: {'start': start, 'end': end, 'source': 'fallback'} for meal, (start, end) in DEFAULT_SERVICE_HOURS[restaurant_id].items()}
+    # The staff location text mixes term/vacation hours; its daily notice is clearer.
+    if restaurant_id == 363910:
+        notice = soup.select_one('.b-location-box pre')
+        if notice:
+            hours.update(_parse_service_hours(notice.get_text('\n'), 'restaurant_notice'))
+    daily_text = '\n'.join(pre.get_text('\n') for pre in soup.select('div.b-menu-day pre'))
+    hours.update(_parse_service_hours(daily_text, 'daily_menu'))
+    return hours
+
+
 def fetch_menu(date_str: str, restaurant_id: int) -> dict:
     info = RESTAURANTS[restaurant_id]
     url = URL_TEMPLATE.format(article_no=restaurant_id, date=date_str)
@@ -64,4 +97,4 @@ def fetch_menu(date_str: str, restaurant_id: int) -> dict:
         container = soup.select_one(f'div.b-menu-day.{css_class}')
         pre = container.find('pre') if container else None
         meals[key] = {'label_ko': MEAL_MAP[key], 'label_cn': MEAL_CN[key], 'sections': _parse_menu_text(pre.get_text('\n') if pre else '')}
-    return {'id': restaurant_id, **info, 'source_url': url, 'meals': meals}
+    return {'id': restaurant_id, **info, 'source_url': url, 'service_hours': extract_service_hours(soup, restaurant_id), 'meals': meals}
