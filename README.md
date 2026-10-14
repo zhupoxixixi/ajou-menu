@@ -1,67 +1,44 @@
 # Ajou Menu · 亚洲大学食堂菜单
 
-轻量的中韩双语菜单站。界面参考 [Çukurova 大学食堂](https://www.cukurova.app/)：黑色顶栏、紧凑菜单卡、底部日期导航，电脑使用日历弹窗、手机使用底部日历面板。
+**[打开网站，直接查看菜单 →](https://zhupoxixixi.github.io/ajou-menu/)**
 
-支持食堂、餐次和窗口切换，中韩菜名搜索、深浅主题切换及菜单复制。复制的链接可以直接打开对应日期、食堂、餐次和窗口。中文模式保留韩文菜名，便于现场对照。引用的设计与配色遵循 MIT 许可，详情见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+已部署到 GitHub Pages，电脑和手机浏览器都可以直接使用。**无需下载源码、安装程序或填写 API 密钥。**
 
-## 本地预览
+## 如何使用
 
-根目录是前端源文件；`site/` 是自动同步的发布副本。无需 npm 安装或前端构建。
+1. 点击右上角的 **中文 / 한국어** 切换语言。中文菜名下保留韩文原名，方便现场对照。
+2. 选择 **宿舍食堂 / 教职工食堂**，再选择餐次和窗口。
+3. 用底部左右按钮切换日期，或点击 **选择日期** 打开日历。手机上显示底部日历面板，电脑上显示弹窗。
+4. 点击右上角搜索按钮，输入中文或韩文菜名；选择结果后会跳到对应日期、食堂和窗口。电脑也支持 `Ctrl + K` / `⌘ + K`。
+5. 点击 **复制菜单**，可以复制当前窗口的菜单和分享链接。右上角还可以切换深浅主题。
 
-```powershell
-python -m http.server 8766 --bind 127.0.0.1 --directory site
-```
+## 菜单来源与更新
 
-访问 `http://127.0.0.1:8766/`。仅供本地预览，不是生产服务器。
+- 原始来源：[亚洲大学官方食堂公告](https://www.ajou.ac.kr/kr/life/food.do)。
+- 仓库配置了每日韩国时间 **00:00（KST）** 的自动更新任务，实际执行时间可能延迟。
+- 周末如已获取下周菜单，可以查看 **下周预告**。
+- 菜单获取失败、译文暂缺或显示旧数据时，页面会提供提示。
 
-## 获取菜单与翻译
+这是非官方菜单助手，实际供餐和临时调整以学校公告为准。`≈ kcal` 是根据菜名粗略估算的热量，并非官方营养数据；各窗口菜单供分别选择。
 
-使用 Python 3.12 或更新版本：
+## API 与隐私
 
-```powershell
-python -m pip install -r requirements.txt
-if (!(Test-Path .env)) { Copy-Item .env.example .env }
-# 编辑 .env，填写自己的密钥。
-python -m scraper.main
-```
+网页只读取已生成的菜单数据，**不会直接请求翻译 API，也不会向访问者提供 API 密钥**。中文翻译在菜单生成流程中完成。
 
-`.env` 和翻译缓存不进入 Git。翻译使用 FactChat 的 OpenAI 兼容接口：
+翻译密钥应保存在本地被 Git 忽略的 `.env` 或 GitHub Actions Secrets 中，不应写入网页、README 或公开代码。
 
-| 配置 | 默认值 / 用途 |
-| --- | --- |
-| `TRANSLATE_API_KEY` | 必填的本地密钥；网页不调用翻译 API |
-| `TRANSLATE_API_ENDPOINT` | `https://factchat-cloud.mindlogic.ai/v1/gateway` |
-| `TRANSLATE_MODEL` | `deepseek-v4.1-flash` |
-| `TRANSLATE_MAX_WORKERS` | 4，允许 1–8 |
-| `TRANSLATE_BATCH_SIZE` | 20，允许 1–40 |
-| `REQUIRE_TRANSLATION` | 设置为 `1` 时，缺少密钥或整批中文失败会阻止数据发布 |
+<details>
+<summary>网站维护说明（仅仓库管理员）</summary>
 
-程序对整周文本去重、分批翻译，对临时网络问题和限流有限重试。仅缓存经过长度、格式和语言校验的成功结果。缓存按版本、模型和端点区分。旧版本缓存自动失效。
+日常使用网站不需要以下配置。
 
-某间食堂获取失败时保留其 ID；如有同一天的旧数据，明确标记为旧数据。不会使用其他日期的菜单冒充当天菜单。未知菜品与通知不填默认热量，所有显示的热量都是粗略估算，不能作为官方营养信息。不同窗口的热量不相加。
+- 自动翻译所需密钥：在仓库 **Settings → Secrets and variables → Actions** 中配置 Secret `TRANSLATE_API_KEY`。
+- 当前默认翻译模型为 `deepseek-v4.1-flash`。如需调整，可配置 Variable `TRANSLATE_MODEL`；网关地址可通过 Variable `TRANSLATE_API_ENDPOINT` 调整。
+- 手动更新菜单：进入 **Actions → Daily Menu Scrape → Run workflow**。
+- 自动更新失败时，查看对应工作流日志。整批翻译失败会阻止发布新数据，保留此前的菜单。
 
-## GitHub Actions 配置
+</details>
 
-在仓库 **Settings → Secrets and variables → Actions** 中设置：
+## 界面来源
 
-- **Secret `TRANSLATE_API_KEY`**：使用当前 FactChat 密钥。迁移网关时需要更新原来的密钥；本地 `.env` 不会自动同步到 GitHub。
-- 可选 **Variable `TRANSLATE_API_ENDPOINT`** 和 **Variable `TRANSLATE_MODEL`**：未设置时使用表中的默认值。端点现在读取 Variable，而非旧的同名 Secret。
-
-定时任务计划在韩国时间每天 00:00 执行，GitHub 实际调度可能延迟。工作流会检查回归用例、恢复翻译缓存、获取全周菜单、同步 `site/`、提交变更。整批翻译失败会让工作流失败并保留此前发布数据。
-
-GitHub Pages 可保持现有根目录发布设置。手动修改根目录前端文件后，运行以下命令更新兼容副本：
-
-```powershell
-python -m scraper.sync_site
-```
-
-## 验证
-
-```powershell
-python -m unittest discover -s tests -p 'test_*.py'
-node --test tests/menu.test.cjs
-```
-
-Python 测试使用模拟接口，不花费翻译额度。浏览器还应检查手机/桌面视口、语言切换、食堂切换、周末预告、缺失数据和键盘操作。
-
-菜单原始来源：[亚洲大学官网](https://www.ajou.ac.kr/kr/life/food.do)。本项目为非官方菜单助手，实际供应以学校公告为准。
+界面参考 [Çukurova 大学食堂](https://www.cukurova.app/) 的紧凑菜单风格，引用部分保留原项目的 MIT 许可与版权说明，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
