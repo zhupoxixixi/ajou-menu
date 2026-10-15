@@ -91,8 +91,8 @@ def run(date_str: str | None = None):
     translate_menu(restaurants, api_key, endpoint, model)
     summary = translation_summary(restaurants, model)
     print(f'[main] Chinese menu coverage: {summary["translated"]}/{summary["total"]}')
-    if require_translation and summary['total'] and not summary['translated']:
-        raise RuntimeError('No valid Chinese menu translations; keeping the previous published data')
+    if require_translation and summary['total'] and summary['translated'] != summary['total']:
+        raise RuntimeError('Chinese menu translations incomplete; keeping the previous published data')
 
     output = {'week_start': monday.strftime('%Y-%m-%d'), 'generated_at': datetime.now(KST).isoformat(), 'translation': summary, 'days': weeks[0]}
     if len(weeks) > 1:

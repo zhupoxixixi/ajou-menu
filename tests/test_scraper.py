@@ -70,6 +70,20 @@ class TranslationTests(unittest.TestCase):
         self.assertEqual(client.post.call_count, 1)
 
 
+class PartialTranslationTests(unittest.TestCase):
+    def test_valid_batch_items_survive_and_only_missing_text_is_retried(self):
+        cache = {}
+        with patch.object(translator, '_call_batch', side_effect=[['泡菜', ''], ['白米饭']]) as api, patch.object(translator, '_save_cache'):
+            result = translator.translate_concurrent(['김치', '쌀밥', '김치'], 'test-key', 'https://example.invalid', cache)
+        self.assertEqual(result, ['泡菜', '白米饭', '泡菜'])
+        self.assertEqual([c.args[0] for c in api.call_args_list], [['김치', '쌀밥'], ['쌀밥']])
+
+    def test_partial_parser_still_rejects_wrong_count(self):
+        with self.assertRaises(translator.TranslationError):
+            translator._parse_response('["泡菜"]', ['김치', '쌀밥'], allow_partial=True)
+        self.assertEqual(translator._parse_response('["泡菜", "쌀밥"]', ['김치', '쌀밥'], allow_partial=True), ['泡菜', ''])
+
+
 class FetchTests(unittest.TestCase):
     def test_failed_restaurant_keeps_its_id_and_explicit_status(self):
         def fetch(date, rid):

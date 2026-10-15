@@ -80,7 +80,7 @@ def _save_cache(cache: dict, model: str = DEFAULT_MODEL, endpoint: str = DEFAULT
     temporary.replace(path)
 
 
-def _parse_response(content: str, sources: list[str]) -> list[str]:
+def _parse_response(content: str, sources: list[str], allow_partial: bool = False) -> list[str]:
     if not isinstance(content, str):
         raise TranslationError('Empty translation response')
     clean = content.strip()
@@ -90,13 +90,16 @@ def _parse_response(content: str, sources: list[str]) -> list[str]:
         results = json.loads(clean)
     except ValueError:
         raise TranslationError('Invalid translation JSON') from None
-    if not isinstance(results, list) or len(results) != len(sources) or not all(is_valid_translation(source, result) for source, result in zip(sources, results)):
+    if not isinstance(results, list) or len(results) != len(sources) or not all(isinstance(result, str) for result in results):
         raise TranslationError('Translation count or language validation failed')
-    return [result.strip() for result in results]
+    valid = [result.strip() if is_valid_translation(source, result) else '' for source, result in zip(sources, results)]
+    if not allow_partial and not all(valid):
+        raise TranslationError('Translation language validation failed')
+    return valid
 
 
 def _call_batch(texts: list[str], api_key: str, api_endpoint: str, model: str) -> list[str]:
-    return request_batch(texts, api_key, api_endpoint, model, SYSTEM_PROMPT, _parse_response)
+    return request_batch(texts, api_key, api_endpoint, model, SYSTEM_PROMPT, lambda content, sources: _parse_response(content, sources, allow_partial=True))
 
 
 def translate_concurrent(texts: list[str], api_key: str, api_endpoint: str, cache: dict, model: str = DEFAULT_MODEL) -> list[str]:
@@ -122,6 +125,20 @@ def translate_concurrent(texts: list[str], api_key: str, api_endpoint: str, cach
                     print(f'[translator] Batch unavailable: {error}; not cached')
                 except Exception as error:
                     print(f'[translator] Batch unavailable: {type(error).__name__}; not cached')
+        # Retain valid aligned results; retry only missing texts once as single-item requests.
+        remaining = [text for text in missing if not is_valid_translation(text, cache.get(text, ''))]
+        if remaining:
+            print(f'[translator] Retrying {len(remaining)} missing texts individually')
+            with ThreadPoolExecutor(max_workers=min(4, len(remaining))) as executor:
+                retry_jobs = {executor.submit(_call_batch, [text], api_key, api_endpoint, model): text for text in remaining}
+                for future in as_completed(retry_jobs):
+                    source = retry_jobs[future]
+                    try:
+                        results = future.result()
+                        if len(results) == 1 and is_valid_translation(source, results[0]):
+                            cache[source] = results[0]
+                    except Exception as error:
+                        print(f'[translator] Individual translation unavailable: {type(error).__name__}; not cached')
         _save_cache(cache, model, api_endpoint)
     # Failed translations stay empty and are eligible for retry on the next run.
     return [cache[text] if text in cache and is_valid_translation(text, cache[text]) else '' for text in texts]
