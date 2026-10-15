@@ -12,6 +12,13 @@ const DEFAULT_SERVICE_HOURS = {
 const COPY = {
   ko: {
     brand: '아주대학교 식단', restaurant: '식당 선택', meal: '식사 선택', window: '코너 선택',
+    pageTitle: '오늘은 뭐 먹지?', intro: '기숙사·교직원식당 메뉴를 한곳에서, 한국 시간 기준으로.',
+    tools: '사용 및 업데이트', healthy: '데이터 업데이트됨', delayed: '업데이트 확인 필요', offline: '오프라인 · 저장된 메뉴', automatic: '자동 선택', manual: '직접 선택',
+    dataTitle: '데이터 상태', generated: '전체 메뉴 업데이트', selectedDate: '선택한 날짜', translation: '중국어 번역', complete: '완료', partial: '일부 미완료', unknown: '확인 필요', fetchOk: '수집 완료', fetchStale: '이전 저장본', fetchFailed: '수집 실패', fetchMissing: '데이터 없음',
+    refresh: '새로고침', refreshing: '새로고침 중…', refreshHint: '매일 00:00 KST에 자동 수집을 예약합니다. 실행은 지연될 수 있으며, 새로고침은 이미 공개된 최신 데이터를 불러옵니다.',
+    installTitle: '홈 화면에 추가', installIos: 'iPhone에서는 Safari로 열고 공유 → 홈 화면에 추가를 선택하세요. 메뉴에 없으면 공유 메뉴의 더 보기를 확인하세요.', installOther: '브라우저 메뉴에서 앱 설치 또는 홈 화면에 추가를 선택하세요.', installed: '홈 화면 앱으로 실행 중입니다.', install: '앱 설치',
+    offlineTitle: '오프라인 보기', offlineHint: '온라인으로 한 번 열면 저장된 주간 메뉴를 다시 볼 수 있습니다. 오프라인 중 변경된 메뉴는 반영되지 않으니 업데이트 시각을 확인해 주세요.', cacheReady: '오프라인 저장 준비 완료', cachePending: '오프라인 저장 준비 중', cacheUnsupported: '현재 브라우저에서는 오프라인 저장을 사용할 수 없습니다.', cacheFailed: '오프라인 저장을 완료하지 못했습니다. 연결 후 다시 열어 주세요.', offlineBanner: '인터넷에 연결되지 않아 저장된 메뉴를 표시합니다. 새 메뉴와 변경 사항은 연결 후 새로고침해 주세요.',
+    notices: '중국어 공지 ↗', serving: '운영시간 내 · 실제 공급은 원문 확인', servingReference: '참고 운영시간 내 · 원문 확인', upcoming: '운영 시작 전', ended: '이 식사 시간은 지났어요', preview: '예정 메뉴', closed: '이 식사는 운영하지 않아요', emptyService: '등록된 메뉴 없음', unconfirmed: '저장된 메뉴 · 운영 여부 확인 필요', unknownService: '운영시간은 학교 원문 확인',
     breakfast: '아침', lunch: '점심', dinner: '저녁', snack: '분식',
     menu: '식단', today: '현재 식사로', todayLabel: '오늘', tomorrowLabel: '내일', source: '학교 원문', servingHours: '운영시간', fallbackHours: '참고 운영시간',
     thisWeek: '이번 주', nextWeek: '다음 주 미리보기', calendar: '날짜 선택', calendarHint: '회색 날짜에는 메뉴가 없습니다.',
@@ -29,6 +36,13 @@ const COPY = {
   },
   cn: {
     brand: '亚洲大学食堂菜单', restaurant: '选择食堂', meal: '选择餐次', window: '选择窗口',
+    pageTitle: '今天吃什么', intro: '宿舍食堂与教职工食堂，一处查看，按韩国时间选餐。',
+    tools: '使用与更新', healthy: '数据已更新', delayed: '需要检查更新', offline: '离线 · 已保存菜单', automatic: '自动选餐', manual: '手动查看',
+    dataTitle: '数据状态', generated: '整份菜单更新时间', selectedDate: '当前查看日期', translation: '中文翻译', complete: '完整', partial: '部分未完成', unknown: '待确认', fetchOk: '获取成功', fetchStale: '保留旧数据', fetchFailed: '获取失败', fetchMissing: '暂无数据',
+    refresh: '刷新菜单', refreshing: '正在刷新…', refreshHint: '每天 00:00 KST 自动抓取，执行可能延迟；这里刷新的是已发布数据。',
+    installTitle: '添加到主屏幕', installIos: 'iPhone 请用 Safari 打开，点“分享”→“添加到主屏幕”；没有看到时，可在分享菜单中展开更多选项。', installOther: '在浏览器菜单中选择“安装应用”或“添加到主屏幕”。', installed: '正在以主屏应用方式打开。', install: '安装应用',
+    offlineTitle: '离线查看', offlineHint: '联网打开一次后，可以查看已保存的一周菜单。离线期间不会同步临时调整，请留意更新时间。', cacheReady: '菜单已准备好供离线查看', cachePending: '正在准备离线菜单', cacheUnsupported: '当前浏览器暂不支持离线保存', cacheFailed: '离线保存未完成，请联网后重新打开。', offlineBanner: '当前连接不可用，显示已保存菜单；新菜单和临时调整需要联网刷新。',
+    notices: '中文公告 ↗', serving: '供餐时段内 · 实际供应以原文为准', servingReference: '参考供餐时段内 · 请核对原文', upcoming: '尚未到供餐时间', ended: '这餐的供餐时段已结束', preview: '预告菜单', closed: '该餐次不供应', emptyService: '暂无已公布菜单', unconfirmed: '已保存菜单 · 供餐情况待核实', unknownService: '供餐时间请查看学校原文',
     breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '小吃',
     menu: '菜单', today: '回到当前餐次', todayLabel: '今天', tomorrowLabel: '明天', source: '学校原文', servingHours: '供餐时间', fallbackHours: '参考供餐时间',
     thisWeek: '本周', nextWeek: '下周预告', calendar: '选择日期', calendarHint: '灰色日期暂无菜单。',
@@ -55,6 +69,8 @@ const ICONS = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/>',
   moon: '<path d="M20 15a8 8 0 0 1-11-11A9 9 0 1 0 20 15Z"/>',
   calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M7 2v5m10-5v5"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/>',
+  refresh: '<path d="M20 7v5h-5M4 17v-5h5M5.5 7a7 7 0 0 1 11.7-2L20 8M4 16l2.8 3A7 7 0 0 0 18.5 17"/>',
   left: '<path d="m14 6-6 6 6 6"/>', right: '<path d="m10 6 6 6-6 6"/>', close: '<path d="m6 6 12 12M6 18 18 6"/>',
   external: '<path d="M14 3h7v7m0-7L10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/>',
   copy: '<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',
@@ -84,6 +100,26 @@ function serviceHours(restaurant, restaurantId) {
   return hours;
 }
 function findRestaurant(schedule, date, restaurantId) { return schedule.weeks.find(week => week.days[date])?.days[date]?.restaurants?.find(restaurant => Number(restaurant.id) === restaurantId); }
+function dataFreshness(value, now = new Date()) {
+  if (!buildSchedule(value, now).weeks.length) return 'missing';
+  const age = now.getTime() - new Date(value?.generated_at).getTime();
+  if (!Number.isFinite(age) || age < -5 * 60 * 1000) return 'unknown';
+  return age > 36 * 60 * 60 * 1000 ? 'old' : 'fresh';
+}
+function serviceStatus(restaurant, restaurantId, date, meal, section, now = new Date(), fresh = true) {
+  if (!restaurant || restaurant.fetch_status === 'error') return 'emptyService';
+  if (!fresh || restaurant.fetch_status === 'stale') return 'unconfirmed';
+  const hours = serviceHours(restaurant, restaurantId)[meal];
+  if (hours === null) return 'closed';
+  if (!(section?.items || []).some(item => !isNotice(item))) return 'emptyService';
+  if (date > getKstDate(now)) return 'preview';
+  if (date < getKstDate(now)) return 'ended';
+  if (!hours) return 'unknownService';
+  const minutes = getKstMinutes(now);
+  if (minutes < clockMinutes(hours.start)) return 'upcoming';
+  if (minutes >= clockMinutes(hours.end)) return 'ended';
+  return hours.source === 'fallback' ? 'servingReference' : 'serving';
+}
 function firstServiceMeal(schedule, date, restaurantId) {
   const hours = serviceHours(findRestaurant(schedule, date, restaurantId), restaurantId);
   return ['breakfast', 'lunch', 'dinner'].find(meal => hours[meal]) || Object.keys(DEFAULT_SERVICE_HOURS[restaurantId] || DEFAULT_SERVICE_HOURS[363910])[0];
@@ -132,6 +168,7 @@ function stepDate(schedule, date, direction) { const dates = [...new Set([...all
 function storageRead(key) { try { return localStorage.getItem(key); } catch { return null; } }
 function storageWrite(key, value) { try { localStorage.setItem(key, value); } catch { /* Preferences are optional. */ } }
 let state, data, schedule, toastTimer;
+let offlineFallback = false, offlineState = 'cachePending', installPrompt = null;
 const $ = id => document.getElementById(id);
 const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text != null) node.textContent = text; return node; };
 const copy = () => COPY[state.lang];
@@ -159,7 +196,7 @@ function refreshAutomaticSelection(force = false) {
   const now = new Date();
   const previousToday = schedule.today;
   schedule = buildSchedule(data, now);
-  if (!state.automatic && !force) { if (previousToday !== schedule.today) renderAll(); return; }
+  if (!state.automatic && !force) { if (previousToday !== schedule.today) renderAll(); else { renderMenu(); renderAppStatus(); } return; }
   const selected = selectDefaultMenu(data, state.restaurantId, now);
   const changed = selected.date !== state.date || selected.meal !== state.meal || selected.week !== state.week || previousToday !== schedule.today;
   if (force) {
@@ -170,6 +207,7 @@ function refreshAutomaticSelection(force = false) {
     window.history.replaceState(null, '', url);
   }
   if (changed || force) { Object.assign(state, selected); state.sectionName = null; state.calendarMonth = selected.date.slice(0, 7); renderAll(); }
+  else { renderMenu(); renderAppStatus(); }
 }
 
 function renderDates() {
@@ -256,6 +294,10 @@ function renderMenu() {
   const hours = serviceHours(restaurant, state.restaurantId)[state.meal];
   $('serviceHours').textContent = hours ? `${hours.source === 'fallback' || !section ? copy().fallbackHours : copy().servingHours} ${hours.start}–${hours.end}` : '';
   $('serviceHours').hidden = !hours;
+  const status = serviceStatus(restaurant, state.restaurantId, state.date, state.meal, section, new Date(), dataFreshness(data) === 'fresh' && navigator.onLine && !offlineFallback);
+  $('serviceState').textContent = copy()[status];
+  $('serviceState').dataset.state = status;
+  $('serviceState').hidden = false;
   $('menuCount').textContent = copy().dishes(items.length);
   $('menuCount').hidden = !items.length;
   $('shareButton').disabled = !section;
@@ -282,18 +324,46 @@ function renderMenu() {
   else if (!section && state.date > schedule.today) message = copy().futureMissing;
   else if (isChinese() && section && (!validTranslation(section.name_ko, section.name_cn) || section.items.some(item => !validTranslation(item.ko, item.cn)))) message = copy().translationMissing;
   showStatus('restaurantStatus', message);
-  const age = Date.now() - new Date(data?.generated_at).getTime();
-  showStatus('dataStatus', !data || !schedule.weeks.length ? copy().noData : !Number.isFinite(age) || age > 36 * 60 * 60 * 1000 ? copy().old : '');
+  const freshness = dataFreshness(data);
+  showStatus('dataStatus', freshness === 'missing' ? copy().noData : !navigator.onLine || offlineFallback ? copy().offlineBanner : freshness !== 'fresh' ? copy().old : '');
+}
+
+function updatedText(value) {
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? `${new Intl.DateTimeFormat(isChinese() ? 'zh-CN' : 'ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(date)} · KST` : copy().unknown;
+}
+function renderAppStatus() {
+  const offline = !navigator.onLine || offlineFallback;
+  const freshness = dataFreshness(data);
+  const selected = RESTAURANTS.map(info => ({ info, restaurant: findRestaurant(schedule, state.date, info.id) }));
+  const healthy = freshness === 'fresh' && selected.every(({ restaurant }) => restaurant?.fetch_status === 'ok') && data?.translation?.status === 'complete';
+  $('healthLabel').textContent = offline ? copy().offline : healthy ? copy().healthy : copy().delayed;
+  $('healthToggle').dataset.state = offline ? 'offline' : healthy ? 'ok' : 'warning';
+  $('selectionMode').textContent = state.automatic ? copy().automatic : copy().manual;
+  $('quickToday').hidden = state.automatic;
+  const rows = [[copy().generated, updatedText(data?.generated_at)], [copy().selectedDate, state.date || '—']];
+  for (const { info, restaurant } of selected) {
+    const statusKey = { ok: 'fetchOk', stale: 'fetchStale', error: 'fetchFailed' }[restaurant?.fetch_status] || 'fetchMissing';
+    rows.push([isChinese() ? info.name_cn : info.name_ko, `${copy()[statusKey]}${restaurant?.fetched_at ? ` · ${updatedText(restaurant.fetched_at)}` : ''}`]);
+  }
+  const translation = data?.translation;
+  rows.push([copy().translation, translation ? `${copy()[translation.status === 'complete' ? 'complete' : 'partial']} · ${translation.translated}/${translation.total}` : copy().unknown]);
+  $('healthDetails').replaceChildren(...rows.map(([name, value]) => { const row = el('div'); row.append(el('dt', '', name), el('dd', '', value)); return row; }));
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  $('installHint').textContent = standalone ? copy().installed : ios ? copy().installIos : copy().installOther;
+  $('installButton').hidden = !installPrompt || !!standalone;
+  $('offlineReady').textContent = copy()[offlineState];
 }
 
 function renderText() {
   document.documentElement.lang = isChinese() ? 'zh-CN' : 'ko';
   document.title = `${copy().brand} · Ajou Menu`;
-  const text = { brandSubtitle: 'brand', pageTitle: 'brand', restaurantLabel: 'restaurant', mealLabel: 'meal', windowLabel: 'window', sourceLabel: 'source', skipLink: 'skip', noticeText: 'notice', emptyTitle: 'empty', emptyDescription: 'emptyDescription', footerNote: 'footer', shareLabel: 'share', calendarTitle: 'calendar', calendarHint: 'calendarHint', datePickerLabel: 'calendar', copyTitle: 'share', copyHint: 'copyHint' };
+  const text = { brandSubtitle: 'brand', pageTitle: 'pageTitle', introText: 'intro', restaurantLabel: 'restaurant', mealLabel: 'meal', windowLabel: 'window', sourceLabel: 'source', skipLink: 'skip', noticeText: 'notice', emptyTitle: 'empty', emptyDescription: 'emptyDescription', footerNote: 'footer', shareLabel: 'share', calendarTitle: 'calendar', calendarHint: 'calendarHint', datePickerLabel: 'calendar', copyTitle: 'share', copyHint: 'copyHint', toolsTitle: 'tools', dataTitle: 'dataTitle', refreshHint: 'refreshHint', refreshLabel: 'refresh', installTitle: 'installTitle', installButton: 'install', offlineTitle: 'offlineTitle', offlineHint: 'offlineHint', noticesLink: 'notices', toolsNoticesLink: 'notices', quickToday: 'today' };
   for (const [id, key] of Object.entries(text)) $(id).textContent = copy()[key];
   $('languageLabel').textContent = isChinese() ? '한국어' : '中文';
   $('langToggle').setAttribute('aria-label', isChinese() ? '한국어로 전환' : '切换到中文');
-  const labels = { dateToggle: 'calendar', navDateLabel: 'calendar', prevDate: 'previous', nextDate: 'next', calendarPrev: 'previousMonth', calendarNext: 'nextMonth', noticeDismiss: 'dismiss', selectionPanel: 'restaurant', dateNavigation: 'calendar' };
+  const labels = { dateToggle: 'calendar', navDateLabel: 'calendar', prevDate: 'previous', nextDate: 'next', calendarPrev: 'previousMonth', calendarNext: 'nextMonth', noticeDismiss: 'dismiss', selectionPanel: 'restaurant', dateNavigation: 'calendar', toolsToggle: 'tools' };
   for (const [id, key] of Object.entries(labels)) $(id).setAttribute('aria-label', copy()[key]);
   for (const node of document.querySelectorAll('[data-close]')) node.setAttribute('aria-label', copy().close);
   renderThemeLabel();
@@ -306,7 +376,7 @@ function renderAll() {
   if (!state.automatic) state.meal = resolveMeal(currentRestaurant(), state.meal);
   state.sectionName = currentSection()?.name_ko || null;
   if (!$('dateDialog').open) state.calendarWeek = state.week;
-  renderText(); renderDates(); renderSelectors(); renderMenu();
+  renderText(); renderDates(); renderSelectors(); renderMenu(); renderAppStatus();
   // Keep shared links aligned with subsequent choices, including a language change.
   if (state.linked) window.history.replaceState(null, '', menuLink());
 }
@@ -346,12 +416,50 @@ function init() {
   $('nextDate').addEventListener('click', () => chooseDate(stepDate(schedule, state.date, 1)));
   for (const [id, direction] of [['calendarPrev',-1],['calendarNext',1]]) $(id).addEventListener('click', () => { const months = [...new Set(activeWeek()?.dates.map(date => date.slice(0, 7)) || [])]; state.calendarMonth = months[months.indexOf(state.calendarMonth) + direction] || state.calendarMonth; renderDates(); });
   $('shareButton').addEventListener('click', copyMenu);
+  $('quickToday').addEventListener('click', () => refreshAutomaticSelection(true));
+  for (const id of ['toolsToggle', 'healthToggle']) $(id).addEventListener('click', () => { renderAppStatus(); openDialog('toolsDialog'); });
+  $('refreshButton').addEventListener('click', async () => {
+    if (!navigator.onLine) { notify(copy().offlineBanner); return; }
+    $('refreshButton').disabled = true; $('refreshLabel').textContent = copy().refreshing;
+    try { const registration = await navigator.serviceWorker?.getRegistration(); await registration?.update(); } catch { /* Reload can still request fresh public data. */ }
+    if (!state.automatic) window.history.replaceState(null, '', menuLink());
+    window.location.reload();
+  });
+  $('installButton').addEventListener('click', async () => { const prompt = installPrompt; if (!prompt) return; installPrompt = null; renderAppStatus(); await prompt.prompt(); await prompt.userChoice; });
+  window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; renderAppStatus(); });
+  window.addEventListener('appinstalled', () => { installPrompt = null; renderAppStatus(); });
+  for (const event of ['online', 'offline']) window.addEventListener(event, () => { offlineFallback = false; renderMenu(); renderAppStatus(); });
   for (const node of document.querySelectorAll('[data-close]')) node.addEventListener('click', () => $(node.dataset.close).close());
   for (const dialog of document.querySelectorAll('dialog')) dialog.addEventListener('click', event => { const rect = dialog.getBoundingClientRect(); if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) dialog.close(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshAutomaticSelection(); });
   setInterval(refreshAutomaticSelection, 30000);
   renderAll();
+  prepareOffline();
+}
+
+async function prepareOffline() {
+  if (!('serviceWorker' in navigator) || !window.isSecureContext) { offlineState = 'cacheUnsupported'; renderAppStatus(); return; }
+  navigator.serviceWorker.addEventListener('message', event => {
+    if (event.data?.type === 'menu-offline-fallback') { offlineFallback = true; renderMenu(); renderAppStatus(); }
+  });
+  try {
+    const registration = await navigator.serviceWorker.register('sw.js', { scope: './', updateViaCache: 'none' });
+    const inspect = async () => {
+      const reply = await new Promise(resolve => {
+        const channel = new MessageChannel();
+        const timer = setTimeout(() => { channel.port1.close(); resolve(null); }, 5000);
+        channel.port1.onmessage = event => { clearTimeout(timer); channel.port1.close(); resolve(event.data); };
+        registration.active?.postMessage({ type: 'menu-cache-status' }, [channel.port2]);
+      });
+      offlineState = reply?.ready ? 'cacheReady' : 'cacheFailed';
+      if (reply?.fallback) { offlineFallback = true; renderMenu(); }
+      renderAppStatus();
+    };
+    if (registration.active) await inspect();
+    else navigator.serviceWorker.ready.then(inspect);
+    navigator.serviceWorker.addEventListener('controllerchange', inspect);
+  } catch { offlineState = 'cacheFailed'; renderAppStatus(); }
 }
 
 if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded', init);
-if (typeof module !== 'undefined' && module.exports) module.exports = { getKstDate, getKstMinutes, buildSchedule, isNotice, availableMeals, resolveMeal, validTranslation, resolveSection, stepDate, serviceHours, selectDefaultMenu, initialSelection };
+if (typeof module !== 'undefined' && module.exports) module.exports = { getKstDate, getKstMinutes, buildSchedule, isNotice, availableMeals, resolveMeal, validTranslation, resolveSection, stepDate, serviceHours, selectDefaultMenu, initialSelection, dataFreshness, serviceStatus };

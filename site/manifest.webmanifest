@@ -1,0 +1,15 @@
+{
+  "id": "./",
+  "name": "Ajou Menu · 亚洲大学食堂",
+  "short_name": "Ajou Menu",
+  "description": "아주대학교 식단 · 亚洲大学中韩双语食堂菜单",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

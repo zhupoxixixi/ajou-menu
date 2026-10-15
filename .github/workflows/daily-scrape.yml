@@ -35,7 +35,7 @@ jobs:
       - name: Check menu regressions
         run: |
           python -m unittest discover -s tests -p 'test_*.py'
-          node --test tests/menu.test.cjs
+          node --test tests/*.test.cjs
       - name: Restore translation cache
         uses: actions/cache/restore@v4
         with:
@@ -63,3 +63,10 @@ jobs:
             git commit -m "Update weekly menu for $(TZ=Asia/Seoul date +%Y-%m-%d)"
             git push
           fi
+      - name: Optional task heartbeat
+        if: always() && !cancelled() && vars.ENABLE_HEALTHCHECKS == 'true'
+        env:
+          ENABLE_HEALTHCHECKS: ${{ vars.ENABLE_HEALTHCHECKS || 'false' }}
+          HEALTHCHECK_PING_URL: ${{ secrets.HEALTHCHECK_PING_URL }}
+          MENU_JOB_STATUS: ${{ job.status }}
+        run: python -m scraper.healthcheck
