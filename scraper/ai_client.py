@@ -30,6 +30,9 @@ def request_batch(sources, api_key, api_endpoint, model, system_prompt, parse_re
         ],
         'temperature': 0.1,
     }
+    if model.startswith('gpt-6'):
+        payload.pop('temperature', None)
+        payload['reasoning_effort'] = 'none'
     last_error = 'AI request failed'
     for attempt in range(3):
         delay = 2 ** attempt

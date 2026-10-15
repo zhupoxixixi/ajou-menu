@@ -10,7 +10,7 @@ from .ai_client import AIRequestError, request_batch
 CACHE_PATH = Path(__file__).resolve().parent.parent / 'data' / 'translation_cache.json'
 CACHE_VERSION = 2
 DEFAULT_ENDPOINT = 'https://factchat-cloud.mindlogic.ai/v1/gateway'
-DEFAULT_MODEL = 'deepseek-v4.1-flash'
+DEFAULT_MODEL = 'gpt-6-luna'
 _HANGUL = re.compile(r'[가-힣]')
 
 GLOSSARY = '''
