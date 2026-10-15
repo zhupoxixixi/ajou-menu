@@ -22,9 +22,9 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=20261016-app">
-  <script defer src="menu-data.js?v=20261016-app"></script>
-  <script defer src="menu.js?v=20261016-app"></script>
+  <link rel="stylesheet" href="styles.css?v=20261016-compact">
+  <script defer src="menu-data.js?v=20261016-compact"></script>
+  <script defer src="menu.js?v=20261016-compact"></script>
 </head>
 <body>
   <a class="skip-link" href="#menuHeading" id="skipLink">메뉴로 바로가기</a>
@@ -44,17 +44,7 @@
   </header>
 
   <main class="page-shell">
-    <section class="page-intro" aria-labelledby="pageTitle">
-      <p class="eyebrow">AJOU CAMPUS / MENU</p>
-      <h1 id="pageTitle">오늘은 뭐 먹지?</h1>
-      <p id="introText" class="intro-text"></p>
-      <div class="app-overview">
-        <button class="health-pill" id="healthToggle" type="button" aria-haspopup="dialog"><span class="status-dot" aria-hidden="true"></span><span id="healthLabel"></span><span class="health-arrow" aria-hidden="true">↗</span></button>
-        <span class="mode-label" id="selectionMode"></span>
-        <button class="return-current" id="quickToday" type="button" hidden></button>
-      </div>
-    </section>
-    <aside class="project-notice" id="projectNotice"><p id="noticeText"></p><button class="notice-close" id="noticeDismiss" type="button"><span data-icon="close"></span></button></aside>
+    <h1 class="sr-only" id="pageTitle">아주대학교 식단</h1>
     <div id="dataStatus" class="status-banner" role="status" hidden></div>
 
     <section class="selection-panel" aria-label="식당 및 식사 선택" id="selectionPanel">
@@ -71,17 +61,15 @@
       <div id="restaurantStatus" class="status-banner" role="status" hidden></div>
       <article class="menu-card">
         <div class="card-header">
-          <div class="card-title-line"><h2 id="menuHeading" tabindex="-1">오늘의 메뉴</h2><span id="dateDisplay" class="date-badge"></span><span id="todayMarker" class="today-marker" hidden></span></div>
+          <div class="card-title-line"><div class="card-title-copy"><h2 id="menuHeading" tabindex="-1">오늘의 메뉴</h2><span id="dateDisplay" class="date-badge"></span><span id="todayMarker" class="today-marker" hidden></span></div><button id="shareButton" class="icon-button copy-button" type="button" aria-label="메뉴 복사" title="메뉴 복사"><span data-icon="copy"></span></button></div>
           <p class="card-context"><span id="restaurantName"></span><span aria-hidden="true"> · </span><span id="mealContext"></span><span aria-hidden="true"> · </span><span id="windowContext"></span></p>
           <p class="service-hours" id="serviceHours" hidden></p>
           <p class="service-state" id="serviceState" role="status" hidden></p>
         </div>
         <div id="menuContent"></div>
         <div id="emptyState" class="empty-state" hidden><span data-icon="bowl" class="empty-symbol"></span><h3 id="emptyTitle"></h3><p id="emptyDescription"></p></div>
-        <div class="card-footer"><a id="sourceLink" class="small-button" href="https://www.ajou.ac.kr/kr/life/food.do" target="_blank" rel="noopener noreferrer"><span data-icon="external"></span><span id="sourceLabel">학교 원문</span></a><span id="menuCount" class="item-count"></span><button id="shareButton" class="small-button" type="button"><span data-icon="copy"></span><span id="shareLabel">메뉴 복사</span></button></div>
       </article>
     </section>
-    <footer class="site-footer"><p id="footerNote"></p><div class="footer-links"><a id="noticesLink" href="https://zhupoxixixi.github.io/ajou-notices/">中文公告 ↗</a><a href="https://github.com/zhupoxixixi/ajou-menu" target="_blank" rel="noopener noreferrer">GitHub ↗</a></div></footer>
   </main>
 
   <nav class="date-navigation" aria-label="날짜 탐색" id="dateNavigation">
@@ -111,7 +99,6 @@
       <section class="tool-section"><h3 id="dataTitle"></h3><dl id="healthDetails" class="health-details"></dl><p class="tool-hint" id="refreshHint"></p><button id="refreshButton" class="small-button" type="button"><span data-icon="refresh"></span><span id="refreshLabel"></span></button></section>
       <section class="tool-section"><h3 id="installTitle"></h3><p id="installHint" class="tool-hint"></p><button id="installButton" class="small-button" type="button" hidden></button></section>
       <section class="tool-section"><h3 id="offlineTitle"></h3><p id="offlineHint" class="tool-hint"></p><p id="offlineReady" class="tool-hint"></p></section>
-      <a class="tool-link" id="toolsNoticesLink" href="https://zhupoxixixi.github.io/ajou-notices/">中文公告 ↗</a>
     </div>
   </dialog>
   <div id="actionStatus" class="toast" role="status" hidden></div>

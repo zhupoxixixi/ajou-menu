@@ -47,23 +47,6 @@ button:disabled { opacity: .35; }
 .language-toggle { height: 34px; min-width: 54px; padding: 0 11px; border: 0; border-radius: 8px; background: #ededed; color: #111; font-size: 12px; font-weight: 600; }
 .language-toggle:hover { background: white; }
 .page-shell { max-width: 592px; padding: 30px 20px 12px; margin-inline: auto; min-height: calc(100dvh - 186px); }
-.page-intro { margin-bottom: 22px; }
-.eyebrow { color: var(--green); font-size: 10px; font-weight: 700; letter-spacing: .12em; margin: 0 0 7px; }
-.page-intro h1 { font-size: 28px; line-height: 1.3; letter-spacing: -.045em; margin: 0 0 8px; }
-.intro-text { font-size: 13px; line-height: 1.8; color: var(--muted-foreground); margin: 0; }
-.app-overview { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin-top: 13px; min-height: 36px; }
-.health-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 9px; min-height: 34px; border: 1px solid var(--border); border-radius: 99px; background: var(--card); color: var(--muted-foreground); font-size: 11px; }
-.health-pill:hover { background: var(--muted); }
-.status-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
-.health-pill[data-state="warning"] .status-dot { background: #ac731d; }
-.health-pill[data-state="offline"] .status-dot { background: #898989; }
-.health-arrow { margin-left: 2px; opacity: .6; }
-.mode-label { font-size: 11px; color: var(--muted-foreground); }
-.return-current { font-size: 11px; border: 0; color: var(--green); background: transparent; padding: 7px 0; min-height: 34px; text-decoration: underline; text-underline-offset: 3px; }
-.project-notice { display: flex; align-items: flex-start; gap: 12px; border: 1px dashed var(--border); border-radius: 12px; padding: 12px; margin-bottom: 16px; color: var(--muted-foreground); }
-.project-notice p { font-size: 12px; line-height: 1.7; margin: 0; flex: 1; }
-.notice-close { color: var(--muted-foreground); border: 0; background: transparent; padding: 2px; }
-.notice-close .icon { width: 12px; height: 12px; }
 .selection-panel { margin: 0 0 13px; }
 .restaurant-tabs { display: flex; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--muted); gap: 3px; margin-bottom: 9px; }
 .restaurant-button { display: flex; align-items: center; justify-content: center; gap: 7px; flex: 1; min-height: 44px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--muted-foreground); font-size: 13px; font-weight: 500; padding: 7px 10px; }
@@ -85,10 +68,13 @@ button:disabled { opacity: .35; }
 .dark .status-banner { background: #30271b; border-color: #5c452c; color: #dec49c; }
 .menu-card { border: 1px solid var(--border); background: var(--card); border-radius: var(--radius); overflow: hidden; box-shadow: 0 1px 2px #00000002; }
 .card-header { padding: 13px 14px 11px; border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--muted) 22%, var(--card)); }
-.card-title-line { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+.card-title-line { display: flex; align-items: center; gap: 10px; }
+.card-title-copy { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; min-width: 0; flex: 1; }
 .card-title-line h2 { margin: 0; font-size: 18px; letter-spacing: -.045em; line-height: 1.35; font-weight: 700; }
+.copy-button { width: 34px; height: 34px; margin-left: auto; border: 0; color: var(--muted-foreground); }
+.copy-button .icon { width: 16px; height: 16px; }
 .date-badge { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 10px; color: var(--muted-foreground); background: var(--muted); border-radius: 6px; padding: 3px 6px; }
-.today-marker { color: #30804c; font-size: 11px; margin-left: auto; }
+.today-marker { color: #30804c; font-size: 11px; }
 .dark .today-marker { color: #83c497; }
 .card-context { margin: 7px 0 0; font-size: 12px; line-height: 1.7; color: var(--muted-foreground); overflow-wrap: anywhere; }
 .service-hours { margin: 5px 0 0; font-size: 12px; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
@@ -104,21 +90,13 @@ button:disabled { opacity: .35; }
 .card-notices { padding: 11px 14px; border-top: 1px solid var(--border); background: color-mix(in srgb, var(--muted) 45%, var(--card)); }
 .card-notices p { font-size: 12px; line-height: 1.85; margin: 0; color: var(--muted-foreground); overflow-wrap: anywhere; }
 .card-notices p + p { margin-top: 8px; }
-.card-footer { display: flex; align-items: center; gap: 7px; padding: 9px 12px; border-top: 1px solid var(--border); background: color-mix(in srgb, var(--muted) 65%, var(--card)); }
 .small-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--foreground); font-size: 12px; padding: 7px 10px; min-height: 38px; white-space: nowrap; }
 .small-button .icon { width: 13px; height: 13px; }
 .small-button:hover:not(:disabled) { background: var(--muted); }
-.item-count { font-size: 10px; color: var(--muted-foreground); }
-#shareButton { margin-left: auto; }
 .empty-state { text-align: center; padding: 35px 20px; }
 .empty-symbol .icon { width: 32px; height: 32px; margin: 0 auto 13px; color: var(--muted-foreground); }
 .empty-state h3 { font-size: 14px; margin: 0 0 7px; }
 .empty-state p { font-size: 12px; color: var(--muted-foreground); margin: 0; line-height: 1.8; }
-.site-footer { display: flex; flex-direction: column; align-items: center; gap: 7px; font-size: 11px; color: var(--muted-foreground); padding: 22px 0 10px; }
-.footer-links { display: flex; align-items: center; gap: 18px; }
-.footer-links a { padding-block: 7px; }
-.site-footer p { margin: 0; text-align: center; }
-.site-footer a:hover { color: var(--foreground); }
 .date-navigation { position: fixed; bottom: 0; inset-inline: 0; z-index: 20; background: #111; color: white; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid #222; }
 .nav-stats { background: #151515; border-bottom: 1px solid #242424; }
 .nav-stats-inner { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 28px; }
@@ -141,7 +119,6 @@ button:disabled { opacity: .35; }
 .tool-section h3 { font-size: 13px; margin: 0 0 9px; }
 .tool-hint { color: var(--muted-foreground); font-size: 12px; line-height: 1.85; margin: 0 0 10px; }
 .tool-hint:last-child { margin-bottom: 0; }
-.tool-link { display: inline-block; color: var(--green); font-size: 12px; padding: 8px 0; }
 .health-details { margin: 0 0 12px; font-size: 12px; }
 .health-details > div { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.6fr); gap: 12px; padding-block: 7px; }
 .health-details dt { color: var(--muted-foreground); }
@@ -175,7 +152,6 @@ button:disabled { opacity: .35; }
   .github-button { display: none; }
   .language-toggle { min-width: 46px; padding-inline: 7px; font-size: 11px; }
   .page-shell { padding-top: 24px; }
-  .project-notice { margin-bottom: 14px; }
   .header-actions .icon-button, .language-toggle { min-height: 40px; }
   .header-actions .icon-button { width: 38px; }
   .restaurant-button { min-height: 44px; }
@@ -185,7 +161,6 @@ button:disabled { opacity: .35; }
   .card-title-line h2 { font-size: 18px; }
   .dish-row td { padding: 12px; }
   .dish-original { font-size: 12px; }
-  .item-count { font-size: 9px; }
   .nav-stats p { font-size: 9px; }
   .nav-controls { min-height: 58px; }
   .date-navigation .icon-button { height: 40px; width: 38px; }
@@ -194,5 +169,5 @@ button:disabled { opacity: .35; }
   .date-dialog { width: 100%; max-width: 440px; margin: auto auto 0; border-bottom: 0; border-radius: 18px 18px 0 0; padding-bottom: env(safe-area-inset-bottom); }
   .date-dialog::before { content: ''; display: block; width: 34px; height: 4px; background: var(--border); border-radius: 5px; margin: 10px auto 0; }
 }
-@media (max-width: 359px) { .header-actions { gap: 4px; } .brand { gap: 5px; } .brand strong { font-size: 11px; } .brand small { font-size: 9px; } .wide-shell { padding-inline: 12px; } .page-shell { padding-inline: 12px; } .card-title-line h2 { font-size: 16px; } .date-badge { font-size: 9px; } .dish-name strong { font-size: 15px; } .small-button { font-size: 11px; padding-inline: 7px; } .card-footer { gap: 5px; } }
+@media (max-width: 359px) { .header-actions { gap: 4px; } .brand { gap: 5px; } .brand strong { font-size: 11px; } .brand small { font-size: 9px; } .wide-shell { padding-inline: 12px; } .page-shell { padding-inline: 12px; } .card-title-line h2 { font-size: 16px; } .date-badge { font-size: 9px; } .dish-name strong { font-size: 15px; } .small-button { font-size: 11px; padding-inline: 7px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }

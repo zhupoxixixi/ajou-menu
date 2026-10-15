@@ -274,10 +274,6 @@ function renderSelectors() {
   $('restaurantLocation').textContent = isChinese() ? info.location_cn : info.location_ko;
   $('weekPreview').textContent = copy().nextWeek;
   $('weekPreview').hidden = state.week !== 'next';
-  const source = new URL('https://www.ajou.ac.kr/kr/life/food.do');
-  source.searchParams.set('mode', 'view'); source.searchParams.set('articleNo', info.id);
-  if (state.date) source.searchParams.set('date', state.date);
-  $('sourceLink').href = source.href;
 }
 
 function renderMenu() {
@@ -298,8 +294,6 @@ function renderMenu() {
   $('serviceState').textContent = copy()[status];
   $('serviceState').dataset.state = status;
   $('serviceState').hidden = false;
-  $('menuCount').textContent = copy().dishes(items.length);
-  $('menuCount').hidden = !items.length;
   $('shareButton').disabled = !section;
   const content = [];
   if (items.length) {
@@ -333,14 +327,7 @@ function updatedText(value) {
   return Number.isFinite(date.getTime()) ? `${new Intl.DateTimeFormat(isChinese() ? 'zh-CN' : 'ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(date)} · KST` : copy().unknown;
 }
 function renderAppStatus() {
-  const offline = !navigator.onLine || offlineFallback;
-  const freshness = dataFreshness(data);
   const selected = RESTAURANTS.map(info => ({ info, restaurant: findRestaurant(schedule, state.date, info.id) }));
-  const healthy = freshness === 'fresh' && selected.every(({ restaurant }) => restaurant?.fetch_status === 'ok') && data?.translation?.status === 'complete';
-  $('healthLabel').textContent = offline ? copy().offline : healthy ? copy().healthy : copy().delayed;
-  $('healthToggle').dataset.state = offline ? 'offline' : healthy ? 'ok' : 'warning';
-  $('selectionMode').textContent = state.automatic ? copy().automatic : copy().manual;
-  $('quickToday').hidden = state.automatic;
   const rows = [[copy().generated, updatedText(data?.generated_at)], [copy().selectedDate, state.date || '—']];
   for (const { info, restaurant } of selected) {
     const statusKey = { ok: 'fetchOk', stale: 'fetchStale', error: 'fetchFailed' }[restaurant?.fetch_status] || 'fetchMissing';
@@ -359,12 +346,13 @@ function renderAppStatus() {
 function renderText() {
   document.documentElement.lang = isChinese() ? 'zh-CN' : 'ko';
   document.title = `${copy().brand} · Ajou Menu`;
-  const text = { brandSubtitle: 'brand', pageTitle: 'pageTitle', introText: 'intro', restaurantLabel: 'restaurant', mealLabel: 'meal', windowLabel: 'window', sourceLabel: 'source', skipLink: 'skip', noticeText: 'notice', emptyTitle: 'empty', emptyDescription: 'emptyDescription', footerNote: 'footer', shareLabel: 'share', calendarTitle: 'calendar', calendarHint: 'calendarHint', datePickerLabel: 'calendar', copyTitle: 'share', copyHint: 'copyHint', toolsTitle: 'tools', dataTitle: 'dataTitle', refreshHint: 'refreshHint', refreshLabel: 'refresh', installTitle: 'installTitle', installButton: 'install', offlineTitle: 'offlineTitle', offlineHint: 'offlineHint', noticesLink: 'notices', toolsNoticesLink: 'notices', quickToday: 'today' };
+  const text = { brandSubtitle: 'brand', pageTitle: 'brand', restaurantLabel: 'restaurant', mealLabel: 'meal', windowLabel: 'window', skipLink: 'skip', emptyTitle: 'empty', emptyDescription: 'emptyDescription', calendarTitle: 'calendar', calendarHint: 'calendarHint', datePickerLabel: 'calendar', copyTitle: 'share', copyHint: 'copyHint', toolsTitle: 'tools', dataTitle: 'dataTitle', refreshHint: 'refreshHint', refreshLabel: 'refresh', installTitle: 'installTitle', installButton: 'install', offlineTitle: 'offlineTitle', offlineHint: 'offlineHint' };
   for (const [id, key] of Object.entries(text)) $(id).textContent = copy()[key];
   $('languageLabel').textContent = isChinese() ? '한국어' : '中文';
   $('langToggle').setAttribute('aria-label', isChinese() ? '한국어로 전환' : '切换到中文');
-  const labels = { dateToggle: 'calendar', navDateLabel: 'calendar', prevDate: 'previous', nextDate: 'next', calendarPrev: 'previousMonth', calendarNext: 'nextMonth', noticeDismiss: 'dismiss', selectionPanel: 'restaurant', dateNavigation: 'calendar', toolsToggle: 'tools' };
+  const labels = { dateToggle: 'calendar', navDateLabel: 'calendar', prevDate: 'previous', nextDate: 'next', calendarPrev: 'previousMonth', calendarNext: 'nextMonth', selectionPanel: 'restaurant', dateNavigation: 'calendar', toolsToggle: 'tools', shareButton: 'share' };
   for (const [id, key] of Object.entries(labels)) $(id).setAttribute('aria-label', copy()[key]);
+  $('shareButton').title = copy().share;
   for (const node of document.querySelectorAll('[data-close]')) node.setAttribute('aria-label', copy().close);
   renderThemeLabel();
   const generated = new Date(data?.generated_at);
@@ -404,8 +392,6 @@ function init() {
     calendarMonth: null,
   };
   for (const node of document.querySelectorAll('[data-icon]')) node.replaceChildren(icon(node.dataset.icon));
-  $('projectNotice').hidden = storageRead('menuNoticeDismissed') === '1';
-  $('noticeDismiss').addEventListener('click', () => { $('projectNotice').hidden = true; storageWrite('menuNoticeDismissed', '1'); });
   $('langToggle').addEventListener('click', () => { state.lang = isChinese() ? 'ko' : 'cn'; storageWrite('menuLang', state.lang); renderAll(); });
   $('themeToggle').addEventListener('click', () => { const dark = !document.documentElement.classList.contains('dark'); document.documentElement.classList.toggle('dark', dark); storageWrite('menuTheme', dark ? 'dark' : 'light'); renderThemeLabel(); });
   const media = matchMedia('(prefers-color-scheme: dark)');
@@ -416,8 +402,7 @@ function init() {
   $('nextDate').addEventListener('click', () => chooseDate(stepDate(schedule, state.date, 1)));
   for (const [id, direction] of [['calendarPrev',-1],['calendarNext',1]]) $(id).addEventListener('click', () => { const months = [...new Set(activeWeek()?.dates.map(date => date.slice(0, 7)) || [])]; state.calendarMonth = months[months.indexOf(state.calendarMonth) + direction] || state.calendarMonth; renderDates(); });
   $('shareButton').addEventListener('click', copyMenu);
-  $('quickToday').addEventListener('click', () => refreshAutomaticSelection(true));
-  for (const id of ['toolsToggle', 'healthToggle']) $(id).addEventListener('click', () => { renderAppStatus(); openDialog('toolsDialog'); });
+  $('toolsToggle').addEventListener('click', () => { renderAppStatus(); openDialog('toolsDialog'); });
   $('refreshButton').addEventListener('click', async () => {
     if (!navigator.onLine) { notify(copy().offlineBanner); return; }
     $('refreshButton').disabled = true; $('refreshLabel').textContent = copy().refreshing;
