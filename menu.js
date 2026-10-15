@@ -18,7 +18,7 @@ const COPY = {
     refresh: '새로고침', refreshing: '새로고침 중…', refreshHint: '매일 00:00 KST에 자동 수집을 예약합니다. 실행은 지연될 수 있으며, 새로고침은 이미 공개된 최신 데이터를 불러옵니다.',
     installTitle: '홈 화면에 추가', installIos: 'iPhone에서는 Safari로 열고 공유 → 홈 화면에 추가를 선택하세요. 메뉴에 없으면 공유 메뉴의 더 보기를 확인하세요.', installOther: '브라우저 메뉴에서 앱 설치 또는 홈 화면에 추가를 선택하세요.', installed: '홈 화면 앱으로 실행 중입니다.', install: '앱 설치',
     offlineTitle: '오프라인 보기', offlineHint: '온라인으로 한 번 열면 저장된 주간 메뉴를 다시 볼 수 있습니다. 오프라인 중 변경된 메뉴는 반영되지 않으니 업데이트 시각을 확인해 주세요.', cacheReady: '오프라인 저장 준비 완료', cachePending: '오프라인 저장 준비 중', cacheUnsupported: '현재 브라우저에서는 오프라인 저장을 사용할 수 없습니다.', cacheFailed: '오프라인 저장을 완료하지 못했습니다. 연결 후 다시 열어 주세요.', offlineBanner: '인터넷에 연결되지 않아 저장된 메뉴를 표시합니다. 새 메뉴와 변경 사항은 연결 후 새로고침해 주세요.',
-    notices: '중국어 공지 ↗', serving: '운영시간 내 · 실제 공급은 원문 확인', servingReference: '참고 운영시간 내 · 원문 확인', upcoming: '운영 시작 전', ended: '이 식사 시간은 지났어요', preview: '예정 메뉴', closed: '이 식사는 운영하지 않아요', emptyService: '등록된 메뉴 없음', unconfirmed: '저장된 메뉴 · 운영 여부 확인 필요', unknownService: '운영시간은 학교 원문 확인',
+    notices: '중국어 공지 ↗', serving: '운영시간 내', servingReference: '참고 운영시간 내', upcoming: '운영 시작 전', ended: '운영시간 종료', preview: '예정 메뉴', closed: '이 식사는 운영하지 않아요', emptyService: '등록된 메뉴 없음', unconfirmed: '운영 여부 확인 필요', unknownService: '운영시간은 학교 원문 확인',
     breakfast: '아침', lunch: '점심', dinner: '저녁', snack: '분식',
     menu: '식단', today: '현재 식사로', todayLabel: '오늘', tomorrowLabel: '내일', source: '학교 원문', servingHours: '운영시간', fallbackHours: '참고 운영시간',
     thisWeek: '이번 주', nextWeek: '다음 주 미리보기', calendar: '날짜 선택', calendarHint: '회색 날짜에는 메뉴가 없습니다.',
@@ -42,7 +42,7 @@ const COPY = {
     refresh: '刷新菜单', refreshing: '正在刷新…', refreshHint: '每天 00:00 KST 自动抓取，执行可能延迟；这里刷新的是已发布数据。',
     installTitle: '添加到主屏幕', installIos: 'iPhone 请用 Safari 打开，点“分享”→“添加到主屏幕”；没有看到时，可在分享菜单中展开更多选项。', installOther: '在浏览器菜单中选择“安装应用”或“添加到主屏幕”。', installed: '正在以主屏应用方式打开。', install: '安装应用',
     offlineTitle: '离线查看', offlineHint: '联网打开一次后，可以查看已保存的一周菜单。离线期间不会同步临时调整，请留意更新时间。', cacheReady: '菜单已准备好供离线查看', cachePending: '正在准备离线菜单', cacheUnsupported: '当前浏览器暂不支持离线保存', cacheFailed: '离线保存未完成，请联网后重新打开。', offlineBanner: '当前连接不可用，显示已保存菜单；新菜单和临时调整需要联网刷新。',
-    notices: '中文公告 ↗', serving: '供餐时段内 · 实际供应以原文为准', servingReference: '参考供餐时段内 · 请核对原文', upcoming: '尚未到供餐时间', ended: '这餐的供餐时段已结束', preview: '预告菜单', closed: '该餐次不供应', emptyService: '暂无已公布菜单', unconfirmed: '已保存菜单 · 供餐情况待核实', unknownService: '供餐时间请查看学校原文',
+    notices: '中文公告 ↗', serving: '供餐时段内', servingReference: '参考供餐时段内', upcoming: '尚未开始', ended: '本餐已结束', preview: '预告菜单', closed: '该餐次不供应', emptyService: '暂无菜单', unconfirmed: '供餐情况待核实', unknownService: '供餐时间请查看学校原文',
     breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '小吃',
     menu: '菜单', today: '回到当前餐次', todayLabel: '今天', tomorrowLabel: '明天', source: '学校原文', servingHours: '供餐时间', fallbackHours: '参考供餐时间',
     thisWeek: '本周', nextWeek: '下周预告', calendar: '选择日期', calendarHint: '灰色日期暂无菜单。',
@@ -263,14 +263,22 @@ function renderSelectors() {
     node.disabled = !available.includes(meal); node.append(icon(meal), el('span', '', copy()[meal])); return node;
   }));
   const sections = menuSections(currentRestaurant(), state.meal);
+  const previousScroll = $('windowTabs').scrollLeft;
   $('windowTabs').hidden = sections.length < 2;
   $('windowTabs').replaceChildren(...sections.map(section => {
     const note = section.items.every(isNotice);
     const node = button(`window-button${note ? ' note-window' : ''}`, section.name_ko === state.sectionName, () => { state.automatic = false; state.sectionName = section.name_ko; renderAll(); });
     node.textContent = localized(section.name_ko, section.name_cn); return node;
   }));
+  $('windowTabs').scrollLeft = previousScroll;
+  const selectedWindow = $('windowTabs').querySelector('[aria-pressed="true"]');
+  if (selectedWindow && !$('windowTabs').hidden) {
+    const strip = $('windowTabs').getBoundingClientRect();
+    const selected = selectedWindow.getBoundingClientRect();
+    if (selected.left < strip.left) $('windowTabs').scrollLeft -= strip.left - selected.left;
+    else if (selected.right > strip.right) $('windowTabs').scrollLeft += selected.right - strip.right;
+  }
   const info = restaurantInfo();
-  $('restaurantName').textContent = isChinese() ? info.name_cn : info.name_ko;
   $('restaurantLocation').textContent = isChinese() ? info.location_cn : info.location_ko;
   $('weekPreview').textContent = copy().nextWeek;
   $('weekPreview').hidden = state.week !== 'next';
@@ -303,7 +311,6 @@ function renderMenu() {
     for (const item of items) {
       const row = el('tr', 'dish-row');
       const name = el('td', 'dish-name'); name.append(el('strong', '', localized(item.ko, item.cn)));
-      if (isChinese() && validTranslation(item.ko, item.cn)) name.append(el('span', 'dish-original', item.ko));
       row.append(name); body.append(row);
     }
     table.append(body); content.push(table);
