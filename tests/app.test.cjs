@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { serviceStatus, dataFreshness, isClosedDay } = require('../menu.js');
+const { serviceStatus, dataFreshness, isClosedDay, unavailableMeal, operatingNotices } = require('../menu.js');
 const section = { items: [{ ko: '김치', cn: '泡菜', kind: 'dish' }] };
 const restaurant = { fetch_status: 'ok', service_hours: { lunch: { start: '11:00', end: '14:00', source: 'daily_menu' } } };
 const status = (time, value = restaurant, portion = section, date = '2026-10-16', fresh = true) => serviceStatus(value, 363910, date, 'lunch', portion, new Date(time), fresh);
@@ -27,6 +27,25 @@ test('fetch failures, stale backups and incomplete records are not holiday closu
   const incomplete = emptyDay();
   delete incomplete.meals.snack;
   assert.equal(isClosedDay(incomplete), false);
+});
+
+test('a known unavailable meal stays distinct from a closed day or a fetch failure', () => {
+  const value = emptyDay();
+  value.meals.lunch.sections = [section];
+  assert.equal(unavailableMeal(value, 'breakfast'), true);
+  assert.equal(unavailableMeal(value, 'lunch'), false);
+  assert.equal(unavailableMeal(emptyDay(), 'breakfast'), false);
+  for (const fetch_status of ['stale', 'error', undefined]) assert.equal(unavailableMeal({ ...value, fetch_status }, 'breakfast'), false);
+  assert.equal(unavailableMeal(undefined, 'breakfast'), false);
+});
+
+test('operating notices from non-serving meals are retained separately and deduplicated', () => {
+  const value = emptyDay();
+  const note = { ko: '※운영시간 안내※', cn: '营业时间说明', kind: 'note' };
+  value.meals.breakfast.sections = [{ items: [note, note] }];
+  value.meals.lunch.sections = [{ items: [section.items[0], { ko: '* 메뉴 변경 가능', kind: 'note' }] }];
+  assert.deepEqual(operatingNotices(value), [note]);
+  assert.deepEqual(operatingNotices(undefined), []);
 });
 
 test('service status observes KST start and end, including a pinned past menu', () => {

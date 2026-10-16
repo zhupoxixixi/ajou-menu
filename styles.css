@@ -54,7 +54,7 @@ button:disabled { opacity: .35; }
 .restaurant-button { display: flex; align-items: center; justify-content: center; gap: 6px; flex: 1; min-height: 34px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--muted-foreground); font-size: 12px; font-weight: 500; padding: 5px 8px; }
 .restaurant-button .icon { width: 13px; height: 13px; }
 .restaurant-button[aria-pressed="true"] { background: var(--card); color: var(--foreground); border-color: var(--border); box-shadow: 0 1px 3px #00000005; }
-.meal-tabs { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 4px; border-bottom: 1px solid var(--border); }
+.meal-tabs { display: grid; grid-template-columns: repeat(var(--meal-count,4),minmax(0,1fr)); gap: 4px; border-bottom: 1px solid var(--border); }
 .meal-button { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 34px; background: transparent; color: var(--muted-foreground); border: 0; border-radius: 6px 6px 0 0; padding: 5px 4px 7px; font-size: 12px; }
 .meal-button .icon { width: 13px; height: 13px; }
 .meal-button[aria-pressed="true"] { color: var(--foreground); font-weight: 600; }
@@ -91,6 +91,8 @@ button:disabled { opacity: .35; }
 .card-notices { padding: 11px 14px; border-top: 1px solid var(--border); background: color-mix(in srgb, var(--muted) 45%, var(--card)); }
 .card-notices p { font-size: 12px; line-height: 1.85; margin: 0; color: var(--muted-foreground); overflow-wrap: anywhere; }
 .card-notices p + p { margin-top: 8px; }
+.operating-details p { margin: 0; color: var(--muted-foreground); font-size: 12px; line-height: 1.85; overflow-wrap: anywhere; }
+.operating-details p + p { margin-top: 6px; }
 .small-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--foreground); font-size: 12px; padding: 7px 10px; min-height: 38px; white-space: nowrap; }
 .small-button .icon { width: 13px; height: 13px; }
 .small-button:hover:not(:disabled) { background: var(--muted); }

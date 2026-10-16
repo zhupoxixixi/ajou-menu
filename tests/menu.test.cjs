@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { getKstDate, getKstMinutes, buildSchedule, resolveMeal, isNotice, validTranslation, resolveSection, stepDate, serviceHours, selectDefaultMenu, initialSelection } = require('../menu.js');
+const { getKstDate, getKstMinutes, buildSchedule, availableMeals, isNotice, validTranslation, resolveSection, stepDate, serviceHours, selectDefaultMenu, initialSelection } = require('../menu.js');
 
 test('Korean midnight is independent of the browser timezone', () => {
   assert.equal(getKstDate(new Date('2026-10-13T15:30:00Z')), '2026-10-14');
@@ -24,10 +24,10 @@ test('weekday default selects the current Korean day, including midnight', () =>
   assert.equal(schedule.initialDate, '2026-10-14');
 });
 
-test('restaurant changes recover a valid meal and missing restaurants do not crash', () => {
-  const restaurant = { meals: { breakfast: { sections: [] }, lunch: { sections: [{ items: [{ ko: '쌀밥' }] }] } } };
-  assert.equal(resolveMeal(restaurant, 'breakfast'), 'lunch');
-  assert.equal(resolveMeal(undefined, 'dinner'), 'dinner');
+test('only meals containing dishes are selectable; notices are not breakfast', () => {
+  const restaurant = { meals: { breakfast: { sections: [{ items: [{ ko: '※운영시간 안내※', kind: 'note' }] }] }, lunch: { sections: [{ items: [{ ko: '쌀밥' }] }] }, dinner: { sections: [{ items: [{ ko: '* 운영 안내', kind: 'note' }, { ko: '김치' }] }] }, snack: { sections: [] } } };
+  assert.deepEqual(availableMeals(restaurant), ['lunch', 'dinner']);
+  assert.deepEqual(availableMeals(undefined), []);
 });
 
 test('untranslated Korean is detected and notices do not count as dishes', () => {

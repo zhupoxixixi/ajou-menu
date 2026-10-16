@@ -22,9 +22,9 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=20261016-closed-days">
-  <script defer src="menu-data.js?v=20261016-closed-days"></script>
-  <script defer src="menu.js?v=20261016-closed-days"></script>
+  <link rel="stylesheet" href="styles.css?v=20261016-meal-flow">
+  <script defer src="menu-data.js?v=20261016-meal-flow"></script>
+  <script defer src="menu.js?v=20261016-meal-flow"></script>
 </head>
 <body>
   <a class="skip-link" href="#menuHeading" id="skipLink">메뉴로 바로가기</a>
@@ -93,6 +93,7 @@
   <dialog id="toolsDialog" class="app-dialog tools-dialog" aria-labelledby="toolsTitle">
     <div class="dialog-heading"><h2 id="toolsTitle"></h2><button class="dialog-close icon-button" type="button" data-close="toolsDialog"><span data-icon="close"></span></button></div>
     <div class="tools-content">
+      <section id="operatingSection" class="tool-section" hidden><h3 id="operatingTitle"></h3><div id="operatingDetails" class="operating-details"></div></section>
       <section class="tool-section"><h3 id="dataTitle"></h3><dl id="healthDetails" class="health-details"></dl><p class="tool-hint" id="refreshHint"></p><button id="refreshButton" class="small-button" type="button"><span data-icon="refresh"></span><span id="refreshLabel"></span></button></section>
       <section class="tool-section"><h3 id="installTitle"></h3><p id="installHint" class="tool-hint"></p><button id="installButton" class="small-button" type="button" hidden></button></section>
       <section class="tool-section"><h3 id="offlineTitle"></h3><p id="offlineHint" class="tool-hint"></p><p id="offlineReady" class="tool-hint"></p></section>
