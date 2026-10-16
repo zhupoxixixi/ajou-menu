@@ -1,9 +1,33 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { serviceStatus, dataFreshness } = require('../menu.js');
+const { serviceStatus, dataFreshness, isClosedDay } = require('../menu.js');
 const section = { items: [{ ko: '김치', cn: '泡菜', kind: 'dish' }] };
 const restaurant = { fetch_status: 'ok', service_hours: { lunch: { start: '11:00', end: '14:00', source: 'daily_menu' } } };
 const status = (time, value = restaurant, portion = section, date = '2026-10-16', fresh = true) => serviceStatus(value, 363910, date, 'lunch', portion, new Date(time), fresh);
+
+const emptyDay = () => ({ fetch_status: 'ok', meals: Object.fromEntries(['breakfast', 'lunch', 'dinner', 'snack'].map(meal => [meal, { sections: [] }])) });
+
+test('successfully fetched days without dishes are closed, including notice-only days', () => {
+  assert.equal(isClosedDay(emptyDay()), true);
+  const notices = emptyDay();
+  notices.meals.breakfast.sections = [{ items: [{ ko: '* 운영 안내', kind: 'note' }] }];
+  assert.equal(isClosedDay(notices), true);
+});
+
+test('a missing meal does not close a day that serves food in another window or meal', () => {
+  const value = emptyDay();
+  value.meals.lunch.sections = [{ items: [{ ko: '* 운영 안내', kind: 'note' }] }, section];
+  assert.equal(isClosedDay(value), false);
+});
+
+test('fetch failures, stale backups and incomplete records are not holiday closures', () => {
+  for (const fetch_status of ['error', 'stale', undefined]) assert.equal(isClosedDay({ ...emptyDay(), fetch_status }), false);
+  assert.equal(isClosedDay(undefined), false);
+  assert.equal(isClosedDay({ fetch_status: 'ok' }), false);
+  const incomplete = emptyDay();
+  delete incomplete.meals.snack;
+  assert.equal(isClosedDay(incomplete), false);
+});
 
 test('service status observes KST start and end, including a pinned past menu', () => {
   assert.equal(status('2026-10-16T01:59:59Z'), 'upcoming');
