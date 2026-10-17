@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { getKstDate, getKstMinutes, buildSchedule, availableMeals, isNotice, validTranslation, resolveSection, stepDate, serviceHours, selectDefaultMenu, initialSelection } = require('../menu.js');
+const { getKstDate, getKstMinutes, buildSchedule, availableMeals, isNotice, validTranslation, resolveSection, stepDate, calendarMonths, stepCalendarMonth, serviceHours, selectDefaultMenu, initialSelection } = require('../menu.js');
 
 test('Korean midnight is independent of the browser timezone', () => {
   assert.equal(getKstDate(new Date('2026-10-13T15:30:00Z')), '2026-10-14');
@@ -17,6 +17,16 @@ test('weekend preview reads the next week, rather than intersecting dates', () =
 
 test('a weekend without preview retains the actual week label', () => {
   assert.equal(buildSchedule({ days: { '2026-10-16': {} } }, new Date('2026-10-17T03:00:00Z')).initialWeek, 'this');
+});
+
+test('calendar arrows follow the displayed cross-month week while another week is selected for the menu', () => {
+  const schedule = { weeks: [{ key: 'this', dates: ['2026-10-26', '2026-10-31', '2026-11-01'] }, { key: 'next', dates: ['2026-11-02', '2026-11-08'] }] };
+  assert.deepEqual(calendarMonths(schedule, 'this', 'next'), ['2026-10', '2026-11']);
+  assert.equal(stepCalendarMonth(schedule, 'this', 'next', '2026-10', 1), '2026-11');
+  assert.equal(stepCalendarMonth(schedule, 'this', 'next', '2026-11', -1), '2026-10');
+  assert.deepEqual(calendarMonths(schedule, 'next', 'this'), ['2026-11']);
+  assert.equal(stepCalendarMonth(schedule, 'next', 'this', '2026-11', -1), '2026-11');
+  assert.deepEqual(calendarMonths({ weeks: [] }, 'this', 'next'), []);
 });
 
 test('weekday default selects the current Korean day, including midnight', () => {

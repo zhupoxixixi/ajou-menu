@@ -1,17 +1,36 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { serviceStatus, dataFreshness, isClosedDay, unavailableMeal, operatingNotices } = require('../menu.js');
+const { serviceStatus, dataFreshness, isClosedDay, isUnpublishedDay, unavailableMeal, operatingNotices } = require('../menu.js');
 const section = { items: [{ ko: '김치', cn: '泡菜', kind: 'dish' }] };
 const restaurant = { fetch_status: 'ok', service_hours: { lunch: { start: '11:00', end: '14:00', source: 'daily_menu' } } };
 const status = (time, value = restaurant, portion = section, date = '2026-10-16', fresh = true) => serviceStatus(value, 363910, date, 'lunch', portion, new Date(time), fresh);
 
 const emptyDay = () => ({ fetch_status: 'ok', meals: Object.fromEntries(['breakfast', 'lunch', 'dinner', 'snack'].map(meal => [meal, { sections: [] }])) });
 
-test('successfully fetched days without dishes are closed, including notice-only days', () => {
-  assert.equal(isClosedDay(emptyDay()), true);
+test('empty weekends retain the requested closure display, including notice-only days', () => {
+  assert.equal(isClosedDay(emptyDay(), '2026-10-17'), true);
   const notices = emptyDay();
   notices.meals.breakfast.sections = [{ items: [{ ko: '* 운영 안내', kind: 'note' }] }];
-  assert.equal(isClosedDay(notices), true);
+  assert.equal(isClosedDay(notices, '2026-10-18'), true);
+});
+
+test('a future empty weekday is unpublished rather than a holiday, including legacy ok records', () => {
+  for (const menu_status of [undefined, 'empty', 'not_published']) {
+    const value = { ...emptyDay(), menu_status };
+    assert.equal(isClosedDay(value, '2026-10-28'), false);
+    assert.equal(isUnpublishedDay(value, '2026-10-28', '2026-10-17'), true);
+  }
+  assert.equal(isClosedDay(emptyDay(), '2026-10-12'), false);
+  assert.equal(isUnpublishedDay({ ...emptyDay(), menu_status: 'unavailable' }, '2026-10-12', '2026-10-17'), false);
+});
+
+test('weekday closure requires an explicit daily announcement, not just an empty record', () => {
+  const value = { ...emptyDay(), menu_status: 'closed', closure: { source: 'daily_menu', text: '금일 식당 휴무' } };
+  assert.equal(isClosedDay(value, '2026-10-28'), true);
+  assert.equal(isUnpublishedDay(value, '2026-10-28', '2026-10-17'), false);
+  assert.equal(isClosedDay({ ...value, closure: { source: 'weekend_no_menu' } }, '2026-10-28'), false);
+  assert.equal(isClosedDay({ ...value, closure: undefined }, '2026-10-28'), false);
+  assert.equal(isClosedDay({ ...value, fetch_status: 'stale' }, '2026-10-28'), false);
 });
 
 test('a missing meal does not close a day that serves food in another window or meal', () => {

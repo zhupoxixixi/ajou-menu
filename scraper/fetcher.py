@@ -18,6 +18,7 @@ _NOTICE_RE = re.compile(r'^\s*(?:[*※]|\()|위 메뉴|시장 상황|운영시�
 _CLOCK = r'(?:[01]?\d|2[0-3]):[0-5]\d'
 _SERVICE_RE = re.compile(rf'(?P<label>조식|아침|중식|증식|점심|석식|저녁)\s*(?:\([^)]*\))?\s*:?\s*(?P<start>{_CLOCK})\s*[~–-]\s*(?P<end>{_CLOCK})')
 _CLOSED_RE = re.compile(r'(조식|아침|중식|증식|점심|석식|저녁)\s*(?:\([^)]*\))?\s*:?\s*(?:미운영|휴무|운영하지 않습니다)')
+_DAY_CLOSED_RE = re.compile(r'^(?:(?:금일|당일|오늘|식당|전체|전일|종일|임시|공휴일|연휴|추석|설날|개천절|한글날)\s*)*(?:휴무|미운영|운영하지\s*않습니다)(?:입니다|\s*안내)?[.!]?$')
 _SERVICE_MEALS = {'조식': 'breakfast', '아침': 'breakfast', '중식': 'lunch', '증식': 'lunch', '점심': 'lunch', '석식': 'dinner', '저녁': 'dinner'}
 # Fallbacks from the university's facility notice; daily notices take precedence.
 DEFAULT_SERVICE_HOURS = {
@@ -49,13 +50,23 @@ def _parse_menu_text(raw_text: str) -> list[dict]:
     return sections
 
 
+def _is_notice_text(text: str) -> bool:
+    return bool(_NOTICE_RE.search(text) or _CLOSED_RE.search(text) or _DAY_CLOSED_RE.fullmatch(text.strip(' \t*※<>[]')))
+
+
+def has_dishes(restaurant: dict) -> bool:
+    return any(item.get('kind') != 'note' and not _is_notice_text(item.get('ko', ''))
+               for meal in restaurant.get('meals', {}).values()
+               for section in meal.get('sections', []) for item in section.get('items', []))
+
+
 def classify_menu_items(menu_data: list[dict]):
     """Keep only menu text and notice classification, including stale fallback data."""
     for restaurant in menu_data:
         for meal in restaurant['meals'].values():
             for section in meal['sections']:
                 section['items'] = [
-                    {'ko': item['ko'], 'cn': item.get('cn', ''), 'kind': 'note' if _NOTICE_RE.search(item['ko']) else 'dish'}
+                    {'ko': item['ko'], 'cn': item.get('cn', ''), 'kind': 'note' if _is_notice_text(item['ko']) else 'dish'}
                     for item in section['items']
                 ]
 
@@ -90,11 +101,32 @@ def fetch_menu(date_str: str, restaurant_id: int) -> dict:
     response = _SESSION.get(url, timeout=(10, 20))
     response.raise_for_status()
     soup = BeautifulSoup(response.text, 'lxml')
-    if not soup.select('div.b-menu-day'):
+    containers = soup.select('div.b-menu-day')
+    if not containers:
         raise ValueError('School page does not contain the expected menu structure')
+    daily_text = '\n'.join(container.get_text('\n') for container in containers)
+    no_menu = bool(soup.select_one('div.b-menu-day.b-no-menu') or _NO_MENU_RE.search(daily_text))
+    closure_text = next((line.strip() for line in daily_text.splitlines()
+                         if _DAY_CLOSED_RE.fullmatch(line.strip(' \t*※<>[]'))), '')
+    if not no_menu and not closure_text and not any(
+            soup.select_one(f'div.b-menu-day.{css_class} pre') for css_class in MEAL_CSS_CLASS.values()):
+        raise ValueError('School page does not contain readable meal containers')
+    if not no_menu and not closure_text and not daily_text.strip():
+        raise ValueError('School meal containers are unexpectedly empty')
     meals = {}
     for key, css_class in MEAL_CSS_CLASS.items():
         container = soup.select_one(f'div.b-menu-day.{css_class}')
         pre = container.find('pre') if container else None
         meals[key] = {'label_ko': MEAL_MAP[key], 'label_cn': MEAL_CN[key], 'sections': _parse_menu_text(pre.get_text('\n') if pre else '')}
-    return {'id': restaurant_id, **info, 'source_url': url, 'service_hours': extract_service_hours(soup, restaurant_id), 'meals': meals}
+    hours = extract_service_hours(soup, restaurant_id)
+    restaurant = {'id': restaurant_id, **info, 'source_url': url, 'service_hours': hours, 'meals': meals}
+    classify_menu_items([restaurant])
+    if has_dishes(restaurant):
+        restaurant['menu_status'] = 'available'
+    elif closure_text or all(hours.get(meal) is None for meal in DEFAULT_SERVICE_HOURS[restaurant_id]):
+        restaurant['menu_status'] = 'closed'
+        restaurant['closure'] = {'source': 'daily_menu', 'text': closure_text or daily_text.strip()}
+    else:
+        # A valid no-menu page says nothing about why the dishes are absent.
+        restaurant['menu_status'] = 'empty'
+    return restaurant

@@ -26,7 +26,9 @@
 
 次日菜单尚未公布时，仍显示次日日期并提示暂无菜单。手动选择日期、餐次、窗口或打开分享链接后，切换食堂仍保留所选日期和餐次；该食堂当天有菜单但不供应所选餐次时，明确提示“不供应早餐”等信息。点击日历中的 **回到当前餐次** 恢复自动选择；自动模式下切换食堂，按各自的供餐时间重新选餐。
 
-周末或节假日等日期，抓取成功且该食堂全天没有菜品时，直接显示 **节假日不营业**，收起餐次、窗口、供餐时间和复制按钮，保留食堂切换及日期导航。尚无抓取数据或抓取失败时，保留相应提示。
+周末抓取成功且全天无菜品，或当天有明确休业公告时，显示 **节假日不营业**，收起餐次、窗口、供餐时间和复制按钮，保留食堂切换及日期导航。未来工作日尚无菜单时显示 **菜单尚未公布**；历史日期缺少来源数据、抓取失败与休业分别提示。
+
+学校页面不再提供某天菜单时，保留此前发布过的同一天菜品和原始抓取时间，并标注“学校页面已无当天菜单”。空页面本身不作为工作日休业或学校保留期限的证据。
 
 ## 菜单来源与更新
 
@@ -54,6 +56,18 @@ python -m scraper.sync_site
 ```
 
 推送界面修改时自动运行检查，不调用翻译 API。图标为本项目原有碗形标志的绘制版本，可安装 Pillow 后运行 `python tools/generate_icons.py` 重新生成。
+
+抓取状态 `fetch_status` 区分成功、保留旧数据和失败；`menu_status` 单独记录 `available`、`empty`（解析阶段尚未判断原因）、`not_published`、`unavailable` 或 `closed`。`closure` 保存当天公告或周末空菜单规则的依据；`stale_reason` 区分来源已无菜单与抓取异常。未知原因不标记为“超出保留窗口”。
+
+浏览器回归检查覆盖未公布菜单、历史数据提示、自动/手动选择与切换周后的跨月箭头。先在另一个终端运行 `python -m http.server 8767 --bind 127.0.0.1 --directory site`，再在项目目录执行：
+
+```sh
+npx --yes --package @playwright/cli playwright-cli -s=menu-regressions open "http://127.0.0.1:8767/?lang=cn" --browser chrome
+npx --yes --package @playwright/cli playwright-cli -s=menu-regressions run-code --filename tests/browser-regressions.js
+npx --yes --package @playwright/cli playwright-cli -s=menu-regressions close
+```
+
+检查只在浏览器内存中构造数据，不调用翻译 API；本地输出保存在项目内已忽略的 `output/` 目录。
 
 ## 界面来源
 

@@ -14,7 +14,7 @@ if _env_path.exists():
             key, value = line.split('=', 1)
             os.environ.setdefault(key.strip(), value.strip().strip('\"\''))
 
-from .fetcher import fetch_menu, RESTAURANTS, MEAL_MAP, MEAL_CN, classify_menu_items
+from .fetcher import fetch_menu, RESTAURANTS, MEAL_MAP, MEAL_CN, classify_menu_items, has_dishes
 from .translator import translate_menu, is_valid_translation, DEFAULT_ENDPOINT, DEFAULT_MODEL
 from .sync_site import sync_site
 
@@ -29,28 +29,57 @@ def _load_previous() -> dict:
         return {}
 
 
-def fetch_single_day(date_str: str, previous: dict | None = None) -> dict:
+def _saved_restaurant(old: dict, old_day: dict, checked_at: str, reason: str) -> dict:
+    restaurant = copy.deepcopy(old)
+    restaurant.update(fetch_status='stale', stale_reason=reason, checked_at=checked_at)
+    restaurant.setdefault('fetched_at', old_day.get('generated_at'))
+    if has_dishes(restaurant):
+        restaurant['menu_status'] = 'available'
+    return restaurant
+
+
+def classify_empty_day(restaurant: dict, date_str: str, today: str):
+    """Describe an empty response without inventing an upstream retention policy."""
+    if restaurant.get('menu_status') == 'closed':
+        return
+    date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    if date.weekday() >= 5:
+        restaurant['menu_status'] = 'closed'
+        restaurant['closure'] = {'source': 'weekend_no_menu'}
+    else:
+        restaurant['menu_status'] = 'not_published' if date_str >= today else 'unavailable'
+
+
+def fetch_single_day(date_str: str, previous: dict | None = None, *, now: datetime | None = None) -> dict:
     print(f'[main] Fetching {date_str}')
+    now = (now or datetime.now(KST)).astimezone(KST)
+    checked_at = now.isoformat()
     restaurants = []
     old_days = {**(previous or {}).get('days', {}), **(previous or {}).get('next_week', {}).get('days', {})}
     old_day = old_days.get(date_str, {})
     for rid, info in RESTAURANTS.items():
+        old = next((entry for entry in old_day.get('restaurants', []) if entry['id'] == rid and entry.get('fetch_status') != 'error'), None)
         try:
             restaurant = fetch_menu(date_str, rid)
             restaurant['fetch_status'] = 'ok'
-            restaurant['fetched_at'] = datetime.now(KST).isoformat()
+            restaurant['fetched_at'] = checked_at
+            restaurant['checked_at'] = checked_at
+            if has_dishes(restaurant):
+                restaurant['menu_status'] = 'available'
+            elif restaurant.get('menu_status') != 'closed' and old and has_dishes(old):
+                # An unconfirmed empty page must never erase published same-date food.
+                restaurant = _saved_restaurant(old, old_day, checked_at, 'source_empty')
+            else:
+                classify_empty_day(restaurant, date_str, now.date().isoformat())
         except Exception as error:
             print(f'[main] Restaurant {rid} unavailable ({type(error).__name__})')
-            old = next((entry for entry in old_day.get('restaurants', []) if entry['id'] == rid and entry.get('fetch_status') != 'error'), None)
             if old:
-                restaurant = copy.deepcopy(old)
-                restaurant['fetch_status'] = 'stale'
-                restaurant.setdefault('fetched_at', old_day.get('generated_at'))
+                restaurant = _saved_restaurant(old, old_day, checked_at, 'fetch_error')
             else:
                 restaurant = {'id': rid, **info, 'fetch_status': 'error', 'meals': {key: {'label_ko': label, 'label_cn': MEAL_CN[key], 'sections': []} for key, label in MEAL_MAP.items()}}
         restaurants.append(restaurant)
     classify_menu_items(restaurants)
-    return {'date': date_str, 'generated_at': datetime.now(KST).isoformat(), 'restaurants': restaurants}
+    return {'date': date_str, 'generated_at': checked_at, 'restaurants': restaurants}
 
 
 def translation_summary(restaurants: list[dict], model: str) -> dict:
