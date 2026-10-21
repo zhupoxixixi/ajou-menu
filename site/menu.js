@@ -443,7 +443,14 @@ function init() {
     calendarMonth: null,
   };
   for (const node of document.querySelectorAll('[data-icon]')) node.replaceChildren(icon(node.dataset.icon));
-  $('langToggle').addEventListener('click', () => { state.lang = isChinese() ? 'ko' : 'cn'; storageWrite('menuLang', state.lang); renderAll(); });
+  $('langToggle').addEventListener('click', () => {
+    state.lang = isChinese() ? 'ko' : 'cn';
+    storageWrite('menuLang', state.lang);
+    const url = new URL(window.location.href);
+    url.searchParams.set('lang', state.lang);
+    window.history.replaceState(null, '', url);
+    renderAll();
+  });
   $('themeToggle').addEventListener('click', () => { const dark = !document.documentElement.classList.contains('dark'); document.documentElement.classList.toggle('dark', dark); storageWrite('menuTheme', dark ? 'dark' : 'light'); renderThemeLabel(); });
   const media = matchMedia('(prefers-color-scheme: dark)');
   media.addEventListener('change', event => { if (!['light','dark'].includes(storageRead('menuTheme'))) { document.documentElement.classList.toggle('dark', event.matches); renderThemeLabel(); } });

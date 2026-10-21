@@ -15,7 +15,7 @@ if _env_path.exists():
             os.environ.setdefault(key.strip(), value.strip().strip('\"\''))
 
 from .fetcher import fetch_menu, RESTAURANTS, MEAL_MAP, MEAL_CN, classify_menu_items, has_dishes
-from .translator import translate_menu, is_valid_translation, reasoning_effort, DEFAULT_ENDPOINT, DEFAULT_MODEL
+from .translator import translate_menu, is_valid_translation, iter_translation_fields, reasoning_effort, DEFAULT_ENDPOINT, DEFAULT_MODEL
 from .sync_site import sync_site
 
 KST = timezone(timedelta(hours=9))
@@ -83,9 +83,18 @@ def fetch_single_day(date_str: str, previous: dict | None = None, *, now: dateti
 
 
 def translation_summary(restaurants: list[dict], model: str) -> dict:
-    items = [item for restaurant in restaurants for meal in restaurant['meals'].values() for section in meal['sections'] for item in section['items']]
-    translated = sum(is_valid_translation(item['ko'], item.get('cn', '')) for item in items)
-    return {'model': model, 'reasoning_effort': reasoning_effort(model), 'total': len(items), 'translated': translated, 'status': 'complete' if translated == len(items) else 'partial' if translated else 'unavailable'}
+    # Chinese cafeteria labels come from the static UI config; location fields
+    # are not rendered. Coverage follows the translated menu-data fields shown
+    # in Chinese: window names plus every dish or notice row.
+    required_categories = {'window', 'menu_item'}
+    fields = [
+        (obj.get(source_field, ''), obj.get(target_field, ''))
+        for obj, source_field, target_field, category in iter_translation_fields(restaurants)
+        if category in required_categories and obj.get(source_field, '')
+    ]
+    translated = sum(is_valid_translation(source, result) for source, result in fields)
+    total = len(fields)
+    return {'model': model, 'reasoning_effort': reasoning_effort(model), 'total': total, 'translated': translated, 'status': 'complete' if translated == total else 'partial' if translated else 'unavailable'}
 
 
 def _write_json(path: Path, data: dict, javascript: bool = False):

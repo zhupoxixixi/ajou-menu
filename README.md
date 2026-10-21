@@ -6,7 +6,7 @@
 
 ## 如何使用
 
-1. 点击右上角的 **中文 / 한국어** 切换语言。中文界面只显示中文菜名；需要韩文时切换到韩文界面。
+1. 点击右上角的 **中文 / 한국어** 切换语言。中文界面只显示中文菜名；需要韩文时切换到韩文界面。切换后刷新仍保留所选语言，也不会把自动选餐固定成某一天的菜单。
 2. 选择 **宿舍食堂 / 教职工食堂**，再选择餐次和窗口。餐次只列出当天有菜品的选项；教职工食堂的营业说明在顶部信息弹窗中查看。窗口超过一行时可左右滑动，当前窗口会保持在可见区域内。
 3. 用底部左右按钮切换日期，或点击 **选择日期** 打开日历。手机上显示底部日历面板，电脑上显示弹窗。
 4. 点击“星期几菜单”标题行最右侧的 **复制图标**，复制日期、食堂、餐次、窗口及菜名，不附带声明或网页链接。右上角还可以切换深浅主题。
@@ -19,6 +19,7 @@
 - Android 等支持安装的浏览器：使用浏览器的安装菜单，或“使用与更新”里的安装按钮（浏览器允许时显示）。
 - 联网打开一次、显示“菜单已准备好供离线查看”后，可断网重新打开已保存的一周菜单。离线期间不能获取临时调整；页面会标明离线状态和原始更新时间。
 - 线上优先加载最新页面和菜单，只有连接失败时使用缓存；缓存仅属于 `/ajou-menu/`，不影响公告站。
+- 缓存存储异常时仍可加载在线菜单；单个标签页使用旧缓存，只通知受影响的页面。
 - 延续公告站的黑白绿色、深浅主题和轻量弹窗动效；系统开启“减少动态效果”时关闭动画。
 - 不提供手机主动推送。
 
@@ -43,6 +44,8 @@
 
 每日菜单更新使用 **Claude Haiku 5.5（`claude-haiku-5-5`，`reasoning_effort=max`）** 翻译，模型和档位在定时工作流中明确指定。翻译缓存按接口、模型和档位区分；网页访问不触发模型调用。API 密钥只保存在本地 `.env` 或 GitHub Actions Secret `TRANSLATE_API_KEY`，不进入网页。已发布菜单的翻译信息记录其生成时使用的模型，新的配置从下一次菜单更新开始生效。
 
+中文完整度统计包含窗口名、菜品和公告；这些字段存在缺译时，每日任务保留上一份已发布数据。明确的韩元金额和时间需要与原文一致，允许等价的数字格式；校验失败的译文不会进入缓存，已有缓存也会重新校验。
+
 外部失效监控预留了接口，默认关闭。需要接入时，添加 GitHub Actions Secret `HEALTHCHECK_PING_URL`（HTTPS 的 Healthchecks.io 兼容 Ping URL），并把仓库变量 `ENABLE_HEALTHCHECKS` 设为 `true`；每次定时任务结束会报告成功或失败。监控服务本身的超时告警需在服务端设置；这表示抓取任务状态，不是网页上线的独立核验。
 
 ## 开发与校验
@@ -59,12 +62,15 @@ python -m scraper.sync_site
 
 抓取状态 `fetch_status` 区分成功、保留旧数据和失败；`menu_status` 单独记录 `available`、`empty`（解析阶段尚未判断原因）、`not_published`、`unavailable` 或 `closed`。`closure` 保存当天公告或周末空菜单规则的依据；`stale_reason` 区分来源已无菜单与抓取异常。未知原因不标记为“超出保留窗口”。
 
-浏览器回归检查覆盖未公布菜单、历史数据提示、自动/手动选择与切换周后的跨月箭头。先在另一个终端运行 `python -m http.server 8767 --bind 127.0.0.1 --directory site`，再在项目目录执行：
+浏览器回归检查覆盖语言切换后刷新、分享链接选择保留、未公布菜单、历史数据提示、自动/手动选择与切换周后的跨月箭头。缓存回归另检查存储故障、标签页隔离和离线重开。先在另一个终端运行 `python -m http.server 8767 --bind 127.0.0.1 --directory site`，再在项目目录执行：
 
 ```sh
 npx --yes --package @playwright/cli playwright-cli -s=menu-regressions open "http://127.0.0.1:8767/?lang=cn" --browser chrome
 npx --yes --package @playwright/cli playwright-cli -s=menu-regressions run-code --filename tests/browser-regressions.js
 npx --yes --package @playwright/cli playwright-cli -s=menu-regressions close
+npx --yes --package @playwright/cli playwright-cli -s=menu-cache open "http://127.0.0.1:8767/?lang=cn" --browser chrome
+npx --yes --package @playwright/cli playwright-cli -s=menu-cache run-code --filename tests/browser-cache-regressions.js
+npx --yes --package @playwright/cli playwright-cli -s=menu-cache close
 ```
 
 检查只在浏览器内存中构造数据，不调用翻译 API；本地输出保存在项目内已忽略的 `output/` 目录。

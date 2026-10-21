@@ -2,6 +2,28 @@ async page => {
   const assert = (value, message) => { if (!value) throw new Error(message); };
   const checks = [], errors = [];
   page.on('pageerror', error => errors.push(error.message));
+  for (const [from, to, htmlLang] of [['cn', 'ko', 'ko'], ['ko', 'cn', 'zh-CN']]) {
+    const url = new URL(page.url()); url.search = `?lang=${from}`;
+    await page.goto(url.href);
+    await page.locator('#langToggle').click();
+    assert(await page.evaluate(() => state.automatic && !state.linked), 'language toggle keeps automatic meal selection');
+    const selected = new URL(page.url());
+    assert(selected.searchParams.get('lang') === to, 'language toggle updates URL');
+    assert(!['date', 'meal', 'window'].some(key => selected.searchParams.has(key)), 'language toggle does not pin the current menu');
+    await page.reload();
+    await page.waitForFunction(lang => document.documentElement.lang === lang, htmlLang);
+    assert(await page.evaluate(() => state.automatic && !state.linked), 'language stays automatic after reload');
+    checks.push(`language ${from} to ${to} survives reload`);
+  }
+  const shared = new URL(page.url());
+  shared.search = '?lang=cn&date=2026-10-22&restaurant=221904&meal=lunch';
+  await page.goto(shared.href);
+  const chosen = await page.evaluate(() => ({ date: state.date, restaurantId: state.restaurantId, meal: state.meal, sectionName: state.sectionName }));
+  await page.locator('#langToggle').click();
+  await page.reload();
+  await page.waitForFunction(() => document.documentElement.lang === 'ko');
+  assert(await page.evaluate(expected => !state.automatic && state.linked && Object.entries(expected).every(([key, value]) => state[key] === value), chosen), 'shared menu selection survives language change and reload');
+  checks.push('shared menu retains selection after language change');
   await page.clock.install({ time: new Date('2026-10-17T03:00:00Z') });
   const emptyRestaurant = (id = 363910) => ({ id, fetch_status: 'ok', meals: Object.fromEntries(['breakfast', 'lunch', 'dinner', 'snack'].map(meal => [meal, { sections: [] }])) });
   const withFood = (id = 363910) => {
@@ -43,18 +65,18 @@ async page => {
       assert(!(await page.locator('#restaurantStatus').isVisible()), 'no duplicate missing-menu banner');
       await record('unpublished Wednesday ' + (menu_status || 'legacy') + ' ' + width);
     }
-    if (width === 390) await page.screenshot({ path: 'output/bugfix-20261017/unpublished-mobile.png', animations: 'disabled' });
+    if (width === 390) await page.screenshot({ path: 'output/fix-audit-20261022/unpublished-mobile.png', animations: 'disabled' });
     await seed(oneDay('2026-10-17', [emptyRestaurant()]), '2026-10-17');
     await page.getByRole('heading', { name: '节假日不营业', exact: true }).waitFor();
     assert(!(await page.locator('#mealTabs').isVisible()) && !(await page.locator('#shareButton').isVisible()), 'closed day hides unused controls');
     await record('empty weekend ' + width);
-    if (width === 1440) await page.screenshot({ path: 'output/bugfix-20261017/closed-desktop.png', animations: 'disabled' });
+    if (width === 1440) await page.screenshot({ path: 'output/fix-audit-20261022/closed-desktop.png', animations: 'disabled' });
     const retained = { ...withFood(), fetch_status: 'stale', stale_reason: 'source_empty', fetched_at: '2026-10-16T03:45:00+09:00' };
     await seed(oneDay('2026-10-12', [retained]), '2026-10-12');
     await page.getByText('学校页面已无当天菜单，显示此前保存的同一天菜单。', { exact: true }).waitFor();
     assert(await page.locator('.dish-row').count() === 1 && await page.locator('#shareButton').isVisible(), 'retained historical dishes remain usable');
     await record('retained history ' + width);
-    if (width === 390) await page.screenshot({ path: 'output/bugfix-20261017/retained-mobile.png', animations: 'disabled' });
+    if (width === 390) await page.screenshot({ path: 'output/fix-audit-20261022/retained-mobile.png', animations: 'disabled' });
   }
 
   const closed = { ...emptyRestaurant(), menu_status: 'closed', closure: { source: 'daily_menu', text: '금일 식당 휴무' } };
@@ -90,7 +112,7 @@ async page => {
   await page.getByRole('button', { name: '上一个月', exact: true }).click();
   assert((await page.locator('#calendarMonth').innerText()) === '2026年10月', 'round trip still works after switching week tabs');
   await record('cross-month arrows after repeated week switches');
-  await page.screenshot({ path: 'output/bugfix-20261017/calendar-october.png', animations: 'disabled' });
+  await page.screenshot({ path: 'output/fix-audit-20261022/calendar-october.png', animations: 'disabled' });
 
   const restaurants = [withFood(363910), withFood(221904)];
   await seed(oneDay('2026-10-17', restaurants), '2026-10-17');

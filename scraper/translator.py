@@ -3,6 +3,7 @@ import json
 import os
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from .ai_client import AIRequestError, request_batch
@@ -13,6 +14,204 @@ DEFAULT_ENDPOINT = 'https://factchat-cloud.mindlogic.ai/v1/gateway'
 DEFAULT_MODEL = 'claude-haiku-5-5'
 DEFAULT_REASONING_EFFORT = 'max'
 _HANGUL = re.compile(r'[가-힣]')
+_FULLWIDTH_DIGITS = str.maketrans('０１２３４５６７８９', '0123456789')
+_CHINESE_DIGITS = {'零': 0, '〇': 0, '○': 0, '一': 1, '二': 2, '两': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9}
+_KOREAN_DIGITS = {'영': 0, '공': 0, '일': 1, '이': 2, '삼': 3, '사': 4, '오': 5, '육': 6, '칠': 7, '팔': 8, '구': 9}
+_PRICE_ARABIC = r'[0-9０-９](?:[0-9０-９,， \t\u00a0]*[0-9０-９])?(?:[.．][0-9０-９]+)?'
+_PRICE_CHINESE = r'[零〇○一二两三四五六七八九十百千万亿]+'
+_PRICE_PART = rf'(?:{_PRICE_ARABIC}|{_PRICE_CHINESE})(?:十|百|千|万|亿)?'
+_PRICE_KOREAN_NUMBER = r'(?:[0-9０-９,，]+)?[영공일이삼사오육칠팔구십백천만억]+'
+_PRICE_RANGE_NUMBER = rf'(?:{_PRICE_PART}|{_PRICE_KOREAN_NUMBER})'
+_PRICE_SUFFIX = re.compile(rf'(?<![0-9０-９零〇○一二两三四五六七八九十百千万亿.,，．])(?P<amount>(?>(?:{_PRICE_PART})+))\s*(?:韩元|韩币|원|KRW)', re.IGNORECASE)
+_PRICE_RANGE_SUFFIX = re.compile(
+    rf'(?<![0-9０-９零〇○一二两三四五六七八九十百千万亿.,，．])'
+    rf'(?P<start>{_PRICE_RANGE_NUMBER})\s*[~～〜–—-]\s*'
+    rf'(?P<end>{_PRICE_RANGE_NUMBER})\s*(?:韩元|韩币|원|KRW)',
+    re.IGNORECASE,
+)
+_PRICE_PREFIX = re.compile(rf'(?:₩|KRW)\s*(?P<amount>{_PRICE_ARABIC})', re.IGNORECASE)
+_PRICE_KOREAN = re.compile(rf'(?P<amount>{_PRICE_KOREAN_NUMBER})\s*원')
+_PRICE_COMPONENT = re.compile(rf'(?P<number>{_PRICE_ARABIC}|{_PRICE_CHINESE})(?P<unit>[十百千万亿]?)')
+_CLOCK_PART = r'(?:[0-9０-９]{1,2}|[零〇○一二两三四五六七八九十]{1,3})'
+_TIME = re.compile(
+    rf'(?<![0-9０-９])(?:(?P<hour>[0-9０-９]{{1,2}})\s*[:：]\s*(?P<minute>[0-9０-９]{{2}})(?![0-9０-９])'
+    rf'|(?P<spoken_hour>{_CLOCK_PART})\s*(?:시|点|时|時)\s*(?P<spoken_minute>{_CLOCK_PART}|반|半)?\s*(?:분)?)'
+)
+
+
+def _chinese_integer(value: str) -> int | None:
+    """Parse common Chinese integer forms used to render a won amount or time."""
+    if value and all(char in _CHINESE_DIGITS for char in value):
+        return int(''.join(str(_CHINESE_DIGITS[char]) for char in value))
+
+    small_units = {'十': 10, '百': 100, '千': 1000}
+    large_units = {'万': 10_000, '亿': 100_000_000}
+    total = section = number = 0
+    for char in value:
+        if char in _CHINESE_DIGITS:
+            number = _CHINESE_DIGITS[char]
+        elif char in small_units:
+            unit = small_units[char]
+            section += (number if number else 1) * unit
+            number = 0
+        elif char in large_units:
+            section += number
+            total += (section or 1) * large_units[char]
+            section = number = 0
+        else:
+            return None
+    return total + section + number
+
+
+def _korean_integer(value: str) -> int | None:
+    small_units = {'십': 10, '백': 100, '천': 1000}
+    large_units = {'만': 10_000, '억': 100_000_000}
+    total = section = number = 0
+    for char in value:
+        if char.translate(_FULLWIDTH_DIGITS).isascii() and char.translate(_FULLWIDTH_DIGITS).isdigit():
+            number = number * 10 + int(char.translate(_FULLWIDTH_DIGITS))
+        elif char in {',', '，'}:
+            continue
+        elif char in _KOREAN_DIGITS:
+            number = _KOREAN_DIGITS[char]
+        elif char in small_units:
+            section += (number if number else 1) * small_units[char]
+            number = 0
+        elif char in large_units:
+            section += number
+            total += (section or 1) * large_units[char]
+            section = number = 0
+        else:
+            return None
+    return total + section + number
+
+
+def _amount_value(value: str) -> int | None:
+    units = {'十': 10, '百': 100, '千': 1000, '万': 10_000, '亿': 100_000_000}
+    parts = list(_PRICE_COMPONENT.finditer(value))
+    if not parts or ''.join(part.group(0) for part in parts) != value:
+        return None
+    total = Decimal(0)
+    for part in parts:
+        number_text = part.group('number')
+        digits = number_text.translate(_FULLWIDTH_DIGITS).replace('，', ',').replace('．', '.')
+        try:
+            if re.fullmatch(r'[0-9][0-9, \t\u00a0]*(?:\.[0-9]+)?', digits):
+                number = Decimal(digits.replace(',', '').replace(' ', '').replace('\t', '').replace('\u00a0', ''))
+            else:
+                chinese_number = _chinese_integer(number_text)
+                if chinese_number is None:
+                    return None
+                number = Decimal(chinese_number)
+        except InvalidOperation:
+            return None
+        unit = part.group('unit')
+        total += number * units[unit] if unit else number
+    if total != total.to_integral_value():
+        return None
+    return int(total)
+
+
+def _explicit_won_amounts(text: str) -> list[int]:
+    matches = []
+    covered_ranges = []
+    unit_values = {
+        '十': 10, '百': 100, '千': 1_000, '万': 10_000, '亿': 100_000_000,
+        '십': 10, '백': 100, '천': 1_000, '만': 10_000, '억': 100_000_000,
+    }
+    korean_numerals = '영공일이삼사오육칠팔구십백천만억'
+
+    def parse_amount(raw: str) -> int | None:
+        if any(char in korean_numerals for char in raw):
+            return _korean_integer(raw)
+        return _amount_value(raw)
+
+    for match in _PRICE_RANGE_SUFFIX.finditer(text):
+        start_raw, end_raw = match.group('start', 'end')
+        start_value, end_value = parse_amount(start_raw), parse_amount(end_raw)
+        if start_value is not None and end_value is not None:
+            end_unit = unit_values.get(end_raw[-1])
+            start_has_unit = any(char in unit_values for char in start_raw)
+            if end_unit and not start_has_unit:
+                start_value *= end_unit
+            matches.extend((
+                (match.start('start'), match.end('start'), start_value),
+                (match.start('end'), match.end('end'), end_value),
+            ))
+            covered_ranges.append((match.start(), match.end()))
+
+    for pattern in (_PRICE_SUFFIX, _PRICE_PREFIX, _PRICE_KOREAN):
+        for match in pattern.finditer(text):
+            if any(start <= match.start('amount') < end for start, end in covered_ranges):
+                continue
+            raw_amount = match.group('amount')
+            value = _korean_integer(raw_amount) if pattern is _PRICE_KOREAN else _amount_value(raw_amount)
+            matches.append((match.start('amount'), match.end('amount'), value))
+    # A string such as "₩6,500원" can match both currency forms; count it once.
+    unique = {(start, end): value for start, end, value in matches}
+    return [value for _, value in sorted(unique.items())]
+
+
+def _clock_integer(value: str) -> int | None:
+    if value in {'반', '半'}:
+        return 30
+    digits = value.translate(_FULLWIDTH_DIGITS)
+    if digits.isascii() and digits.isdigit():
+        return int(digits)
+    return _chinese_integer(value)
+
+
+def _explicit_times(text: str) -> list[int]:
+    """Return explicit times as minutes after midnight, preserving order/count."""
+    matches = list(_TIME.finditer(text))
+    raw_times = []
+    markers = []
+    marker_pattern = r'(오전|오후|上午|下午|早上|晚上|AM|PM)'
+    for match in matches:
+        if match.group('hour') is not None:
+            hour = _clock_integer(match.group('hour'))
+            minute = _clock_integer(match.group('minute'))
+        else:
+            hour = _clock_integer(match.group('spoken_hour'))
+            spoken_minute = match.group('spoken_minute')
+            minute = _clock_integer(spoken_minute) if spoken_minute else 0
+        if hour is None or minute is None or not (0 <= hour <= 23 and 0 <= minute <= 59):
+            raw_times.append(None)
+            markers.append(None)
+            continue
+        prefix = text[max(0, match.start() - 12):match.start()]
+        suffix = text[match.end():match.end() + 12]
+        before = re.search(rf'{marker_pattern}\s*$', prefix, re.IGNORECASE)
+        after = re.match(rf'\s*(AM|PM)\b', suffix, re.IGNORECASE)
+        marker = before.group(1) if before else after.group(1) if after else None
+        raw_times.append((hour, minute))
+        markers.append(marker.upper() if marker and marker.upper() in {'AM', 'PM'} else marker)
+
+    # A single meridiem marker on a range applies to both endpoints. Markers
+    # written on each endpoint remain explicit, so an exception is preserved.
+    range_separator = re.compile(
+        rf'\s*(?:{marker_pattern}\s*)?[~～〜–—-]\s*(?:{marker_pattern}\s*)?',
+        re.IGNORECASE,
+    )
+    for index in range(len(matches) - 1):
+        between = text[matches[index].end():matches[index + 1].start()]
+        if range_separator.fullmatch(between):
+            if markers[index] and not markers[index + 1]:
+                markers[index + 1] = markers[index]
+            elif markers[index + 1] and not markers[index]:
+                markers[index] = markers[index + 1]
+
+    times = []
+    for raw_time, marker in zip(raw_times, markers):
+        if raw_time is None:
+            continue
+        hour, minute = raw_time
+        if marker in {'오후', '下午', '晚上', 'PM'}:
+            hour = hour % 12 + 12
+        elif marker in {'오전', '上午', '早上', 'AM'}:
+            hour %= 12
+        times.append(hour * 60 + minute)
+    return times
 
 GLOSSARY = '''
 货币：价格单位원译为韩元，保留原有金额数字。
@@ -50,6 +249,12 @@ def _setting(name: str, default: int, maximum: int) -> int:
 def is_valid_translation(source: str, result: str) -> bool:
     if not isinstance(result, str) or not result.strip():
         return False
+    # Compare only explicit time and won-price tokens. Ordinary menu counts
+    # such as "3종" are deliberately left to the translation itself.
+    if _explicit_won_amounts(source) != _explicit_won_amounts(result):
+        return False
+    if _explicit_times(source) != _explicit_times(result):
+        return False
     if source.startswith('증식(') and '11:00' in source and '午餐' not in result:
         return False
     if '장조림' in source and '소고기' not in source and '牛肉' in result:
@@ -67,6 +272,20 @@ def _namespace(model: str, endpoint: str) -> str:
     return f'{endpoint.rstrip("/")}|{model}|{reasoning_effort(model) or "default"}'
 
 
+def iter_translation_fields(menu_data: list[dict]):
+    """Yield every translated field and its UI-coverage category."""
+    for restaurant in menu_data:
+        yield restaurant, 'name_ko', 'name_cn', 'restaurant'
+        yield restaurant, 'location_ko', 'location_cn', 'location'
+        for meal in restaurant.get('meals', {}).values():
+            for section in meal.get('sections', []):
+                items = section.get('items', [])
+                if items:
+                    yield section, 'name_ko', 'name_cn', 'window'
+                for item in items:
+                    yield item, 'ko', 'cn', 'menu_item'
+
+
 def _load_cache(model: str = DEFAULT_MODEL, endpoint: str = DEFAULT_ENDPOINT) -> dict:
     try:
         payload = json.loads(Path(CACHE_PATH).read_text(encoding='utf-8'))
@@ -82,7 +301,8 @@ def _save_cache(cache: dict, model: str = DEFAULT_MODEL, endpoint: str = DEFAULT
     path = Path(CACHE_PATH)
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix('.tmp')
-    temporary.write_text(json.dumps({'version': CACHE_VERSION, 'namespace': _namespace(model, endpoint), 'entries': cache}, ensure_ascii=False, indent=2), encoding='utf-8')
+    valid_cache = {source: result for source, result in cache.items() if is_valid_translation(source, result)}
+    temporary.write_text(json.dumps({'version': CACHE_VERSION, 'namespace': _namespace(model, endpoint), 'entries': valid_cache}, ensure_ascii=False, indent=2), encoding='utf-8')
     temporary.replace(path)
 
 
@@ -117,6 +337,9 @@ def _call_batch(texts: list[str], api_key: str, api_endpoint: str, model: str) -
 
 def translate_concurrent(texts: list[str], api_key: str, api_endpoint: str, cache: dict, model: str = DEFAULT_MODEL) -> list[str]:
     """Deduplicate a whole week's text, translating bounded batches in parallel."""
+    for source, result in list(cache.items()):
+        if not is_valid_translation(source, result):
+            del cache[source]
     unique = list(dict.fromkeys(text for text in texts if text and text.strip()))
     missing = [text for text in unique if not is_valid_translation(text, cache.get(text, ''))]
     batch_size = _setting('TRANSLATE_BATCH_SIZE', 20, 40)
@@ -163,17 +386,11 @@ def translate_menu(menu_data: list[dict], api_key: str, api_endpoint: str, model
         return menu_data
     cache = _load_cache(model, api_endpoint)
     texts, targets = [], []
-    for restaurant in menu_data:
-        fields = [(restaurant, 'name_ko', 'name_cn'), (restaurant, 'location_ko', 'location_cn')]
-        for meal in restaurant['meals'].values():
-            for section in meal['sections']:
-                fields.append((section, 'name_ko', 'name_cn'))
-                fields.extend((item, 'ko', 'cn') for item in section['items'])
-        for obj, source_field, target_field in fields:
-            source = obj.get(source_field, '')
-            if source and not is_valid_translation(source, obj.get(target_field, '')):
-                texts.append(source)
-                targets.append((obj, target_field))
+    for obj, source_field, target_field, _category in iter_translation_fields(menu_data):
+        source = obj.get(source_field, '')
+        if source and not is_valid_translation(source, obj.get(target_field, '')):
+            texts.append(source)
+            targets.append((obj, target_field))
     translated = translate_concurrent(texts, api_key, api_endpoint, cache, model)
     for (obj, field), result in zip(targets, translated):
         obj[field] = result
