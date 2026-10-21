@@ -18,7 +18,8 @@ jobs:
     timeout-minutes: 20
     env:
       PYTHONUNBUFFERED: '1'
-      TRANSLATE_MODEL: ${{ vars.TRANSLATE_MODEL || 'gpt-6-luna' }}
+      TRANSLATE_MODEL: 'claude-haiku-5-5'
+      TRANSLATE_REASONING_EFFORT: 'max'
       TRANSLATE_API_ENDPOINT: ${{ vars.TRANSLATE_API_ENDPOINT || 'https://factchat-cloud.mindlogic.ai/v1/gateway' }}
       TRANSLATE_MAX_WORKERS: '4'
     steps:
@@ -40,9 +41,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: data/translation_cache.json
-          key: menu-translations-v2-${{ runner.os }}-${{ env.TRANSLATE_MODEL }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: menu-translations-v3-${{ runner.os }}-${{ env.TRANSLATE_MODEL }}-${{ env.TRANSLATE_REASONING_EFFORT }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            menu-translations-v2-${{ runner.os }}-${{ env.TRANSLATE_MODEL }}-
+            menu-translations-v3-${{ runner.os }}-${{ env.TRANSLATE_MODEL }}-${{ env.TRANSLATE_REASONING_EFFORT }}-
       - name: Run scraper
         env:
           TRANSLATE_API_KEY: ${{ secrets.TRANSLATE_API_KEY }}
@@ -53,7 +54,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: data/translation_cache.json
-          key: menu-translations-v2-${{ runner.os }}-${{ env.TRANSLATE_MODEL }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: menu-translations-v3-${{ runner.os }}-${{ env.TRANSLATE_MODEL }}-${{ env.TRANSLATE_REASONING_EFFORT }}-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"

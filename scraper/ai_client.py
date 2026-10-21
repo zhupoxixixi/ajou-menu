@@ -18,7 +18,7 @@ def _session() -> requests.Session:
     return _CLIENTS.session
 
 
-def request_batch(sources, api_key, api_endpoint, model, system_prompt, parse_response):
+def request_batch(sources, api_key, api_endpoint, model, system_prompt, parse_response, *, reasoning_effort=None):
     endpoint = api_endpoint.rstrip('/')
     if not endpoint.endswith('/chat/completions'):
         endpoint += '/chat/completions'
@@ -33,6 +33,9 @@ def request_batch(sources, api_key, api_endpoint, model, system_prompt, parse_re
     if model.startswith('gpt-6'):
         payload.pop('temperature', None)
         payload['reasoning_effort'] = 'none'
+    if reasoning_effort:
+        payload.pop('temperature', None)
+        payload['reasoning_effort'] = reasoning_effort
     last_error = 'AI request failed'
     for attempt in range(3):
         delay = 2 ** attempt

@@ -8,12 +8,14 @@ from pathlib import Path
 from .ai_client import AIRequestError, request_batch
 
 CACHE_PATH = Path(__file__).resolve().parent.parent / 'data' / 'translation_cache.json'
-CACHE_VERSION = 2
+CACHE_VERSION = 3
 DEFAULT_ENDPOINT = 'https://factchat-cloud.mindlogic.ai/v1/gateway'
-DEFAULT_MODEL = 'gpt-6-luna'
+DEFAULT_MODEL = 'claude-haiku-5-5'
+DEFAULT_REASONING_EFFORT = 'max'
 _HANGUL = re.compile(r'[가-힣]')
 
 GLOSSARY = '''
+货币：价格单位원译为韩元，保留原有金额数字。
 餐次：중식=午餐（不是中式）；석식=晚餐；조식/아침=早餐；점심=午餐；저녁=晚餐；분식=小吃。
 营业时间公告中的증식(...원): 11:00~14:00是중식的笔误，此处译为午餐。
 窗口：메인=主菜单；코너=窗口；테이크아웃=外带；간편식=简餐；천원의 아침밥=千韩元早餐。
@@ -57,8 +59,12 @@ def is_valid_translation(source: str, result: str) -> bool:
     )
 
 
+def reasoning_effort(model: str) -> str | None:
+    return os.environ.get('TRANSLATE_REASONING_EFFORT') or (DEFAULT_REASONING_EFFORT if model == DEFAULT_MODEL else None)
+
+
 def _namespace(model: str, endpoint: str) -> str:
-    return f'{endpoint.rstrip("/")}|{model}'
+    return f'{endpoint.rstrip("/")}|{model}|{reasoning_effort(model) or "default"}'
 
 
 def _load_cache(model: str = DEFAULT_MODEL, endpoint: str = DEFAULT_ENDPOINT) -> dict:
@@ -92,6 +98,10 @@ def _parse_response(content: str, sources: list[str], allow_partial: bool = Fals
         raise TranslationError('Invalid translation JSON') from None
     if not isinstance(results, list) or len(results) != len(sources) or not all(isinstance(result, str) for result in results):
         raise TranslationError('Translation count or language validation failed')
+    # Localize only an unambiguous currency suffix; other untranslated Hangul
+    # still fails validation, including food names and the known lunch typo.
+    results = [re.sub(r'(?<=\d)\s*원', '韩元', result) if re.search(r'\d\s*원', source) else result
+               for source, result in zip(sources, results)]
     valid = [result.strip() if is_valid_translation(source, result) else '' for source, result in zip(sources, results)]
     if not allow_partial and not all(valid):
         raise TranslationError('Translation language validation failed')
@@ -99,7 +109,10 @@ def _parse_response(content: str, sources: list[str], allow_partial: bool = Fals
 
 
 def _call_batch(texts: list[str], api_key: str, api_endpoint: str, model: str) -> list[str]:
-    return request_batch(texts, api_key, api_endpoint, model, SYSTEM_PROMPT, lambda content, sources: _parse_response(content, sources, allow_partial=True))
+    # This university's 11:00 notice misspells lunch as 증식. Correct only that
+    # known context before translation, while validating/caching the original text.
+    sources = [text.replace('증식(', '중식(', 1) if text.startswith('증식(') and '11:00' in text else text for text in texts]
+    return request_batch(sources, api_key, api_endpoint, model, SYSTEM_PROMPT, lambda content, _: _parse_response(content, texts, allow_partial=True), reasoning_effort=reasoning_effort(model))
 
 
 def translate_concurrent(texts: list[str], api_key: str, api_endpoint: str, cache: dict, model: str = DEFAULT_MODEL) -> list[str]:

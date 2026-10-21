@@ -1,4 +1,4 @@
-"""Regenerate the original bowl icon and social card; optional dev dependency: Pillow."""
+"""Regenerate the monochrome bowl icon and social card with Pillow."""
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
@@ -6,14 +6,30 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def icon(size):
-    image = Image.new('RGB', (512, 512), '#111111')
+    image = Image.new('RGB', (1024, 1024), '#111111')
     draw = ImageDraw.Draw(image)
-    draw.ellipse((96, 96, 416, 416), fill='#116537', outline='white', width=12)
-    draw.arc((158, 151, 354, 347), 0, 180, fill='white', width=10)
-    draw.line((145, 249, 367, 249), fill='white', width=10)
-    draw.line((209, 365, 303, 365), fill='white', width=10)
-    for x, top in [(207, 174), (256, 156), (305, 174)]:
-        draw.line((x, top, x, 216), fill='white', width=9)
+    # Same 32-unit geometry as the inline logo and favicon, inside the maskable safe zone.
+    point = lambda x, y: (128 + 24 * x, 128 + 24 * y)
+    def curve(a, b, c, d):
+        return [point(*(((1 - t) ** 3 * a[i] + 3 * (1 - t) ** 2 * t * b[i]
+                         + 3 * (1 - t) * t ** 2 * c[i] + t ** 3 * d[i]) for i in (0, 1)))
+                for t in (n / 64 for n in range(65))]
+    # Filled outer/inner contours avoid the seams from many thick line joins.
+    outer = [point(4.1, 13.1), point(27.9, 13.1)]
+    outer += curve((27.9, 13.1), (27.9, 20.9), (22.7, 25.9), (16, 25.9))[1:]
+    outer += curve((16, 25.9), (9.3, 25.9), (4.1, 20.9), (4.1, 13.1))[1:]
+    inner = [point(5.9, 14.9), point(26.1, 14.9)]
+    inner += curve((26.1, 14.9), (25.7, 20.3), (21.5, 24.1), (16, 24.1))[1:]
+    inner += curve((16, 24.1), (10.5, 24.1), (6.3, 20.3), (5.9, 14.9))[1:]
+    draw.polygon(outer, fill='white')
+    draw.polygon(inner, fill='#111111')
+    width = 43
+    for x in (12, 20):
+        draw.line([point(x, 5), point(x, 9)], fill='white', width=width)
+        for y in (5, 9):
+            px, py = point(x, y)
+            radius = width / 2
+            draw.ellipse((px - radius, py - radius, px + radius, py + radius), fill='white')
     return image.resize((size, size), Image.Resampling.LANCZOS)
 
 
@@ -33,6 +49,6 @@ if __name__ == '__main__':
     draw = ImageDraw.Draw(card)
     card.paste(icon(220), (70, 70))
     draw.text((78, 335), 'AJOU MENU', fill='#ffffff', font=font(68, bold=True))
-    draw.text((82, 446), '亚洲大学食堂 · 中韩双语菜单', fill='#bfe2ca', font=font(36))
+    draw.text((82, 446), '亚洲大学食堂 · 中韩双语菜单', fill='#cccccc', font=font(36))
     draw.text((84, 534), 'zhupoxixixi.github.io/ajou-menu', fill='#aaaaaa', font=font(23))
     card.save(ROOT / 'share.png', optimize=True)

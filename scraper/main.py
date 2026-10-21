@@ -15,7 +15,7 @@ if _env_path.exists():
             os.environ.setdefault(key.strip(), value.strip().strip('\"\''))
 
 from .fetcher import fetch_menu, RESTAURANTS, MEAL_MAP, MEAL_CN, classify_menu_items, has_dishes
-from .translator import translate_menu, is_valid_translation, DEFAULT_ENDPOINT, DEFAULT_MODEL
+from .translator import translate_menu, is_valid_translation, reasoning_effort, DEFAULT_ENDPOINT, DEFAULT_MODEL
 from .sync_site import sync_site
 
 KST = timezone(timedelta(hours=9))
@@ -85,7 +85,7 @@ def fetch_single_day(date_str: str, previous: dict | None = None, *, now: dateti
 def translation_summary(restaurants: list[dict], model: str) -> dict:
     items = [item for restaurant in restaurants for meal in restaurant['meals'].values() for section in meal['sections'] for item in section['items']]
     translated = sum(is_valid_translation(item['ko'], item.get('cn', '')) for item in items)
-    return {'model': model, 'total': len(items), 'translated': translated, 'status': 'complete' if translated == len(items) else 'partial' if translated else 'unavailable'}
+    return {'model': model, 'reasoning_effort': reasoning_effort(model), 'total': len(items), 'translated': translated, 'status': 'complete' if translated == len(items) else 'partial' if translated else 'unavailable'}
 
 
 def _write_json(path: Path, data: dict, javascript: bool = False):

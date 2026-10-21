@@ -41,7 +41,7 @@
 
 这是非官方菜单助手，实际供餐和临时调整以学校公告为准；各窗口菜单供分别选择。
 
-中文翻译在菜单更新时通过 **GPT-6 Luna（`gpt-6-luna`）** API 完成并按模型缓存；网页访问不触发模型调用。API 密钥只保存在本地 `.env` 或 GitHub Actions Secret `TRANSLATE_API_KEY`，不进入网页。
+每日菜单更新使用 **Claude Haiku 5.5（`claude-haiku-5-5`，`reasoning_effort=max`）** 翻译，模型和档位在定时工作流中明确指定。翻译缓存按接口、模型和档位区分；网页访问不触发模型调用。API 密钥只保存在本地 `.env` 或 GitHub Actions Secret `TRANSLATE_API_KEY`，不进入网页。已发布菜单的翻译信息记录其生成时使用的模型，新的配置从下一次菜单更新开始生效。
 
 外部失效监控预留了接口，默认关闭。需要接入时，添加 GitHub Actions Secret `HEALTHCHECK_PING_URL`（HTTPS 的 Healthchecks.io 兼容 Ping URL），并把仓库变量 `ENABLE_HEALTHCHECKS` 设为 `true`；每次定时任务结束会报告成功或失败。监控服务本身的超时告警需在服务端设置；这表示抓取任务状态，不是网页上线的独立核验。
 
@@ -55,7 +55,7 @@ node --test tests/*.test.cjs
 python -m scraper.sync_site
 ```
 
-推送界面修改时自动运行检查，不调用翻译 API。图标为本项目原有碗形标志的绘制版本，可安装 Pillow 后运行 `python tools/generate_icons.py` 重新生成。
+推送界面修改时自动运行检查，不调用翻译 API。图标采用简约的白色线条碗形，浏览器标签、主屏图标与分享图保持一致；可安装 Pillow 后运行 `python tools/generate_icons.py` 重新生成。
 
 抓取状态 `fetch_status` 区分成功、保留旧数据和失败；`menu_status` 单独记录 `available`、`empty`（解析阶段尚未判断原因）、`not_published`、`unavailable` 或 `closed`。`closure` 保存当天公告或周末空菜单规则的依据；`stale_reason` 区分来源已无菜单与抓取异常。未知原因不标记为“超出保留窗口”。
 
