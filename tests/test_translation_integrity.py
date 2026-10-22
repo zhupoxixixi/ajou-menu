@@ -19,6 +19,80 @@ CHANGED_TIME = '午餐（6,500韩元）：12:00~15:00'
 
 
 class TranslationIntegrityTests(unittest.TestCase):
+    def test_reproduced_food_concept_errors_are_rejected(self):
+        cases = [
+            ('쫄면', '辣拌米肠', '韩式辣拌劲道面'),
+            ('쫄면순두부찌개', '辣炒年糕嫩豆腐汤', '劲道面嫩豆腐汤'),
+            ('멘치까스', '门把牛排（炸猪排）', '日式炸肉饼'),
+            ('난자완쓰', '难炸丸子（甜酸酱）', '南煎丸子'),
+            ('계란파국', '鸡蛋海带汤', '鸡蛋葱花汤'),
+            ('자몽보코치니샐러드', '西柚班戟沙拉', '西柚马苏里拉奶酪球沙拉'),
+            ('톳밥*양념장', '藜麦饭*酱料', '羊栖菜饭*调味酱'),
+            ('조랭이떡국', '千层年糕汤', '葫芦形年糕汤'),
+            ('숙주미나리무침', '绿豆芽韭菜凉拌', '凉拌绿豆芽水芹'),
+            ('건파래볶음', '炒干海带丝', '炒干海苔'),
+            ('오복지&락교', '五福地&落葵', '什锦酱菜&糖醋藠头'),
+            ('떡갈비브로콜리볶음', '炒年糕饼排骨西兰花', '西兰花炒韩式肉饼'),
+            ('콘포테이토샌드위치', '薯泥鸡蛋三明治', '玉米土豆三明治'),
+            ('후리가케밥', '饭团拌饭', '日式拌饭料米饭'),
+            ('김말이튀김', '紫菜包饭炸物', '炸紫菜粉丝卷'),
+            ('즉석라볶이', '即食辣炒年糕', '现做拉面炒年糕'),
+            ('건새우무볶음', '干虾炒', '虾米炒萝卜'),
+            ('부추적채겉절이', '韭菜丝拌菜', '韭菜紫甘蓝鲜拌菜'),
+        ]
+        for source, wrong, correct in cases:
+            with self.subTest(source=source):
+                self.assertFalse(translator.is_valid_translation(source, wrong))
+                self.assertTrue(translator.is_valid_translation(source, correct))
+
+    def test_prompt_changes_invalidate_otherwise_valid_cached_translations(self):
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=OUTPUT_DIR) as directory:
+            cache_path = Path(directory) / 'cache.json'
+            with patch.object(translator, 'CACHE_PATH', cache_path):
+                translator._save_cache({'김치': '泡菜'})
+                self.assertEqual(translator._load_cache(), {'김치': '泡菜'})
+                with patch.object(translator, 'PROMPT_HASH', 'updated-prompt'):
+                    self.assertEqual(translator._load_cache(), {})
+
+    def test_force_retranslation_bypasses_both_existing_fields_and_cache(self):
+        menu = [{'meals': {'lunch': {'sections': [{
+            'name_ko': '특별 코너', 'name_cn': '特别窗口',
+            'items': [{'ko': '김치', 'cn': '泡菜'}],
+        }]}}}]
+        with patch.object(translator, '_load_cache') as load, patch.object(
+            translator, 'translate_concurrent', return_value=['主餐', '韩式泡菜']
+        ) as translate:
+            translator.translate_menu(menu, 'test-key', 'https://example.invalid', force=True)
+        load.assert_not_called()
+        self.assertEqual(translate.call_args.args[0], ['특별 코너', '김치'])
+        self.assertEqual(translate.call_args.args[3], {})
+        section = menu[0]['meals']['lunch']['sections'][0]
+        self.assertEqual((section['name_cn'], section['items'][0]['cn']), ('主餐', '韩式泡菜'))
+
+    def test_reviewed_menu_phrases_override_existing_or_cached_ai_mistranslations(self):
+        menu = [{'meals': {'lunch': {'sections': [{
+            'name_ko': '메인', 'name_cn': '主菜单',
+            'items': [
+                {'ko': '그린샐러드/잡곡밥', 'cn': '西兰花沙拉/杂粮饭'},
+                {'ko': '메추리알새송이조림', 'cn': '鹌鹑蛋新鲜香菇炖菜'},
+                {'ko': '유부미소국', 'cn': '味噌海带豆腐汤'},
+            ],
+        }]}}}]
+        with patch.object(translator, '_load_cache', return_value={}), patch.object(translator, '_call_batch') as api:
+            translator.translate_menu(menu, 'test-key', 'https://example.invalid')
+        api.assert_not_called()
+        section = menu[0]['meals']['lunch']['sections'][0]
+        self.assertEqual(section['name_cn'], '主餐')
+        self.assertEqual([item['cn'] for item in section['items']], ['蔬菜沙拉 / 杂粮饭', '酱炖鹌鹑蛋杏鲍菇', '油豆腐味噌汤'])
+
+    def test_reviewed_glossary_does_not_override_unreviewed_combinations(self):
+        self.assertEqual(translator.reviewed_translation('그린샐러드  / 잡곡밥'), '蔬菜沙拉 / 杂粮饭')
+        self.assertIsNone(translator.reviewed_translation('그린샐러드 / 치킨'))
+        for source, result in translator.REVIEWED_TRANSLATIONS.items():
+            with self.subTest(source=source):
+                self.assertTrue(translator.is_valid_translation(source, result))
+
     def test_amount_and_time_format_variants_are_equivalent(self):
         variants = [
             VALID_NOTICE,
