@@ -88,7 +88,7 @@ The Ajou Menu Git commit containing that version is
 `f97a44f89cc5ae6bc9f920e01d9e22272d43179a`; the recorded upstream source commit
 is `98ed97bd99def529493fd37177228810f6422f6d`. This is historical attribution:
 the source files and their adapter have been removed from the current version.
-The current clear and frosted choices use ordinary CSS.
+The current transparent, translucent, and frosted choices use ordinary CSS.
 
 The user-selectable background remains processed and stored in the browser on
 the user's device. Ajou Menu does not upload that image.

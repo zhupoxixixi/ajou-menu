@@ -13,10 +13,7 @@ const COPY = {
   ko: {
     brand: '아주대학교 식단', restaurant: '식당 선택', meal: '식사 선택', window: '코너 선택',
     tools: '사용 및 업데이트', healthy: '데이터 업데이트됨', delayed: '업데이트 확인 필요', offline: '오프라인 · 저장된 메뉴', automatic: '자동 선택', manual: '직접 선택',
-    dataTitle: '데이터 상태', generated: '전체 메뉴 업데이트', selectedDate: '선택한 날짜', translation: '중국어 번역', complete: '완료', partial: '일부 미완료', unknown: '확인 필요', fetchOk: '수집 완료', fetchStale: '이전 저장본', fetchFailed: '수집 실패', fetchMissing: '데이터 없음',
-    refresh: '새로고침', refreshing: '새로고침 중…', refreshHint: '매일 00:00 KST에 자동 수집을 예약합니다. 실행은 지연될 수 있으며, 새로고침은 이미 공개된 최신 데이터를 불러옵니다.',
-    installTitle: '홈 화면에 추가', installIos: 'iPhone에서는 Safari로 열고 공유 → 홈 화면에 추가를 선택하세요. 메뉴에 없으면 공유 메뉴의 더 보기를 확인하세요.', installOther: '브라우저 메뉴에서 앱 설치 또는 홈 화면에 추가를 선택하세요.', installed: '홈 화면 앱으로 실행 중입니다.', install: '앱 설치',
-    offlineTitle: '오프라인 보기', offlineHint: '온라인으로 한 번 열면 저장된 주간 메뉴를 다시 볼 수 있습니다. 오프라인 중 변경된 메뉴는 반영되지 않으니 업데이트 시각을 확인해 주세요.', cacheReady: '오프라인 저장 준비 완료', cachePending: '오프라인 저장 준비 중', cacheUnsupported: '현재 브라우저에서는 오프라인 저장을 사용할 수 없습니다.', cacheFailed: '오프라인 저장을 완료하지 못했습니다. 연결 후 다시 열어 주세요.', offlineBanner: '인터넷에 연결되지 않아 저장된 메뉴를 표시합니다. 새 메뉴와 변경 사항은 연결 후 새로고침해 주세요.',
+    offlineBanner: '인터넷에 연결되지 않아 저장된 메뉴를 표시합니다. 새 메뉴와 변경 사항은 연결 후 새로고침해 주세요.',
     notices: '중국어 공지 ↗', serving: '운영시간 내', servingReference: '참고 운영시간 내', upcoming: '운영 시작 전', ended: '운영시간 종료', preview: '예정 메뉴', closed: '이 식사는 운영하지 않아요', emptyService: '등록된 메뉴 없음', unconfirmed: '운영 여부 확인 필요', unknownService: '운영시간은 학교 원문 확인',
     breakfast: '아침', lunch: '점심', dinner: '저녁', snack: '분식',
     menu: '식단', today: '현재 식사로', todayLabel: '오늘', tomorrowLabel: '내일', source: '학교 원문', servingHours: '운영시간', fallbackHours: '참고 운영시간',
@@ -37,10 +34,7 @@ const COPY = {
   cn: {
     brand: '亚洲大学食堂菜单', restaurant: '选择食堂', meal: '选择餐次', window: '选择窗口',
     tools: '使用与更新', healthy: '数据已更新', delayed: '需要检查更新', offline: '离线 · 已保存菜单', automatic: '自动选餐', manual: '手动查看',
-    dataTitle: '数据状态', generated: '整份菜单更新时间', selectedDate: '当前查看日期', translation: '中文翻译', complete: '完整', partial: '部分未完成', unknown: '待确认', fetchOk: '获取成功', fetchStale: '保留旧数据', fetchFailed: '获取失败', fetchMissing: '暂无数据',
-    refresh: '刷新菜单', refreshing: '正在刷新…', refreshHint: '每天 00:00 KST 自动抓取，执行可能延迟；这里刷新的是已发布数据。',
-    installTitle: '添加到主屏幕', installIos: 'iPhone 请用 Safari 打开，点“分享”→“添加到主屏幕”；没有看到时，可在分享菜单中展开更多选项。', installOther: '在浏览器菜单中选择“安装应用”或“添加到主屏幕”。', installed: '正在以主屏应用方式打开。', install: '安装应用',
-    offlineTitle: '离线查看', offlineHint: '联网打开一次后，可以查看已保存的一周菜单。离线期间不会同步临时调整，请留意更新时间。', cacheReady: '菜单已准备好供离线查看', cachePending: '正在准备离线菜单', cacheUnsupported: '当前浏览器暂不支持离线保存', cacheFailed: '离线保存未完成，请联网后重新打开。', offlineBanner: '当前连接不可用，显示已保存菜单；新菜单和临时调整需要联网刷新。',
+    offlineBanner: '当前连接不可用，显示已保存菜单；新菜单和临时调整需要联网刷新。',
     notices: '中文公告 ↗', serving: '供餐时段内', servingReference: '参考供餐时段内', upcoming: '尚未开始', ended: '本餐已结束', preview: '预告菜单', closed: '该餐次不供应', emptyService: '暂无菜单', unconfirmed: '供餐情况待核实', unknownService: '供餐时间请查看学校原文',
     breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '小吃',
     menu: '菜单', today: '回到当前餐次', todayLabel: '今天', tomorrowLabel: '明天', source: '学校原文', servingHours: '供餐时间', fallbackHours: '参考供餐时间',
@@ -201,7 +195,7 @@ function stepCalendarMonth(schedule, calendarWeek, menuWeek, month, direction) {
 function storageRead(key) { try { return localStorage.getItem(key); } catch { return null; } }
 function storageWrite(key, value) { try { localStorage.setItem(key, value); } catch { /* Preferences are optional. */ } }
 let state, data, schedule, toastTimer;
-let offlineFallback = false, offlineState = 'cachePending', installPrompt = null;
+let offlineFallback = false, offlineState = 'cachePending';
 const $ = id => document.getElementById(id);
 const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text != null) node.textContent = text; return node; };
 const copy = () => COPY[state.lang];
@@ -365,10 +359,6 @@ function renderMenu() {
   showStatus('dataStatus', freshness === 'missing' ? copy().noData : !navigator.onLine || offlineFallback ? copy().offlineBanner : freshness !== 'fresh' ? copy().old : '');
 }
 
-function updatedText(value) {
-  const date = new Date(value);
-  return Number.isFinite(date.getTime()) ? `${new Intl.DateTimeFormat(isChinese() ? 'zh-CN' : 'ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(date)} · KST` : copy().unknown;
-}
 function renderAppStatus() {
   const restaurant = currentRestaurant();
   const notes = isClosedDay(restaurant, state.date) ? [] : operatingNotices(restaurant);
@@ -376,27 +366,12 @@ function renderAppStatus() {
   const info = restaurantInfo();
   $('operatingTitle').textContent = `${copy().operating} · ${localized(info.name_ko, info.name_cn)}`;
   $('operatingDetails').replaceChildren(...notes.map(item => el('p', '', localized(item.ko, item.cn))));
-  const selected = RESTAURANTS.map(info => ({ info, restaurant: findRestaurant(schedule, state.date, info.id) }));
-  const rows = [[copy().generated, updatedText(data?.generated_at)], [copy().selectedDate, state.date || '—']];
-  for (const { info, restaurant } of selected) {
-    const statusKey = { ok: 'fetchOk', stale: 'fetchStale', error: 'fetchFailed' }[restaurant?.fetch_status] || 'fetchMissing';
-    const menuStatusKey = { not_published: 'notPublished', unavailable: 'sourceUnavailable' }[restaurant?.menu_status];
-    rows.push([isChinese() ? info.name_cn : info.name_ko, `${copy()[statusKey]}${menuStatusKey ? ` · ${copy()[menuStatusKey]}` : ''}${restaurant?.fetched_at ? ` · ${updatedText(restaurant.fetched_at)}` : ''}`]);
-  }
-  const translation = data?.translation;
-  rows.push([copy().translation, translation ? `${copy()[translation.status === 'complete' ? 'complete' : 'partial']} · ${translation.translated}/${translation.total}` : copy().unknown]);
-  $('healthDetails').replaceChildren(...rows.map(([name, value]) => { const row = el('div'); row.append(el('dt', '', name), el('dd', '', value)); return row; }));
-  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  $('installHint').textContent = standalone ? copy().installed : ios ? copy().installIos : copy().installOther;
-  $('installButton').hidden = !installPrompt || !!standalone;
-  $('offlineReady').textContent = copy()[offlineState];
 }
 
 function renderText() {
   document.documentElement.lang = isChinese() ? 'zh-CN' : 'ko';
   document.title = `${copy().brand} · Ajou Menu`;
-  const text = { brandSubtitle: 'brand', restaurantLabel: 'restaurant', mealLabel: 'meal', windowLabel: 'window', skipLink: 'skip', emptyTitle: 'empty', emptyDescription: 'emptyDescription', calendarTitle: 'calendar', calendarHint: 'calendarHint', datePickerLabel: 'calendar', copyTitle: 'share', copyHint: 'copyHint', toolsTitle: 'tools', dataTitle: 'dataTitle', refreshHint: 'refreshHint', refreshLabel: 'refresh', installTitle: 'installTitle', installButton: 'install', offlineTitle: 'offlineTitle', offlineHint: 'offlineHint' };
+  const text = { brandSubtitle: 'brand', restaurantLabel: 'restaurant', mealLabel: 'meal', windowLabel: 'window', skipLink: 'skip', emptyTitle: 'empty', emptyDescription: 'emptyDescription', calendarTitle: 'calendar', calendarHint: 'calendarHint', datePickerLabel: 'calendar', copyTitle: 'share', copyHint: 'copyHint', toolsTitle: 'tools' };
   for (const [id, key] of Object.entries(text)) $(id).textContent = copy()[key];
   $('languageLabel').textContent = isChinese() ? '한국어' : '中文';
   $('langToggle').setAttribute('aria-label', isChinese() ? '한국어로 전환' : '切换到中文');
@@ -464,16 +439,6 @@ function init() {
   for (const [id, direction] of [['calendarPrev',-1],['calendarNext',1]]) $(id).addEventListener('click', () => { state.calendarMonth = stepCalendarMonth(schedule, state.calendarWeek, state.week, state.calendarMonth, direction); renderDates(); });
   $('shareButton').addEventListener('click', copyMenu);
   $('toolsToggle').addEventListener('click', () => { renderAppStatus(); openDialog('toolsDialog'); });
-  $('refreshButton').addEventListener('click', async () => {
-    if (!navigator.onLine) { notify(copy().offlineBanner); return; }
-    $('refreshButton').disabled = true; $('refreshLabel').textContent = copy().refreshing;
-    try { const registration = await navigator.serviceWorker?.getRegistration(); await registration?.update(); } catch { /* Reload can still request fresh public data. */ }
-    if (!state.automatic) window.history.replaceState(null, '', menuLink());
-    window.location.reload();
-  });
-  $('installButton').addEventListener('click', async () => { const prompt = installPrompt; if (!prompt) return; installPrompt = null; renderAppStatus(); await prompt.prompt(); await prompt.userChoice; });
-  window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; renderAppStatus(); });
-  window.addEventListener('appinstalled', () => { installPrompt = null; renderAppStatus(); });
   for (const event of ['online', 'offline']) window.addEventListener(event, () => { offlineFallback = false; renderMenu(); renderAppStatus(); });
   for (const node of document.querySelectorAll('[data-close]')) node.addEventListener('click', () => $(node.dataset.close).close());
   for (const dialog of document.querySelectorAll('dialog')) dialog.addEventListener('click', event => { const rect = dialog.getBoundingClientRect(); if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) dialog.close(); });

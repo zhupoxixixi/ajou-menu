@@ -3,8 +3,9 @@
   color-scheme: light;
   --background: #ffffff; --foreground: #10243c; --muted-foreground: #29415c;
   --border: #496e9028; --system-blue: #0088ff; --blue-text: #005bbd;
-  --glass-tint: rgb(255 255 255 / .56); --menu-tint: rgb(255 255 255 / .60);
-  --dialog-background: rgb(250 252 255 / .96);
+  --glass-tint: rgb(255 255 255 / .20); --menu-tint: rgb(255 255 255 / .24);
+  --dialog-background: rgb(250 252 255 / .90);
+  --control-background: #eaf2fc; --control-border: #6e86a5; --control-hover: #dbeaff;
   --hover: #ffffff42; --content-width: 1080px;
   --menu-background-image: none;
   font-family: -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR","Segoe UI",sans-serif;
@@ -15,10 +16,13 @@
   color-scheme: dark;
   --background: #14263f; --foreground: #f7faff; --muted-foreground: #e2edfc;
   --border: #d4eaff26; --system-blue: #0091ff; --blue-text: #b5deff;
-  --glass-tint: rgb(5 22 42 / .64); --menu-tint: rgb(5 22 42 / .60);
-  --dialog-background: rgb(20 38 63 / .96);
+  --glass-tint: rgb(5 22 42 / .32); --menu-tint: rgb(5 22 42 / .36);
+  --dialog-background: rgb(20 38 63 / .92);
+  --control-background: #253d59; --control-border: #8aadc9; --control-hover: #314f71;
   --hover: #ffffff18;
 }
+:root:is([data-glass-style="translucent"],[data-glass-style="frosted"]) { --glass-tint: rgb(255 255 255 / .56); --menu-tint: rgb(255 255 255 / .60); }
+:root.dark:is([data-glass-style="translucent"],[data-glass-style="frosted"]) { --glass-tint: rgb(5 22 42 / .64); --menu-tint: rgb(5 22 42 / .60); }
 * { box-sizing: border-box; }
 body { margin: 0; min-height: 100dvh; color: var(--foreground); background: var(--background); line-height: 1.5; -webkit-font-smoothing: antialiased; }
 button,textarea { font: inherit; }
@@ -35,6 +39,9 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,[tabindex]:focus-vis
 #glassBackdrop { position: fixed; inset: 0; z-index: -1; pointer-events: none; background-color: var(--background); background-image: var(--menu-background-image); background-position: center; background-size: cover; background-repeat: no-repeat; }
 .glass-surface { position: relative; isolation: isolate; min-width: 0; background: var(--glass-tint); border-radius: var(--glass-radius,28px); box-shadow: 0 9px 28px -14px #001a3448; }
 .glass-content { position: relative; z-index: 1; }
+:root[data-glass-style="transparent"] :is(.glass-surface,.brand) { text-shadow: 0 1px 1px #ffffffdd,0 0 3px #ffffffbb; }
+:root.dark[data-glass-style="transparent"] :is(.glass-surface,.brand) { text-shadow: 0 1px 1px #000d,0 0 3px #000b; }
+:root[data-glass-style="transparent"] :is(.restaurant-button,.meal-button,.window-button)[aria-pressed="true"] { text-shadow: none; }
 .glass-surface::after { content: ''; position: absolute; pointer-events: none; inset: 0; z-index: 2; border-radius: inherit; border: 1px solid var(--border); box-shadow: inset 0 1px 1px #ffffff66,inset 0 -1px 1px #ffffff30; }
 .dark .glass-surface::after { border-color: #e8f6ff45; box-shadow: inset 0 1px 1px #fff5,inset 0 -1px 1px #cbe7ff20; }
 .wide-shell,.page-shell { max-width: var(--content-width); padding-inline: 24px; margin-inline: auto; }
@@ -127,25 +134,27 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,[tabindex]:focus-vis
 .app-dialog::backdrop { background: #08224535; }
 .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px 14px; }
 .dialog-heading h2 { font-size: 17px; margin: 0; }
+.dialog-close { width: 44px; height: 44px; border: 1px solid var(--control-border); background: var(--control-background); }
+.dialog-close:hover { background: var(--control-hover) !important; }
 .tools-content { padding: 0 22px 22px; }
 .tool-section { padding: 18px 0; border-top: 1px solid var(--border); }
 .tool-section h3 { font-size: 14px; margin: 0 0 10px; }
 .tool-hint,.operating-details p { color: var(--muted-foreground); font-size: 13px; line-height: 1.85; margin: 0 0 12px; overflow-wrap: anywhere; }
 .tool-hint:last-child,.operating-details p:last-child { margin-bottom: 0; }
 .small-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 8px 12px; border: 1px solid #ffffff40; border-radius: 22px; background: #ffffff36; color: inherit; font-size: 12px; }
-.appearance-options { display: inline-flex; gap: 4px; padding: 4px; border: 1px solid var(--border); border-radius: 24px; background: #7a9abb12; }
-.appearance-options button { min-height: 44px; min-width: 88px; padding: 8px 20px; border: 1px solid transparent; border-radius: 20px; background: transparent; color: inherit; font-size: 13px; }
-.appearance-options button[aria-pressed="true"] { background: #006edb; color: #fff; border-color: #ffffff80; box-shadow: 0 2px 7px #007aff20; }
-/* Blur is opt-in. Clear mode has no filter or backdrop-filter on any surface. */
+.appearance-options { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; padding: 5px; border: 1px solid var(--border); border-radius: 20px; background: #7a9abb12; }
+.appearance-options button { min-height: 44px; min-width: 0; padding: 8px 10px; border: 1px solid var(--control-border); border-radius: 15px; background: var(--control-background); color: inherit; font-size: 13px; font-weight: 600; }
+.appearance-options button:hover:not([aria-pressed="true"]) { background: var(--control-hover); }
+.appearance-options button[aria-pressed="true"] { background: #006edb; color: #fff; border-color: #006edb; box-shadow: 0 2px 7px #007aff20; }
+/* Both transparent choices have no filters. Only frosted opts into CSS blur. */
 :root[data-glass-style="frosted"] :is(.glass-surface,.brand,.app-dialog) { -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 .background-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.tools-dialog .background-actions .small-button { min-height: 44px; padding: 10px 16px; border: 1px solid var(--control-border); background: var(--control-background); font-size: 13px; font-weight: 600; box-shadow: 0 1px 3px #001a3414; }
+.tools-dialog .background-actions .small-button:hover { background: var(--control-hover); }
+#backgroundChoose { color: #fff; background: #006edb; border-color: #006edb; }
+.tools-dialog #backgroundChoose:hover { background: #005bbd; color: #fff; }
 .background-status { margin-top: 12px; }
 .background-status:empty { display: none; }
-.health-details { margin: 0 0 18px; padding: 10px 14px; border-radius: 20px; background: #ffffff24; font-size: 12px; }
-.health-details > div { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.6fr); gap: 12px; padding-block: 8px; }
-.health-details dt { color: var(--muted-foreground); }
-.health-details dd { margin: 0; text-align: right; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
-#offlineReady { color: var(--blue-text); }
 .calendar-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin: 0 22px 16px; }
 .week-switch { display: flex; padding: 5px; background: #ffffff24; border: 1px solid #ffffff50; border-radius: 22px; gap: 4px; }
 .week-switch button { min-height: 40px; font-size: 12px; padding: 7px 12px; color: inherit; border: 0; background: transparent; border-radius: 17px; }
@@ -233,8 +242,8 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,[tabindex]:focus-vis
   .calendar-weekdays,.calendar-grid { padding-inline: 4px; gap: 0; }
 }
 @media(prefers-reduced-transparency: reduce) {
-  :root { --glass-tint: #eef3faf2; --menu-tint: #eef3faf2; }
-  :root.dark { --glass-tint: #10243cf2; --menu-tint: #10243cf2; }
+  :root { --glass-tint: #eef3faf2 !important; --menu-tint: #eef3faf2 !important; }
+  :root.dark { --glass-tint: #10243cf2 !important; --menu-tint: #10243cf2 !important; }
   :is(.glass-surface,.brand,.app-dialog) { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 }
 @media(prefers-reduced-motion: reduce) { *,*::before,*::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }

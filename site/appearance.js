@@ -7,16 +7,22 @@
   const STORAGE_KEY = 'menuGlassStyle';
   const html = doc.documentElement;
   const title = doc.getElementById('glassStyleTitle');
-  const clearButton = doc.getElementById('glassClear');
+  const transparentButton = doc.getElementById('glassTransparent');
+  const translucentButton = doc.getElementById('glassTranslucent');
   const frostedButton = doc.getElementById('glassFrosted');
   const labels = {
-    zh: { title: '玻璃效果', clear: '清透', frosted: '磨砂' },
-    ko: { title: '유리 효과', clear: '투명', frosted: '반투명' },
+    zh: { title: '玻璃效果', transparent: '透明', translucent: '半透明', frosted: '磨砂' },
+    ko: { title: '유리 효과', transparent: '투명', translucent: '반투명', frosted: '블러' },
   };
-  let selectedStyle = 'clear';
+  const buttons = {
+    transparent: transparentButton,
+    translucent: translucentButton,
+    frosted: frostedButton,
+  };
+  let selectedStyle = 'transparent';
 
   function isStyle(value) {
-    return value === 'clear' || value === 'frosted';
+    return value === 'transparent' || value === 'translucent' || value === 'frosted';
   }
 
   function currentLabels() {
@@ -27,13 +33,15 @@
   function updateLabels() {
     const copy = currentLabels();
     if (title) title.textContent = copy.title;
-    if (clearButton) clearButton.textContent = copy.clear;
-    if (frostedButton) frostedButton.textContent = copy.frosted;
+    for (const style of Object.keys(buttons)) {
+      if (buttons[style]) buttons[style].textContent = copy[style];
+    }
   }
 
   function updatePressedState() {
-    if (clearButton) clearButton.setAttribute('aria-pressed', String(selectedStyle === 'clear'));
-    if (frostedButton) frostedButton.setAttribute('aria-pressed', String(selectedStyle === 'frosted'));
+    for (const [style, button] of Object.entries(buttons)) {
+      if (button) button.setAttribute('aria-pressed', String(selectedStyle === style));
+    }
   }
 
   function applyStyle(style, persist) {
@@ -52,16 +60,26 @@
 
   try {
     const savedStyle = win.localStorage.getItem(STORAGE_KEY);
-    if (isStyle(savedStyle)) selectedStyle = savedStyle;
+    if (savedStyle === 'clear') {
+      selectedStyle = 'translucent';
+      try {
+        win.localStorage.setItem(STORAGE_KEY, selectedStyle);
+      } catch (_) {
+        // Keep the migrated appearance for this page if the value cannot be rewritten.
+      }
+    } else if (isStyle(savedStyle)) {
+      selectedStyle = savedStyle;
+    }
   } catch (_) {
-    selectedStyle = 'clear';
+    selectedStyle = 'transparent';
   }
 
   html.dataset.glassStyle = selectedStyle;
   updateLabels();
   updatePressedState();
 
-  if (clearButton) clearButton.addEventListener('click', () => applyStyle('clear', true));
+  if (transparentButton) transparentButton.addEventListener('click', () => applyStyle('transparent', true));
+  if (translucentButton) translucentButton.addEventListener('click', () => applyStyle('translucent', true));
   if (frostedButton) frostedButton.addEventListener('click', () => applyStyle('frosted', true));
 
   if (typeof win.MutationObserver === 'function') {
