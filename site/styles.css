@@ -114,6 +114,8 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,[tabindex]:focus-vis
 .nav-stats p { font-size: 11px; color: #243a55; margin: 0; }
 .app-dialog { width: min(460px,calc(100% - 32px)); max-height: calc(100dvh - 48px); overflow-y: auto; border: 1px solid #ffffffb3; border-radius: 30px; padding: 0; color: var(--foreground); background: var(--dialog-background); box-shadow: 0 22px 70px #122d6140,inset 0 1px 0 #fff; opacity: 0; transform: translateY(8px) scale(.99); transition: opacity .18s ease,transform .18s ease,display .18s allow-discrete,overlay .18s allow-discrete; overscroll-behavior: contain; }
 .app-dialog[open] { opacity: 1; transform: none; }
+/* Dialogs keep a readable frosted surface in every main-page glass mode. */
+.app-dialog { -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 @starting-style { .app-dialog[open] { opacity: 0; transform: translateY(8px) scale(.99); } }
 .app-dialog::backdrop { background: #08224535; }
 .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px 14px; }
@@ -133,8 +135,8 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,[tabindex]:focus-vis
 .appearance-options button { min-height: 44px; min-width: 0; padding: 8px 10px; border: 1px solid var(--control-border); border-radius: 15px; background: var(--control-background); color: inherit; font-size: 13px; font-weight: 600; }
 .appearance-options button:hover:not([aria-pressed="true"]) { background: var(--control-hover); }
 .appearance-options button[aria-pressed="true"] { background: #006edb; color: #fff; border-color: #006edb; box-shadow: 0 2px 7px #007aff20; }
-/* Both transparent choices have no filters. Only frosted opts into CSS blur. */
-:root[data-glass-style="frosted"] :is(.glass-surface,.brand,.app-dialog) { -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+/* Main-page blur is optional; dialog blur is independent of this setting. */
+:root[data-glass-style="frosted"] :is(.glass-surface,.brand) { -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 .background-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .tools-dialog .background-actions .small-button { min-height: 44px; padding: 10px 16px; border: 1px solid var(--control-border); background: var(--control-background); font-size: 13px; font-weight: 600; box-shadow: 0 1px 3px #001a3414; }
 .tools-dialog .background-actions .small-button:hover { background: var(--control-hover); }
