@@ -3,7 +3,7 @@
   color-scheme: light;
   --background: #ffffff; --foreground: #10243c; --muted-foreground: #29415c;
   --border: #496e9028; --system-blue: #0088ff; --blue-text: #005bbd;
-  --glass-tint: rgb(255 255 255 / .20); --menu-tint: rgb(255 255 255 / .24);
+  --glass-tint: transparent; --menu-tint: transparent;
   --dialog-background: rgb(250 252 255 / .90);
   --control-background: #eaf2fc; --control-border: #6e86a5; --control-hover: #dbeaff;
   --hover: #ffffff42; --content-width: 1080px;
@@ -16,7 +16,7 @@
   color-scheme: dark;
   --background: #14263f; --foreground: #f7faff; --muted-foreground: #e2edfc;
   --border: #d4eaff26; --system-blue: #0091ff; --blue-text: #b5deff;
-  --glass-tint: rgb(5 22 42 / .32); --menu-tint: rgb(5 22 42 / .36);
+  --glass-tint: transparent; --menu-tint: transparent;
   --dialog-background: rgb(20 38 63 / .92);
   --control-background: #253d59; --control-border: #8aadc9; --control-hover: #314f71;
   --hover: #ffffff18;
@@ -39,9 +39,12 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,[tabindex]:focus-vis
 #glassBackdrop { position: fixed; inset: 0; z-index: -1; pointer-events: none; background-color: var(--background); background-image: var(--menu-background-image); background-position: center; background-size: cover; background-repeat: no-repeat; }
 .glass-surface { position: relative; isolation: isolate; min-width: 0; background: var(--glass-tint); border-radius: var(--glass-radius,28px); box-shadow: 0 9px 28px -14px #001a3448; }
 .glass-content { position: relative; z-index: 1; }
-:root[data-glass-style="transparent"] :is(.glass-surface,.brand) { text-shadow: 0 1px 1px #ffffffdd,0 0 3px #ffffffbb; }
-:root.dark[data-glass-style="transparent"] :is(.glass-surface,.brand) { text-shadow: 0 1px 1px #000d,0 0 3px #000b; }
-:root[data-glass-style="transparent"] :is(.restaurant-button,.meal-button,.window-button)[aria-pressed="true"] { text-shadow: none; }
+/* Transparent glass leaves the background untouched and the foreground sharp. */
+:root[data-glass-style="transparent"] :is(.glass-surface,.brand) { text-shadow: none; }
+:root[data-glass-style="transparent"] :is(.date-picker-trigger,.copy-button,.card-notices,.empty-state,.nav-stats) { background: transparent; }
+:root[data-glass-style="transparent"] .meal-button:not([aria-pressed="true"]) { background: transparent; }
+:root[data-glass-style="transparent"][data-custom-background="true"] [data-text-tone="light"]:not([aria-pressed="true"]) { color: #f7faff !important; }
+:root[data-glass-style="transparent"][data-custom-background="true"] [data-text-tone="dark"]:not([aria-pressed="true"]) { color: #10243c !important; }
 .glass-surface::after { content: ''; position: absolute; pointer-events: none; inset: 0; z-index: 2; border-radius: inherit; border: 1px solid var(--border); box-shadow: inset 0 1px 1px #ffffff66,inset 0 -1px 1px #ffffff30; }
 .dark .glass-surface::after { border-color: #e8f6ff45; box-shadow: inset 0 1px 1px #fff5,inset 0 -1px 1px #cbe7ff20; }
 .wide-shell,.page-shell { max-width: var(--content-width); padding-inline: 24px; margin-inline: auto; }
