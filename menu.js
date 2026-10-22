@@ -12,7 +12,6 @@ const DEFAULT_SERVICE_HOURS = {
 const COPY = {
   ko: {
     brand: '아주대학교 식단', restaurant: '식당 선택', meal: '식사 선택', window: '코너 선택',
-    pageTitle: '오늘은 뭐 먹지?', intro: '기숙사·교직원식당 메뉴를 한곳에서, 한국 시간 기준으로.',
     tools: '사용 및 업데이트', healthy: '데이터 업데이트됨', delayed: '업데이트 확인 필요', offline: '오프라인 · 저장된 메뉴', automatic: '자동 선택', manual: '직접 선택',
     dataTitle: '데이터 상태', generated: '전체 메뉴 업데이트', selectedDate: '선택한 날짜', translation: '중국어 번역', complete: '완료', partial: '일부 미완료', unknown: '확인 필요', fetchOk: '수집 완료', fetchStale: '이전 저장본', fetchFailed: '수집 실패', fetchMissing: '데이터 없음',
     refresh: '새로고침', refreshing: '새로고침 중…', refreshHint: '매일 00:00 KST에 자동 수집을 예약합니다. 실행은 지연될 수 있으며, 새로고침은 이미 공개된 최신 데이터를 불러옵니다.',
@@ -37,7 +36,6 @@ const COPY = {
   },
   cn: {
     brand: '亚洲大学食堂菜单', restaurant: '选择食堂', meal: '选择餐次', window: '选择窗口',
-    pageTitle: '今天吃什么', intro: '宿舍食堂与教职工食堂，一处查看，按韩国时间选餐。',
     tools: '使用与更新', healthy: '数据已更新', delayed: '需要检查更新', offline: '离线 · 已保存菜单', automatic: '自动选餐', manual: '手动查看',
     dataTitle: '数据状态', generated: '整份菜单更新时间', selectedDate: '当前查看日期', translation: '中文翻译', complete: '完整', partial: '部分未完成', unknown: '待确认', fetchOk: '获取成功', fetchStale: '保留旧数据', fetchFailed: '获取失败', fetchMissing: '暂无数据',
     refresh: '刷新菜单', refreshing: '正在刷新…', refreshHint: '每天 00:00 KST 自动抓取，执行可能延迟；这里刷新的是已发布数据。',
@@ -398,7 +396,7 @@ function renderAppStatus() {
 function renderText() {
   document.documentElement.lang = isChinese() ? 'zh-CN' : 'ko';
   document.title = `${copy().brand} · Ajou Menu`;
-  const text = { brandSubtitle: 'brand', pageTitle: 'pageTitle', restaurantLabel: 'restaurant', mealLabel: 'meal', windowLabel: 'window', skipLink: 'skip', emptyTitle: 'empty', emptyDescription: 'emptyDescription', calendarTitle: 'calendar', calendarHint: 'calendarHint', datePickerLabel: 'calendar', copyTitle: 'share', copyHint: 'copyHint', toolsTitle: 'tools', dataTitle: 'dataTitle', refreshHint: 'refreshHint', refreshLabel: 'refresh', installTitle: 'installTitle', installButton: 'install', offlineTitle: 'offlineTitle', offlineHint: 'offlineHint' };
+  const text = { brandSubtitle: 'brand', restaurantLabel: 'restaurant', mealLabel: 'meal', windowLabel: 'window', skipLink: 'skip', emptyTitle: 'empty', emptyDescription: 'emptyDescription', calendarTitle: 'calendar', calendarHint: 'calendarHint', datePickerLabel: 'calendar', copyTitle: 'share', copyHint: 'copyHint', toolsTitle: 'tools', dataTitle: 'dataTitle', refreshHint: 'refreshHint', refreshLabel: 'refresh', installTitle: 'installTitle', installButton: 'install', offlineTitle: 'offlineTitle', offlineHint: 'offlineHint' };
   for (const [id, key] of Object.entries(text)) $(id).textContent = copy()[key];
   $('languageLabel').textContent = isChinese() ? '한국어' : '中文';
   $('langToggle').setAttribute('aria-label', isChinese() ? '한국어로 전환' : '切换到中文');
@@ -423,7 +421,7 @@ function renderThemeLabel() {
   const dark = document.documentElement.classList.contains('dark');
   $('themeToggle').replaceChildren(icon(dark ? 'sun' : 'moon'));
   $('themeToggle').setAttribute('aria-label', dark ? copy().light : copy().dark);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#111b17' : '#f5f7f8');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#252b28' : '#e0e0e0');
 }
 function notify(text) { clearTimeout(toastTimer); showStatus('actionStatus', text); toastTimer = setTimeout(() => showStatus('actionStatus', ''), 2400); }
 

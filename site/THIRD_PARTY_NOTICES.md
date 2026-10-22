@@ -36,6 +36,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+## Uiverse.io card by Codewithvinay
+
+The user supplied a CSS card snippet attributed to Codewithvinay on Uiverse.io.
+Its gray surface (`#e0e0e0`), rounded corners, and opposing light/dark shadows
+are adapted for the responsive cards and controls. The original attribution is
+retained in `styles.css`. No exact component URL or separate license text was
+provided with the snippet.
+
 ## Tabler UI v1.7.0
 
 **Use in Ajou Menu:** This notice covers an adaptation of Tabler component structure and light visual styling into local HTML/CSS. It does not indicate that Ajou Menu includes the complete Tabler UI kit or its bundled CSS/JavaScript.
