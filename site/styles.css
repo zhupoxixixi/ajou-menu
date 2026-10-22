@@ -140,6 +140,9 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,[tabindex]:focus-vis
 .dialog-close { width: 44px; height: 44px; border: 1px solid var(--control-border); background: var(--control-background); }
 .dialog-close:hover { background: var(--control-hover) !important; }
 .tools-content { padding: 0 22px 22px; }
+.tool-actions { display: flex; padding-bottom: 18px; }
+.tools-dialog .refresh-button { min-height: 44px; padding: 10px 16px; border: 1px solid var(--control-border); background: var(--control-background); color: var(--blue-text); font-size: 13px; font-weight: 600; }
+.tools-dialog .refresh-button:hover:not(:disabled) { background: var(--control-hover); }
 .tool-section { padding: 18px 0; border-top: 1px solid var(--border); }
 .tool-section h3 { font-size: 14px; margin: 0 0 10px; }
 .tool-hint,.operating-details p { color: var(--muted-foreground); font-size: 13px; line-height: 1.85; margin: 0 0 12px; overflow-wrap: anywhere; }

@@ -13,6 +13,7 @@ const COPY = {
   ko: {
     brand: '아주대학교 식단', restaurant: '식당 선택', meal: '식사 선택', window: '코너 선택',
     tools: '사용 및 업데이트', healthy: '데이터 업데이트됨', delayed: '업데이트 확인 필요', offline: '오프라인 · 저장된 메뉴', automatic: '자동 선택', manual: '직접 선택',
+    refresh: '새로고침', refreshing: '새로고침 중…', refreshOffline: '오프라인에서는 메뉴를 새로고침할 수 없습니다. 인터넷에 연결된 후 다시 시도해 주세요.',
     offlineBanner: '인터넷에 연결되지 않아 저장된 메뉴를 표시합니다. 새 메뉴와 변경 사항은 연결 후 새로고침해 주세요.',
     notices: '중국어 공지 ↗', serving: '운영시간 내', servingReference: '참고 운영시간 내', upcoming: '운영 시작 전', ended: '운영시간 종료', preview: '예정 메뉴', closed: '이 식사는 운영하지 않아요', emptyService: '등록된 메뉴 없음', unconfirmed: '운영 여부 확인 필요', unknownService: '운영시간은 학교 원문 확인',
     breakfast: '아침', lunch: '점심', dinner: '저녁', snack: '분식',
@@ -34,6 +35,7 @@ const COPY = {
   cn: {
     brand: '亚洲大学食堂菜单', restaurant: '选择食堂', meal: '选择餐次', window: '选择窗口',
     tools: '使用与更新', healthy: '数据已更新', delayed: '需要检查更新', offline: '离线 · 已保存菜单', automatic: '自动选餐', manual: '手动查看',
+    refresh: '刷新菜单', refreshing: '正在刷新…', refreshOffline: '当前处于离线状态，无法刷新菜单。请联网后重试。',
     offlineBanner: '当前连接不可用，显示已保存菜单；新菜单和临时调整需要联网刷新。',
     notices: '中文公告 ↗', serving: '供餐时段内', servingReference: '参考供餐时段内', upcoming: '尚未开始', ended: '本餐已结束', preview: '预告菜单', closed: '该餐次不供应', emptyService: '暂无菜单', unconfirmed: '供餐情况待核实', unknownService: '供餐时间请查看学校原文',
     breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '小吃',
@@ -371,7 +373,7 @@ function renderAppStatus() {
 function renderText() {
   document.documentElement.lang = isChinese() ? 'zh-CN' : 'ko';
   document.title = `${copy().brand} · Ajou Menu`;
-  const text = { brandSubtitle: 'brand', restaurantLabel: 'restaurant', mealLabel: 'meal', windowLabel: 'window', skipLink: 'skip', emptyTitle: 'empty', emptyDescription: 'emptyDescription', calendarTitle: 'calendar', calendarHint: 'calendarHint', datePickerLabel: 'calendar', copyTitle: 'share', copyHint: 'copyHint', toolsTitle: 'tools' };
+  const text = { brandSubtitle: 'brand', restaurantLabel: 'restaurant', mealLabel: 'meal', windowLabel: 'window', skipLink: 'skip', emptyTitle: 'empty', emptyDescription: 'emptyDescription', calendarTitle: 'calendar', calendarHint: 'calendarHint', datePickerLabel: 'calendar', copyTitle: 'share', copyHint: 'copyHint', toolsTitle: 'tools', refreshLabel: 'refresh' };
   for (const [id, key] of Object.entries(text)) $(id).textContent = copy()[key];
   $('languageLabel').textContent = isChinese() ? '한국어' : '中文';
   $('langToggle').setAttribute('aria-label', isChinese() ? '한국어로 전환' : '切换到中文');
@@ -439,6 +441,23 @@ function init() {
   for (const [id, direction] of [['calendarPrev',-1],['calendarNext',1]]) $(id).addEventListener('click', () => { state.calendarMonth = stepCalendarMonth(schedule, state.calendarWeek, state.week, state.calendarMonth, direction); renderDates(); });
   $('shareButton').addEventListener('click', copyMenu);
   $('toolsToggle').addEventListener('click', () => { renderAppStatus(); openDialog('toolsDialog'); });
+  $('refreshButton').addEventListener('click', async () => {
+    if (!navigator.onLine) { notify(copy().refreshOffline); return; }
+    $('refreshButton').disabled = true;
+    $('refreshLabel').textContent = copy().refreshing;
+    if (!state.automatic) window.history.replaceState(null, '', menuLink());
+    let timeoutId;
+    const updateWorker = (async () => {
+      const registration = await navigator.serviceWorker?.getRegistration();
+      await registration?.update();
+    })().catch(() => {});
+    await Promise.race([
+      updateWorker,
+      new Promise(resolve => { timeoutId = setTimeout(resolve, 2000); }),
+    ]);
+    clearTimeout(timeoutId);
+    window.location.reload();
+  });
   for (const event of ['online', 'offline']) window.addEventListener(event, () => { offlineFallback = false; renderMenu(); renderAppStatus(); });
   for (const node of document.querySelectorAll('[data-close]')) node.addEventListener('click', () => $(node.dataset.close).close());
   for (const dialog of document.querySelectorAll('dialog')) dialog.addEventListener('click', event => { const rect = dialog.getBoundingClientRect(); if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) dialog.close(); });

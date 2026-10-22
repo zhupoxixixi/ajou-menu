@@ -13,22 +13,22 @@
   <meta property="og:title" content="Ajou Menu · 亚洲大学食堂菜单">
   <meta property="og:description" content="宿舍食堂与教职工食堂，中韩双语菜单、供餐时段和每周预告。">
   <meta property="og:url" content="https://zhupoxixixi.github.io/ajou-menu/">
-  <meta property="og:image" content="https://zhupoxixixi.github.io/ajou-menu/share.png?v=20261023-crisp-glass">
+  <meta property="og:image" content="https://zhupoxixixi.github.io/ajou-menu/share.png?v=20261023-refresh-menu">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://zhupoxixixi.github.io/ajou-menu/">
   <script>try{const t=localStorage.getItem('menuTheme');document.documentElement.classList.toggle('dark',t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches));}catch{}</script>
   <script>document.documentElement.dataset.glassStyle='transparent';try{const s=localStorage.getItem('menuGlassStyle');if(['transparent','translucent','frosted'].includes(s))document.documentElement.dataset.glassStyle=s;else if(s==='clear')document.documentElement.dataset.glassStyle='translucent';}catch{}</script>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20261023-crisp-glass">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20261023-crisp-glass">
-  <link rel="manifest" href="manifest.webmanifest?v=20261023-crisp-glass">
-  <link rel="stylesheet" href="styles.css?v=20261023-crisp-glass">
-  <script defer src="appearance.js?v=20261023-crisp-glass"></script>
-  <script defer src="background.js?v=20261023-crisp-glass"></script>
-  <script defer src="contrast.js?v=20261023-crisp-glass"></script>
-  <script defer src="menu-data.js?v=20261023-crisp-glass"></script>
-  <script defer src="menu.js?v=20261023-crisp-glass"></script>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20261023-refresh-menu">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20261023-refresh-menu">
+  <link rel="manifest" href="manifest.webmanifest?v=20261023-refresh-menu">
+  <link rel="stylesheet" href="styles.css?v=20261023-refresh-menu">
+  <script defer src="appearance.js?v=20261023-refresh-menu"></script>
+  <script defer src="background.js?v=20261023-refresh-menu"></script>
+  <script defer src="contrast.js?v=20261023-refresh-menu"></script>
+  <script defer src="menu-data.js?v=20261023-refresh-menu"></script>
+  <script defer src="menu.js?v=20261023-refresh-menu"></script>
 </head>
 <body>
 <div id="glassBackdrop" aria-hidden="true"></div>
@@ -101,6 +101,7 @@
   <dialog id="toolsDialog" class="app-dialog tools-dialog" aria-labelledby="toolsTitle">
     <div class="dialog-heading"><h2 id="toolsTitle"></h2><button class="dialog-close icon-button" type="button" data-close="toolsDialog"><span data-icon="close"></span></button></div>
     <div class="tools-content">
+      <div class="tool-actions"><button id="refreshButton" class="small-button refresh-button" type="button"><span data-icon="refresh"></span><span id="refreshLabel">메뉴 새로고침</span></button></div>
       <section class="tool-section appearance-section">
         <h3 id="glassStyleTitle">유리 효과</h3>
         <div class="appearance-options" role="group" aria-labelledby="glassStyleTitle"><button id="glassTransparent" type="button" aria-pressed="true">투명</button><button id="glassTranslucent" type="button" aria-pressed="false">반투명</button><button id="glassFrosted" type="button" aria-pressed="false">블러</button></div>
