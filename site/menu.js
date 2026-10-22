@@ -30,7 +30,7 @@ const COPY = {
     updated: '업데이트', footer: '아주대학교와 독립적으로 운영되는 오픈소스 식단 안내',
     share: '메뉴 복사', copied: '메뉴를 복사했어요', copyHint: '자동 복사가 불가능합니다. 아래 내용을 선택해 복사해 주세요.',
     close: '닫기', previous: '이전 날짜', next: '다음 날짜', previousMonth: '이전 달', nextMonth: '다음 달',
-    dark: '어두운 테마로 전환', light: '밝은 테마로 전환', dishes: n => `${n}개 메뉴`, days: n => `메뉴 날짜: ${n}일`,
+    dishes: n => `${n}개 메뉴`, days: n => `메뉴 날짜: ${n}일`,
   },
   cn: {
     brand: '亚洲大学食堂菜单', restaurant: '选择食堂', meal: '选择餐次', window: '选择窗口',
@@ -52,7 +52,7 @@ const COPY = {
     updated: '更新于', footer: '独立于亚洲大学运营的开源菜单助手',
     share: '复制菜单', copied: '已复制菜单', copyHint: '当前浏览器无法自动复制，请选中下面的内容后复制。',
     close: '关闭', previous: '上一个日期', next: '下一个日期', previousMonth: '上一个月', nextMonth: '下一个月',
-    dark: '切换深色主题', light: '切换浅色主题', dishes: n => `${n} 道菜`, days: n => `可用日期：${n} 天`,
+    dishes: n => `${n} 道菜`, days: n => `可用日期：${n} 天`,
   },
 };
 const ICONS = {
@@ -62,7 +62,6 @@ const ICONS = {
   dinner: '<path d="M20 15a8 8 0 0 1-11-11A9 9 0 1 0 20 15Z"/>',
   snack: '<path d="m7 3 2 6m8-6-2 6M4 10h16c0 7-3 11-8 11S4 17 4 10ZM3 10h18"/>',
   bowl: '<path d="M3 10h18c0 7-4 11-9 11S3 17 3 10ZM2 10h20M7 2v4m5-5v5m5-4v4"/>',
-  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/>',
   moon: '<path d="M20 15a8 8 0 0 1-11-11A9 9 0 1 0 20 15Z"/>',
   calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M7 2v5m10-5v5"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/>',
@@ -381,7 +380,6 @@ function renderText() {
   for (const [id, key] of Object.entries(labels)) $(id).setAttribute('aria-label', copy()[key]);
   $('shareButton').title = copy().share;
   for (const node of document.querySelectorAll('[data-close]')) node.setAttribute('aria-label', copy().close);
-  renderThemeLabel();
   const generated = new Date(data?.generated_at);
   $('updatedAt').textContent = Number.isFinite(generated.getTime()) ? `${copy().updated} ${new Intl.DateTimeFormat(isChinese() ? 'zh-CN' : 'ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(generated)} · KST` : '';
   $('dateCount').textContent = copy().days(allDates(schedule).length);
@@ -393,12 +391,6 @@ function renderAll() {
   renderText(); renderDates(); renderSelectors(); renderMenu(); renderAppStatus();
   // Keep shared links aligned with subsequent choices, including a language change.
   if (state.linked) window.history.replaceState(null, '', menuLink());
-}
-function renderThemeLabel() {
-  const dark = document.documentElement.classList.contains('dark');
-  $('themeToggle').replaceChildren(icon(dark ? 'sun' : 'moon'));
-  $('themeToggle').setAttribute('aria-label', dark ? copy().light : copy().dark);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#14263f' : '#ffffff');
 }
 function notify(text) { clearTimeout(toastTimer); showStatus('actionStatus', text); toastTimer = setTimeout(() => showStatus('actionStatus', ''), 2400); }
 
@@ -431,9 +423,6 @@ function init() {
     window.history.replaceState(null, '', url);
     renderAll();
   });
-  $('themeToggle').addEventListener('click', () => { const dark = !document.documentElement.classList.contains('dark'); document.documentElement.classList.toggle('dark', dark); storageWrite('menuTheme', dark ? 'dark' : 'light'); renderThemeLabel(); });
-  const media = matchMedia('(prefers-color-scheme: dark)');
-  media.addEventListener('change', event => { if (!['light','dark'].includes(storageRead('menuTheme'))) { document.documentElement.classList.toggle('dark', event.matches); renderThemeLabel(); } });
   for (const id of ['dateToggle','navDateLabel']) $(id).addEventListener('click', () => { state.calendarWeek = state.week; state.calendarMonth = state.date.slice(0, 7); renderDates(); openDialog('dateDialog'); });
   $('todayButton').addEventListener('click', () => { refreshAutomaticSelection(true); $('dateDialog').close(); });
   $('prevDate').addEventListener('click', () => chooseDate(stepDate(schedule, state.date, -1)));

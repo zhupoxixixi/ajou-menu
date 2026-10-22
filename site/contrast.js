@@ -6,20 +6,16 @@
   const html = doc.documentElement;
   const backdrop = doc.getElementById('glassBackdrop');
   const MAX_CANVAS_EDGE = 96;
-  const MAX_SAMPLES_PER_ELEMENT = 30;
   const DEBOUNCE_MS = 90;
   const TONE_ATTRIBUTE = 'data-text-tone';
-  const TARGET_SELECTOR = [
-    '.brand strong', '.brand small',
-    '.header-actions button', '.header-actions a',
-    '#dateNavigation button', '.control-label',
-    '#restaurantTabs button:not([aria-pressed="true"])',
-    '#mealTabs button:not([aria-pressed="true"])',
-    '#windowTabs button:not([aria-pressed="true"])',
-    '#menuHeading', '#dateDisplay', '#serviceHours', '#serviceState',
-    '.dish-name strong', '.card-notices p',
-    '#emptyTitle', '#emptyDescription', '#updatedAt', '#dateCount', '#shareButton',
-  ].join(',');
+  const GROUPS = [
+    { key: 'header', root: '.site-header', targets: '.brand strong,.brand small,.header-actions button,.header-actions a' },
+    { key: 'date', root: '.glass-date', targets: '#dateNavigation button' },
+    { key: 'selection', root: '#selectionPanel', targets: '.control-label,#restaurantTabs button:not([aria-pressed="true"]),#mealTabs button' },
+    { key: 'windows', root: '.glass-windows', targets: '#windowTabs button:not([aria-pressed="true"])' },
+    { key: 'menu', root: '.glass-menu', targets: '#menuHeading,#dateDisplay,#serviceHours,#serviceState,.dish-name strong,.card-notices p,#emptyTitle,#emptyDescription,#shareButton' },
+    { key: 'metadata', root: '.nav-stats', targets: '#updatedAt,#dateCount' },
+  ];
   const DARK_TEXT = [16, 36, 60];
   const LIGHT_TEXT = [247, 250, 255];
   const reducedTransparency = win.matchMedia?.('(prefers-reduced-transparency: reduce)');
@@ -30,6 +26,9 @@
   let pendingPixels = null;
   let tonedElements = new Set();
   let status = 'inactive';
+  let toneUrl = null;
+  let toneLayout = null;
+  const groupTones = new Map();
 
   function isActive() {
     return html.dataset.glassStyle === 'transparent' && html.dataset.customBackground === 'true' && !reducedTransparency?.matches;
@@ -88,7 +87,7 @@
   }
 
   function backdropBaseColor() {
-    const fallback = html.classList.contains('dark') ? [16, 36, 60] : [255, 255, 255];
+    const fallback = [255, 255, 255];
     try {
       const base = parseColor(win.getComputedStyle(backdrop || html).backgroundColor);
       return base ? blend(base.rgb, fallback, base.alpha) : fallback;
@@ -147,91 +146,31 @@
     return record.promise;
   }
 
-  function clippedRect(rect, element, viewportWidth, viewportHeight) {
-    let left = Math.max(0, rect.left);
-    let top = Math.max(0, rect.top);
-    let right = Math.min(viewportWidth, rect.right);
-    let bottom = Math.min(viewportHeight, rect.bottom);
-
-    for (let parent = element.parentElement; parent && parent !== doc.documentElement; parent = parent.parentElement) {
-      let style;
-      try { style = win.getComputedStyle(parent); } catch (_) { continue; }
-      const parentRect = parent.getBoundingClientRect();
-      if (/(auto|scroll|hidden|clip)/.test(style.overflowX)) {
-        left = Math.max(left, parentRect.left);
-        right = Math.min(right, parentRect.right);
-      }
-      if (/(auto|scroll|hidden|clip)/.test(style.overflowY)) {
-        top = Math.max(top, parentRect.top);
-        bottom = Math.min(bottom, parentRect.bottom);
-      }
+  function layoutChanged(width, height) {
+    const breakpoint = width < 640 ? 'phone' : width < 900 ? 'tablet' : 'desktop';
+    const orientation = width > height ? 'landscape' : 'portrait';
+    if (!toneLayout || breakpoint !== toneLayout.breakpoint || orientation !== toneLayout.orientation || Math.abs(width - toneLayout.width) >= 160) {
+      toneLayout = { width, breakpoint, orientation };
+      return true;
     }
-    if (right <= left || bottom <= top) return null;
-    return { left, top, right, bottom, width: right - left, height: bottom - top };
+    return false;
   }
 
-  function visibleTextRects(element) {
-    if (!element.isConnected || element.closest('[hidden]')) return [];
-    let style;
-    try { style = win.getComputedStyle(element); } catch (_) { return []; }
-    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return [];
-
-    const viewportWidth = win.innerWidth || html.clientWidth;
-    const viewportHeight = win.innerHeight || html.clientHeight;
-    const rects = [];
-    let containsText = false;
-    let range;
-    try {
-      const walker = doc.createTreeWalker(element, win.NodeFilter.SHOW_TEXT);
-      range = doc.createRange();
-      let node;
-      while ((node = walker.nextNode())) {
-        if (!node.nodeValue || !node.nodeValue.trim()) continue;
-        if (node.parentElement?.closest('[aria-hidden="true"]')) continue;
-        containsText = true;
-        range.selectNodeContents(node);
-        for (const rect of range.getClientRects()) {
-          const clipped = clippedRect(rect, element, viewportWidth, viewportHeight);
-          if (clipped) rects.push(clipped);
-        }
-      }
-    } catch (_) {
-      return [];
-    } finally {
-      if (range && typeof range.detach === 'function') range.detach();
-    }
-
-    if (!containsText && element.querySelector('svg,[data-icon]')) {
-      const rect = element.getBoundingClientRect();
-      const clipped = clippedRect(rect, element, viewportWidth, viewportHeight);
-      if (clipped) rects.push(clipped);
-    }
-    return rects;
-  }
-
-  function chooseRepresentativeRects(rects) {
-    if (rects.length <= 8) return rects;
-    const selected = [];
-    for (let index = 0; index < 8; index++) {
-      selected.push(rects[Math.round(index * (rects.length - 1) / 7)]);
-    }
-    return selected;
-  }
-
-  function samplePoints(rects) {
-    const selectedRects = chooseRepresentativeRects(rects);
+  function groupPoints(container, backgroundRect) {
+    const rect = container.getBoundingClientRect();
+    // The wallpaper is fixed to the viewport; keep both rectangles in that
+    // coordinate space. The cached group tone stays locked during scrolling.
+    const left = Math.max(backgroundRect.left, rect.left);
+    const right = Math.min(backgroundRect.right, rect.right);
+    const top = Math.max(backgroundRect.top, rect.top);
+    const bottom = Math.min(backgroundRect.bottom, rect.bottom);
+    const area = right > left && bottom > top
+      ? { left, top, width: right - left, height: bottom - top }
+      : backgroundRect;
     const points = [];
-    for (const rect of selectedRects) {
-      const fractions = rect.width > 30 ? [0.2, 0.5, 0.8] : [0.5];
-      const xPositions = fractions.map(fraction => rect.left + rect.width * fraction);
-      const yPositions = rect.height > 12
-        ? [rect.top + rect.height * 0.3, rect.top + rect.height * 0.7]
-        : [rect.top + rect.height * 0.5];
-      for (const y of yPositions) {
-        for (const x of xPositions) {
-          points.push({ x, y });
-          if (points.length >= MAX_SAMPLES_PER_ELEMENT) return points;
-        }
+    for (let row = 0; row < 5; row++) {
+      for (let column = 0; column < 6; column++) {
+        points.push({ x: area.left + area.width * (column + 0.5) / 6, y: area.top + area.height * (row + 0.5) / 5 });
       }
     }
     return points;
@@ -268,8 +207,8 @@
     return (Math.max(text, background) + 0.05) / (Math.min(text, background) + 0.05);
   }
 
-  function toneFor(element, image, backgroundRect, baseColor) {
-    const points = samplePoints(visibleTextRects(element));
+  function toneFor(container, image, backgroundRect, baseColor) {
+    const points = groupPoints(container, backgroundRect);
     if (!points.length) return null;
     let darkScore = 0;
     let lightScore = 0;
@@ -294,14 +233,27 @@
       return;
     }
     const baseColor = backdropBaseColor();
-    const backgroundRect = backdrop?.getBoundingClientRect() || { left: 0, top: 0, width: viewportWidth, height: viewportHeight };
+    const backgroundRect = backdrop?.getBoundingClientRect() || { left: 0, top: 0, right: viewportWidth, bottom: viewportHeight, width: viewportWidth, height: viewportHeight };
+    const changedLayout = layoutChanged(viewportWidth, viewportHeight);
+    if (toneUrl !== image.url || changedLayout) {
+      groupTones.clear();
+      toneUrl = image.url;
+    }
     const nextToned = new Set();
     const changes = [];
-    for (const element of doc.querySelectorAll(TARGET_SELECTOR)) {
-      const tone = toneFor(element, image, backgroundRect, baseColor);
-      if (!tone) continue;
-      changes.push([element, tone]);
-      nextToned.add(element);
+    for (const group of GROUPS) {
+      const container = doc.querySelector(group.root);
+      if (!container) continue;
+      let tone = groupTones.get(group.key);
+      if (!tone) {
+        tone = toneFor(container, image, backgroundRect, baseColor);
+        if (!tone) continue;
+        groupTones.set(group.key, tone);
+      }
+      for (const element of container.querySelectorAll(group.targets)) {
+        changes.push([element, tone]);
+        nextToned.add(element);
+      }
     }
     // Measure all text first; colour writes must not interrupt the layout reads.
     for (const [element, tone] of changes) {
@@ -366,14 +318,13 @@
 
   win.addEventListener('menu-background-change', schedule);
   win.addEventListener('resize', schedule, { passive: true });
-  doc.addEventListener('scroll', schedule, { capture: true, passive: true });
   reducedTransparency?.addEventListener?.('change', schedule);
 
   if (typeof win.MutationObserver === 'function') {
     const rootObserver = new win.MutationObserver(schedule);
     rootObserver.observe(html, {
       attributes: true,
-      attributeFilter: ['data-glass-style', 'data-custom-background', 'lang', 'class'],
+      attributeFilter: ['data-glass-style', 'data-custom-background', 'lang'],
     });
 
     const contentObserver = new win.MutationObserver(schedule);
