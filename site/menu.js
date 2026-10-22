@@ -421,7 +421,7 @@ function renderThemeLabel() {
   const dark = document.documentElement.classList.contains('dark');
   $('themeToggle').replaceChildren(icon(dark ? 'sun' : 'moon'));
   $('themeToggle').setAttribute('aria-label', dark ? copy().light : copy().dark);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#14263f' : '#d3dce8');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#14263f' : '#ffffff');
 }
 function notify(text) { clearTimeout(toastTimer); showStatus('actionStatus', text); toastTimer = setTimeout(() => showStatus('actionStatus', ''), 2400); }
 

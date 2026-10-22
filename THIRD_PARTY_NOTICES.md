@@ -40,9 +40,8 @@ SOFTWARE.
 
 The user supplied a CSS card snippet attributed to Codewithvinay on Uiverse.io.
 Its gray surface (`#e0e0e0`), rounded corners, and opposing light/dark shadows
-were adapted in a previous version. This historical attribution is retained;
-the current interface uses the Deepika glass material described below. No exact
-component URL or separate license text was provided with the snippet.
+were adapted in a previous version. This historical attribution is retained.
+No exact component URL or separate license text was provided with the snippet.
 
 ## Tabler UI v1.7.0
 
@@ -82,17 +81,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ```
 
-## Deepika Liquid Glass
+## Historical Deepika Liquid Glass source
 
-The current refraction engine is the unmodified `liquid-glass.js` from
-[deepika-builds/liquid-glass](https://github.com/deepika-builds/liquid-glass),
-commit `98ed97bd99def529493fd37177228810f6422f6d`.
+An earlier Ajou Menu version used [Deepika Liquid Glass](https://github.com/deepika-builds/liquid-glass).
+The Ajou Menu Git commit containing that version is
+`f97a44f89cc5ae6bc9f920e01d9e22272d43179a`; the recorded upstream source commit
+is `98ed97bd99def529493fd37177228810f6422f6d`. This is historical attribution:
+the source files and their adapter have been removed from the current version.
+The current clear and frosted choices use ordinary CSS.
 
-- Source: `vendor/liquid-glass.js`
-- Complete upstream MIT license: [vendor/LICENSE](vendor/LICENSE)
-- Upstream source SHA256: `dfadcbd3e72646a156bab4f0bde4bfa3baae6ea7ebd54659ccb71fcb6ecfd752`
-- Local adapter: `glass.js`; local background selection: `background.js`.
-
-The default background photograph was supplied and selected by the user for
-this project. User-selected replacement backgrounds are processed and stored
-locally in the browser and are not uploaded by Ajou Menu.
+The user-selectable background remains processed and stored in the browser on
+the user's device. Ajou Menu does not upload that image.

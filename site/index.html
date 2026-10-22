@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#d3dce8">
+  <meta name="theme-color" content="#ffffff">
   <meta name="description" content="아주대학교 식당의 주간 메뉴를 한국어와 중국어로 확인하세요. 查看亚洲大学食堂每周菜单，支持中韩双语。">
   <title>아주대학교 식단 · Ajou Menu</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,21 +13,21 @@
   <meta property="og:title" content="Ajou Menu · 亚洲大学食堂菜单">
   <meta property="og:description" content="宿舍食堂与教职工食堂，中韩双语菜单、供餐时段和每周预告。">
   <meta property="og:url" content="https://zhupoxixixi.github.io/ajou-menu/">
-  <meta property="og:image" content="https://zhupoxixixi.github.io/ajou-menu/share.png?v=20261023-deepika">
+  <meta property="og:image" content="https://zhupoxixixi.github.io/ajou-menu/share.png?v=20261023-light-glass">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://zhupoxixixi.github.io/ajou-menu/">
   <script>try{const t=localStorage.getItem('menuTheme');document.documentElement.classList.toggle('dark',t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches));}catch{}</script>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20261023-deepika">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20261023-deepika">
-  <link rel="manifest" href="manifest.webmanifest?v=20261023-deepika">
-  <link rel="stylesheet" href="styles.css?v=20261023-deepika">
-  <script defer src="vendor/liquid-glass.js?v=20261023-deepika"></script>
-  <script defer src="glass.js?v=20261023-deepika"></script>
-  <script defer src="background.js?v=20261023-deepika"></script>
-  <script defer src="menu-data.js?v=20261023-deepika"></script>
-  <script defer src="menu.js?v=20261023-deepika"></script>
+  <script>document.documentElement.dataset.glassStyle='clear';try{if(localStorage.getItem('menuGlassStyle')==='frosted')document.documentElement.dataset.glassStyle='frosted';}catch{}</script>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20261023-light-glass">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20261023-light-glass">
+  <link rel="manifest" href="manifest.webmanifest?v=20261023-light-glass">
+  <link rel="stylesheet" href="styles.css?v=20261023-light-glass">
+  <script defer src="appearance.js?v=20261023-light-glass"></script>
+  <script defer src="background.js?v=20261023-light-glass"></script>
+  <script defer src="menu-data.js?v=20261023-light-glass"></script>
+  <script defer src="menu.js?v=20261023-light-glass"></script>
 </head>
 <body>
 <div id="glassBackdrop" aria-hidden="true"></div>
@@ -100,6 +100,10 @@
   <dialog id="toolsDialog" class="app-dialog tools-dialog" aria-labelledby="toolsTitle">
     <div class="dialog-heading"><h2 id="toolsTitle"></h2><button class="dialog-close icon-button" type="button" data-close="toolsDialog"><span data-icon="close"></span></button></div>
     <div class="tools-content">
+      <section class="tool-section appearance-section">
+        <h3 id="glassStyleTitle">유리 효과</h3>
+        <div class="appearance-options" role="group" aria-labelledby="glassStyleTitle"><button id="glassClear" type="button" aria-pressed="true">투명</button><button id="glassFrosted" type="button" aria-pressed="false">반투명</button></div>
+      </section>
       <section id="backgroundSection" class="tool-section">
         <h3 id="backgroundTitle">배경 이미지</h3>
         <p id="backgroundHint" class="tool-hint">기기에 저장된 사진으로 배경을 바꿀 수 있어요.</p>

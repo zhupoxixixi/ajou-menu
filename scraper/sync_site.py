@@ -2,8 +2,7 @@
 from pathlib import Path
 import shutil
 
-ASSETS = ('index.html', 'styles.css', 'menu.js', 'glass.js', 'background.js',
-          'vendor/liquid-glass.js', 'vendor/LICENSE', 'assets/background.jpg',
+ASSETS = ('index.html', 'styles.css', 'menu.js', 'appearance.js', 'background.js',
           'menu-data.js', 'favicon.svg',
           'manifest.webmanifest', 'sw.js', 'apple-touch-icon.png', 'icon-192.png',
           'icon-512.png', 'share.png', '404.html', 'THIRD_PARTY_NOTICES.md')
