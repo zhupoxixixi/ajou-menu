@@ -15,7 +15,7 @@ if _env_path.exists():
             os.environ.setdefault(key.strip(), value.strip().strip('\"\''))
 
 from .fetcher import fetch_menu, RESTAURANTS, MEAL_MAP, MEAL_CN, classify_menu_items, has_dishes
-from .translator import translate_menu, is_valid_translation, iter_translation_fields, reasoning_effort, DEFAULT_ENDPOINT, DEFAULT_MODEL
+from .translator import translate_menu, is_valid_translation, iter_translation_fields, reasoning_effort, DEFAULT_ENDPOINT, DEFAULT_MODEL, PROMPT_HASH
 from .sync_site import sync_site
 
 KST = timezone(timedelta(hours=9))
@@ -94,7 +94,10 @@ def translation_summary(restaurants: list[dict], model: str) -> dict:
     ]
     translated = sum(is_valid_translation(source, result) for source, result in fields)
     total = len(fields)
-    return {'model': model, 'reasoning_effort': reasoning_effort(model), 'total': total, 'translated': translated, 'status': 'complete' if translated == total else 'partial' if translated else 'unavailable'}
+    return {'model': model, 'reasoning_effort': reasoning_effort(model), 'total': total, 'translated': translated,
+            'pipeline': 'translate-review-v1', 'review_model': model, 'review_reasoning_effort': reasoning_effort(model),
+            'reviewed': translated, 'policy_hash': PROMPT_HASH,
+            'status': 'complete' if translated == total else 'partial' if translated else 'unavailable'}
 
 
 def _write_json(path: Path, data: dict, javascript: bool = False):
@@ -123,14 +126,17 @@ def run(date_str: str | None = None):
     api_key = os.environ.get('TRANSLATE_API_KEY', '')
     endpoint = os.environ.get('TRANSLATE_API_ENDPOINT') or DEFAULT_ENDPOINT
     model = os.environ.get('TRANSLATE_MODEL') or DEFAULT_MODEL
-    require_translation = os.environ.get('REQUIRE_TRANSLATION') == '1'
+    require_translation = os.environ.get('REQUIRE_TRANSLATION', '1') != '0'
     if require_translation and not api_key:
         raise RuntimeError('TRANSLATE_API_KEY is required; configure the GitHub Actions secret')
     translate_menu(restaurants, api_key, endpoint, model)
     summary = translation_summary(restaurants, model)
     print(f'[main] Chinese menu coverage: {summary["translated"]}/{summary["total"]}')
-    if require_translation and summary['total'] and summary['translated'] != summary['total']:
+    incomplete = any(obj.get(source) and not is_valid_translation(obj[source], obj.get(target, ''))
+                     for obj, source, target, _ in iter_translation_fields(restaurants))
+    if require_translation and incomplete:
         raise RuntimeError('Chinese menu translations incomplete; keeping the previous published data')
+    summary['reviewed_at'] = datetime.now(KST).isoformat()
 
     output = {'week_start': monday.strftime('%Y-%m-%d'), 'generated_at': datetime.now(KST).isoformat(), 'translation': summary, 'days': weeks[0]}
     if len(weeks) > 1:

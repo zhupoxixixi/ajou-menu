@@ -19,6 +19,21 @@ CHANGED_TIME = '午餐（6,500韩元）：12:00~15:00'
 
 
 class TranslationIntegrityTests(unittest.TestCase):
+    def test_korean_menu_cannot_be_left_as_english_only(self):
+        self.assertFalse(translator.is_valid_translation('그린샐러드', 'green salad'))
+        self.assertTrue(translator.is_valid_translation('그린샐러드', '蔬菜沙拉'))
+        self.assertTrue(translator.is_valid_translation('Foodist+', 'Foodist+'))
+
+    def test_operating_notice_markers_cannot_disappear_during_review(self):
+        source = '★ 당일 조리 ★ 에그마요샌드위치 [11:00 ~ 14:00] 한정수량'
+        correct = '★ 当日制作 ★ 蛋黄酱鸡蛋三明治 [11:00 ~ 14:00] 限量供应'
+        self.assertTrue(translator.is_valid_translation(source, correct))
+        for wrong in [correct.replace('★', ''), correct.replace('当日制作', ''), correct.replace('限量供应', '')]:
+            with self.subTest(wrong=wrong):
+                self.assertFalse(translator.is_valid_translation(source, wrong))
+                self.assertEqual(translator._parse_review_response(json.dumps([{'id': 0, 'translation': wrong, 'approved': True}]), [source], allow_partial=True), [''])
+        self.assertFalse(translator.is_valid_translation('★ 직화 ★ 김치나베우동', '★ 泡菜锅烧乌冬面 ★'))
+
     def test_reproduced_food_concept_errors_are_rejected(self):
         cases = [
             ('쫄면', '辣拌米肠', '韩式辣拌劲道面'),
@@ -70,7 +85,7 @@ class TranslationIntegrityTests(unittest.TestCase):
         section = menu[0]['meals']['lunch']['sections'][0]
         self.assertEqual((section['name_cn'], section['items'][0]['cn']), ('主餐', '韩式泡菜'))
 
-    def test_reviewed_menu_phrases_override_existing_or_cached_ai_mistranslations(self):
+    def test_reference_phrases_still_use_api_translation_and_review(self):
         menu = [{'meals': {'lunch': {'sections': [{
             'name_ko': '메인', 'name_cn': '主菜单',
             'items': [
@@ -79,17 +94,22 @@ class TranslationIntegrityTests(unittest.TestCase):
                 {'ko': '유부미소국', 'cn': '味噌海带豆腐汤'},
             ],
         }]}}}]
-        with patch.object(translator, '_load_cache', return_value={}), patch.object(translator, '_call_batch') as api:
+        drafts = ['主餐', '蔬菜沙拉/杂粮饭', '鹌鹑蛋炖杏鲍菇', '豆皮味噌汤']
+        finals = ['主菜', '田园沙拉/杂粮饭', '鹌鹑蛋炖杏鲍菇', '豆皮味噌汤']
+        with patch.object(translator, '_load_cache', return_value={}), patch.object(translator, '_call_batch', return_value=drafts) as api, patch.object(
+            translator, '_call_review_batch', return_value=finals
+        ) as review, patch.object(translator, '_save_cache'):
             translator.translate_menu(menu, 'test-key', 'https://example.invalid')
-        api.assert_not_called()
+        api.assert_called_once()
+        review.assert_called_once()
         section = menu[0]['meals']['lunch']['sections'][0]
-        self.assertEqual(section['name_cn'], '主餐')
-        self.assertEqual([item['cn'] for item in section['items']], ['蔬菜沙拉 / 杂粮饭', '酱炖鹌鹑蛋杏鲍菇', '油豆腐味噌汤'])
+        self.assertEqual(section['name_cn'], '主菜')
+        self.assertEqual([item['cn'] for item in section['items']], finals[1:])
 
-    def test_reviewed_glossary_does_not_override_unreviewed_combinations(self):
-        self.assertEqual(translator.reviewed_translation('그린샐러드  / 잡곡밥'), '蔬菜沙拉 / 杂粮饭')
-        self.assertIsNone(translator.reviewed_translation('그린샐러드 / 치킨'))
-        for source, result in translator.REVIEWED_TRANSLATIONS.items():
+    def test_glossary_is_only_relevant_prompt_guidance(self):
+        self.assertIn('蔬菜沙拉 / 杂粮饭', translator._reference_prompt(['그린샐러드  / 잡곡밥']))
+        self.assertEqual(translator._reference_prompt(['그린샐러드 / 치킨']), '')
+        for source, result in translator.REFERENCE_TRANSLATIONS.items():
             with self.subTest(source=source):
                 self.assertTrue(translator.is_valid_translation(source, result))
 
@@ -202,7 +222,7 @@ class TranslationIntegrityTests(unittest.TestCase):
     def test_invalid_cache_values_are_retranslated_and_never_saved(self):
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         cache = {NOTICE: CHANGED_TIME}
-        with patch.object(translator, '_call_batch', return_value=[VALID_NOTICE]) as api, patch.object(translator, '_save_cache'):
+        with patch.object(translator, '_translate_and_review_batch', return_value=[VALID_NOTICE]) as api, patch.object(translator, '_save_cache'):
             translated = translator.translate_concurrent([NOTICE], 'test-key', 'https://example.invalid', cache)
         self.assertEqual(translated, [VALID_NOTICE])
         self.assertEqual(api.call_count, 1)
@@ -223,10 +243,10 @@ class TranslationIntegrityTests(unittest.TestCase):
             }]}}
         }]
         with patch.object(translator, '_load_cache', return_value={}), patch.object(
-            translator, 'translate_concurrent', return_value=[VALID_NOTICE]
+            translator, 'translate_concurrent', return_value=['午餐', VALID_NOTICE]
         ) as translate:
             translator.translate_menu(menu, 'test-key', 'https://example.invalid')
-        self.assertEqual(translate.call_args.args[0], [NOTICE])
+        self.assertEqual(translate.call_args.args[0], ['중식', NOTICE])
         self.assertEqual(menu[0]['meals']['lunch']['sections'][0]['items'][0]['cn'], VALID_NOTICE)
 
     def test_summary_counts_windows_and_every_menu_row_but_not_location_metadata(self):

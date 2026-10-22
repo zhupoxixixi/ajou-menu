@@ -17,7 +17,7 @@ def restaurant(rid):
 class TranslationTests(unittest.TestCase):
     def test_duplicates_use_one_request_and_keep_input_order(self):
         cache = {}
-        with patch.object(translator, '_call_batch', return_value=['泡菜', '白米饭']) as api, patch.object(translator, '_save_cache'):
+        with patch.object(translator, '_translate_and_review_batch', return_value=['泡菜', '白米饭']) as api, patch.object(translator, '_save_cache'):
             result = translator.translate_concurrent(['김치', '쌀밥', '김치'], 'test-key', 'https://example.invalid', cache)
         self.assertEqual(result, ['泡菜', '白米饭', '泡菜'])
         self.assertEqual(api.call_count, 1)
@@ -25,10 +25,10 @@ class TranslationTests(unittest.TestCase):
 
     def test_failure_is_not_cached_and_next_run_retries(self):
         cache = {}
-        with patch.object(translator, '_call_batch', side_effect=translator.TranslationError('HTTP 429')), patch.object(translator, '_save_cache'):
+        with patch.object(translator, '_translate_and_review_batch', side_effect=translator.TranslationError('HTTP 429')), patch.object(translator, '_save_cache'):
             self.assertEqual(translator.translate_concurrent(['김치'], 'test-key', 'https://example.invalid', cache), [''])
         self.assertEqual(cache, {})
-        with patch.object(translator, '_call_batch', return_value=['泡菜']) as api, patch.object(translator, '_save_cache'):
+        with patch.object(translator, '_translate_and_review_batch', return_value=['泡菜']) as api, patch.object(translator, '_save_cache'):
             self.assertEqual(translator.translate_concurrent(['김치'], 'test-key', 'https://example.invalid', cache), ['泡菜'])
             self.assertEqual(api.call_count, 1)
 
@@ -73,7 +73,7 @@ class TranslationTests(unittest.TestCase):
 class PartialTranslationTests(unittest.TestCase):
     def test_valid_batch_items_survive_and_only_missing_text_is_retried(self):
         cache = {}
-        with patch.object(translator, '_call_batch', side_effect=[['泡菜', ''], ['白米饭']]) as api, patch.object(translator, '_save_cache'):
+        with patch.object(translator, '_translate_and_review_batch', side_effect=[['泡菜', ''], ['白米饭']]) as api, patch.object(translator, '_save_cache'):
             result = translator.translate_concurrent(['김치', '쌀밥', '김치'], 'test-key', 'https://example.invalid', cache)
         self.assertEqual(result, ['泡菜', '白米饭', '泡菜'])
         self.assertEqual([c.args[0] for c in api.call_args_list], [['김치', '쌀밥'], ['쌀밥']])
