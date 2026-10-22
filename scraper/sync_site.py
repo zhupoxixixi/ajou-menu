@@ -2,7 +2,9 @@
 from pathlib import Path
 import shutil
 
-ASSETS = ('index.html', 'styles.css', 'menu.js', 'menu-data.js', 'favicon.svg',
+ASSETS = ('index.html', 'styles.css', 'menu.js', 'glass.js', 'background.js',
+          'vendor/liquid-glass.js', 'vendor/LICENSE', 'assets/background.jpg',
+          'menu-data.js', 'favicon.svg',
           'manifest.webmanifest', 'sw.js', 'apple-touch-icon.png', 'icon-192.png',
           'icon-512.png', 'share.png', '404.html', 'THIRD_PARTY_NOTICES.md')
 
@@ -12,7 +14,9 @@ def sync_site(base_dir: Path | None = None):
     target = base_dir / 'site'
     target.mkdir(exist_ok=True)
     for name in ASSETS:
-        shutil.copyfile(base_dir / name, target / name)
+        destination = target / name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(base_dir / name, destination)
 
 
 if __name__ == '__main__':

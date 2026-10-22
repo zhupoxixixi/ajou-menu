@@ -40,9 +40,9 @@ SOFTWARE.
 
 The user supplied a CSS card snippet attributed to Codewithvinay on Uiverse.io.
 Its gray surface (`#e0e0e0`), rounded corners, and opposing light/dark shadows
-are adapted for the responsive cards and controls. The original attribution is
-retained in `styles.css`. No exact component URL or separate license text was
-provided with the snippet.
+were adapted in a previous version. This historical attribution is retained;
+the current interface uses the Deepika glass material described below. No exact
+component URL or separate license text was provided with the snippet.
 
 ## Tabler UI v1.7.0
 
@@ -81,3 +81,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ```
+
+## Deepika Liquid Glass
+
+The current refraction engine is the unmodified `liquid-glass.js` from
+[deepika-builds/liquid-glass](https://github.com/deepika-builds/liquid-glass),
+commit `98ed97bd99def529493fd37177228810f6422f6d`.
+
+- Source: `vendor/liquid-glass.js`
+- Complete upstream MIT license: [vendor/LICENSE](vendor/LICENSE)
+- Upstream source SHA256: `dfadcbd3e72646a156bab4f0bde4bfa3baae6ea7ebd54659ccb71fcb6ecfd752`
+- Local adapter: `glass.js`; local background selection: `background.js`.
+
+The default background photograph was supplied and selected by the user for
+this project. User-selected replacement backgrounds are processed and stored
+locally in the browser and are not uploaded by Ajou Menu.

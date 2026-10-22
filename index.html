@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#e0e0e0">
+  <meta name="theme-color" content="#d3dce8">
   <meta name="description" content="아주대학교 식당의 주간 메뉴를 한국어와 중국어로 확인하세요. 查看亚洲大学食堂每周菜单，支持中韩双语。">
   <title>아주대학교 식단 · Ajou Menu</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,20 +13,24 @@
   <meta property="og:title" content="Ajou Menu · 亚洲大学食堂菜单">
   <meta property="og:description" content="宿舍食堂与教职工食堂，中韩双语菜单、供餐时段和每周预告。">
   <meta property="og:url" content="https://zhupoxixixi.github.io/ajou-menu/">
-  <meta property="og:image" content="https://zhupoxixixi.github.io/ajou-menu/share.png?v=20261022-system-blue">
+  <meta property="og:image" content="https://zhupoxixixi.github.io/ajou-menu/share.png?v=20261023-deepika">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://zhupoxixixi.github.io/ajou-menu/">
   <script>try{const t=localStorage.getItem('menuTheme');document.documentElement.classList.toggle('dark',t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches));}catch{}</script>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20261022-system-blue">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20261022-system-blue">
-  <link rel="manifest" href="manifest.webmanifest?v=20261022-system-blue">
-  <link rel="stylesheet" href="styles.css?v=20261022-system-blue">
-  <script defer src="menu-data.js?v=20261022-system-blue"></script>
-  <script defer src="menu.js?v=20261022-system-blue"></script>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20261023-deepika">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20261023-deepika">
+  <link rel="manifest" href="manifest.webmanifest?v=20261023-deepika">
+  <link rel="stylesheet" href="styles.css?v=20261023-deepika">
+  <script defer src="vendor/liquid-glass.js?v=20261023-deepika"></script>
+  <script defer src="glass.js?v=20261023-deepika"></script>
+  <script defer src="background.js?v=20261023-deepika"></script>
+  <script defer src="menu-data.js?v=20261023-deepika"></script>
+  <script defer src="menu.js?v=20261023-deepika"></script>
 </head>
 <body>
+<div id="glassBackdrop" aria-hidden="true"></div>
   <a class="skip-link" href="#menuHeading" id="skipLink">메뉴로 바로가기</a>
   <header class="site-header">
     <div class="wide-shell header-inner">
@@ -34,46 +38,47 @@
         <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 14h22c0 6.4-4.7 11-11 11S5 20.4 5 14Z"/><path d="M12 5v4m8-4v4"/></svg></span>
         <span class="brand-copy"><strong>AJOU MENU</strong><small id="brandSubtitle">아주대학교 식단</small></span>
       </a>
-      <div class="header-actions">
+      <div class="glass-surface glass-actions"><div class="glass-content"><div class="header-actions">
         <a class="icon-button github-button" href="https://github.com/zhupoxixixi/ajou-menu" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><span data-icon="github"></span></a>
         <button class="icon-button" id="toolsToggle" type="button" aria-haspopup="dialog" aria-label="使用与更新"><span data-icon="info"></span></button>
         <button class="language-toggle" id="langToggle" type="button"><span id="languageLabel">中文</span></button>
         <button class="icon-button" id="themeToggle" type="button"><span data-icon="sun"></span></button>
       </div>
+    </div></div>
     </div>
   </header>
 
   <main class="page-shell">
     <div class="page-intro">
-      <nav class="date-navigation" aria-label="날짜 탐색" id="dateNavigation">
+      <div class="glass-surface glass-date"><div class="glass-content"><nav class="date-navigation" aria-label="날짜 탐색" id="dateNavigation">
         <div class="nav-controls">
           <div class="date-stepper"><button class="icon-button" id="prevDate" type="button"><span data-icon="left"></span></button><button class="nav-current-date" id="navDateLabel" type="button" aria-haspopup="dialog"><span id="navDateDisplay">—</span></button><button class="icon-button" id="nextDate" type="button"><span data-icon="right"></span></button></div>
           <button class="date-picker-trigger" id="dateToggle" type="button" aria-haspopup="dialog"><span data-icon="calendar"></span><span id="datePickerLabel">날짜 선택</span></button>
         </div>
-      </nav>
+      </nav></div></div>
     </div>
     <div id="dataStatus" class="status-banner" role="status" hidden></div>
 
     <div class="menu-layout">
-      <section class="selection-panel" aria-label="식당 및 식사 선택" id="selectionPanel">
+      <div class="glass-surface glass-selection"><div class="glass-content"><section class="selection-panel" aria-label="식당 및 식사 선택" id="selectionPanel">
         <p class="control-label" id="restaurantLabel">식당 선택</p>
         <div id="restaurantTabs" class="restaurant-tabs" role="group" aria-labelledby="restaurantLabel"></div>
         <p class="control-label" id="mealLabel">식사 선택</p>
         <div id="mealTabs" class="meal-tabs" role="group" aria-labelledby="mealLabel"></div>
-      </section>
+      </section></div></div>
 
       <section class="menu-panel" aria-labelledby="menuHeading">
         <p class="sr-only" id="windowLabel">코너 선택</p>
-        <div id="windowTabs" class="window-tabs" role="group" aria-labelledby="windowLabel"></div>
+        <div class="glass-surface glass-windows"><div class="glass-content"><div id="windowTabs" class="window-tabs" role="group" aria-labelledby="windowLabel"></div></div></div>
         <div id="restaurantStatus" class="status-banner" role="status" hidden></div>
-        <article class="menu-card">
+        <div class="glass-surface glass-menu"><div class="glass-content"><article class="menu-card">
           <div class="card-header">
             <div class="card-title-line"><div class="card-title-copy"><h1 id="menuHeading" tabindex="-1">오늘의 메뉴</h1><span id="dateDisplay" class="date-badge"></span><span id="todayMarker" class="today-marker" hidden></span></div><button id="shareButton" class="icon-button copy-button" type="button" aria-label="메뉴 복사" title="메뉴 복사"><span data-icon="copy"></span></button></div>
             <div id="serviceMeta" class="service-meta"><p class="service-hours" id="serviceHours" hidden></p><p class="service-state" id="serviceState" role="status" hidden></p></div>
           </div>
           <div id="menuContent"></div>
           <div id="emptyState" class="empty-state" hidden><span data-icon="bowl" class="empty-symbol"></span><h2 id="emptyTitle"></h2><p id="emptyDescription"></p></div>
-        </article>
+        </article></div></div>
       </section>
     </div>
     <div class="nav-stats"><p id="updatedAt"></p><p id="dateCount"></p></div>
@@ -95,6 +100,13 @@
   <dialog id="toolsDialog" class="app-dialog tools-dialog" aria-labelledby="toolsTitle">
     <div class="dialog-heading"><h2 id="toolsTitle"></h2><button class="dialog-close icon-button" type="button" data-close="toolsDialog"><span data-icon="close"></span></button></div>
     <div class="tools-content">
+      <section id="backgroundSection" class="tool-section">
+        <h3 id="backgroundTitle">배경 이미지</h3>
+        <p id="backgroundHint" class="tool-hint">기기에 저장된 사진으로 배경을 바꿀 수 있어요.</p>
+        <input id="backgroundFile" type="file" accept="image/*" hidden>
+        <div class="background-actions"><button id="backgroundChoose" class="small-button" type="button">사진 선택</button><button id="backgroundReset" class="small-button" type="button">기본 배경</button></div>
+        <p id="backgroundStatus" class="tool-hint background-status" role="status"></p>
+      </section>
       <section id="operatingSection" class="tool-section" hidden><h3 id="operatingTitle"></h3><div id="operatingDetails" class="operating-details"></div></section>
       <section class="tool-section"><h3 id="dataTitle"></h3><dl id="healthDetails" class="health-details"></dl><p class="tool-hint" id="refreshHint"></p><button id="refreshButton" class="small-button" type="button"><span data-icon="refresh"></span><span id="refreshLabel"></span></button></section>
       <section class="tool-section"><h3 id="installTitle"></h3><p id="installHint" class="tool-hint"></p><button id="installButton" class="small-button" type="button" hidden></button></section>

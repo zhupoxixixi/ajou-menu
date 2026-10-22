@@ -12,6 +12,7 @@
 4. 点击“星期几菜单”标题行最右侧的 **复制图标**，复制日期、食堂、餐次、窗口及菜名，不附带声明或网页链接。右上角还可以切换深浅主题。
 5. 手动查看后，点击日历里的 **回到当前餐次** 恢复自动选餐。菜单上的状态按韩国时间和公布时段计算，不代表现场实时营业情况。
 6. 点击顶部信息按钮，查看所选日期两间食堂的抓取状态、更新时间、中文完整度，或刷新已发布菜单。
+7. 在信息弹窗的 **背景图片** 中选择设备里的照片，或恢复默认背景。图片在浏览器本机处理和保存，不会上传服务器；不同设备、浏览器或主屏应用之间不自动同步，清理浏览器数据后会恢复默认。
 
 ## 手机与离线
 
@@ -20,7 +21,9 @@
 - 联网打开一次、显示“菜单已准备好供离线查看”后，可断网重新打开已保存的一周菜单。离线期间不能获取临时调整；页面会标明离线状态和原始更新时间。
 - 线上优先加载最新页面和菜单，只有连接失败时使用缓存；缓存仅属于 `/ajou-menu/`，不影响公告站。
 - 缓存存储异常时仍可加载在线菜单；单个标签页使用旧缓存，只通知受影响的页面。
-- 采用灰色同色表面、柔和凸起卡片和内凹菜单区域，蓝色标记选中状态；支持深浅主题和轻量弹窗动效，系统开启“减少动态效果”时关闭动画。
+- 采用 Deepika 透明玻璃面板和 System Blue 选中态，默认背景为用户选定的图片；支持深浅主题和轻量弹窗动效，系统开启“减少动态效果”时关闭动画。
+- Chromium 使用边缘折射；Safari、iOS Chrome 和 iOS 主屏应用使用磨砂兼容效果，保留背景、圆角、半透明和高光。添加主屏幕不会自动获得额外滤镜支持；不同系统与设备的效果和性能仍需真机核验。
+- 自选背景会适当缩小后保存在本机，可离线使用。浏览器存储不可用时仅当前页面生效；iPhone 浏览器和主屏应用可能需要分别选择一次图片。
 - 不提供手机主动推送。
 
 默认进入宿舍食堂，按**韩国时间**和供餐截止时间显示当前或下一餐：早餐结束后显示午餐，午餐结束后显示晚餐，晚餐结束后显示次日第一餐。教职工食堂不供应早餐，次日默认午餐；有 A/B 窗口时优先 A。每天的供餐时间优先读取当天公告，页面显示对应时段。
@@ -79,8 +82,10 @@ npx --yes --package @playwright/cli playwright-cli -s=menu-cache close
 
 ## 界面来源
 
-当前界面采用用户提供的 Uiverse.io / Codewithvinay 卡片阴影效果：灰色同色表面、圆角、两侧明暗阴影，卡片凸起，菜单内容和按下状态内凹。强调色参考 [Apple System Blue](https://developer.apple.com/design/human-interface-guidelines/color)：图标浅色 #0088FF、深色 #0091FF；小号蓝色文字使用更高对比度变体。按设备宽度调整圆角和控件尺寸，支持深浅主题；去掉“今天吃什么”装饰标题。
+当前玻璃效果使用 [deepika-builds/liquid-glass](https://github.com/deepika-builds/liquid-glass)，固定源码版本 `98ed97bd99def529493fd37177228810f6422f6d`，MIT 许可。`vendor/liquid-glass.js` 保留上游原文件，`glass.js` 负责页面接入和 WebKit 主屏应用兼容，`background.js` 负责本机背景选择。网页不引入 React，也没有第三方 CDN 运行依赖。
+
+强调色参考 [Apple System Blue](https://developer.apple.com/design/human-interface-guidelines/color)，保留蓝底白碗图标与蓝色选中态，按设备宽度调整圆角和控件尺寸。“今天吃什么”、热量和搜索保持移除。
 
 页面、卡片和分段控件结构沿用对 [Tabler](https://tabler.io/) 的适配，使用本地 HTML/CSS，不引入完整组件库。日期导航位于内容顶部；宽度 ≥900px 时，电脑采用食堂选择区与菜单区两栏，手机和平板采用单栏。更新时间自然排布在菜单下方。
 
-早期界面参考 [Çukurova 大学食堂](https://www.cukurova.app/)。两个来源的 MIT 许可与版权说明均保留，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+早期界面参考 [Çukurova 大学食堂](https://www.cukurova.app/) 与用户提供的 Uiverse.io / Codewithvinay 卡片。来源记录和相关许可保留在 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。上线玻璃界面前的版本保存为 GitHub 标签 [backup-before-deepika-20261023](https://github.com/zhupoxixixi/ajou-menu/tree/backup-before-deepika-20261023)。

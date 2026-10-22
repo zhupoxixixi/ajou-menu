@@ -55,6 +55,11 @@ test('offline installation saves the shell and data; activation leaves notice ca
   assert.ok(!app.stores.has('ajou-menu-old'));
   const menu = [...app.stores.entries()].find(([key]) => key.startsWith('ajou-menu-'))[1];
   assert.ok(menu.has(ROOT)); assert.ok(menu.has(ROOT + 'menu-data.js'));
+  const page = fs.readFileSync(require.resolve('../index.html'), 'utf8');
+  for (const [, script] of page.matchAll(/<script[^>]+src="([^"]+)"/g)) {
+    assert.ok(menu.has(new URL(script.split('?')[0], ROOT).href), `offline cache contains ${script}`);
+  }
+  assert.ok(menu.has(ROOT + 'assets/background.jpg'));
   let ready;
   await app.dispatch('message', { data: { type: 'menu-cache-status' }, ports: [{ postMessage: value => ready = value.ready }] });
   assert.equal(ready, true);

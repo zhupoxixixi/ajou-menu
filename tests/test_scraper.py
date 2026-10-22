@@ -119,7 +119,9 @@ class FetchTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)
             for asset in ASSETS:
-                (base / asset).write_text(asset, encoding='utf-8')
+                source = base / asset
+                source.parent.mkdir(parents=True, exist_ok=True)
+                source.write_text(asset, encoding='utf-8')
             sync_site(base)
             for asset in ASSETS:
                 self.assertEqual((base / 'site' / asset).read_text(encoding='utf-8'), asset)
