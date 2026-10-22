@@ -3,28 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#111111">
+  <meta name="theme-color" content="#f5f7f8">
   <meta name="description" content="아주대학교 식당의 주간 메뉴를 한국어와 중국어로 확인하세요. 查看亚洲大学食堂每周菜单，支持中韩双语。">
   <title>아주대학교 식단 · Ajou Menu</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Ajou Menu">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Ajou Menu · 亚洲大学食堂菜单">
   <meta property="og:description" content="宿舍食堂与教职工食堂，中韩双语菜单、供餐时段和每周预告。">
   <meta property="og:url" content="https://zhupoxixixi.github.io/ajou-menu/">
-  <meta property="og:image" content="https://zhupoxixixi.github.io/ajou-menu/share.png?v=20261022-bugfix">
+  <meta property="og:image" content="https://zhupoxixixi.github.io/ajou-menu/share.png?v=20261022-light-ui">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://zhupoxixixi.github.io/ajou-menu/">
   <script>try{const t=localStorage.getItem('menuTheme');document.documentElement.classList.toggle('dark',t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches));}catch{}</script>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20261022-bugfix">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20261022-bugfix">
-  <link rel="manifest" href="manifest.webmanifest?v=20261022-bugfix">
-  <link rel="stylesheet" href="styles.css?v=20261022-bugfix">
-  <script defer src="menu-data.js?v=20261022-bugfix"></script>
-  <script defer src="menu.js?v=20261022-bugfix"></script>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20261022-light-ui">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20261022-light-ui">
+  <link rel="manifest" href="manifest.webmanifest?v=20261022-light-ui">
+  <link rel="stylesheet" href="styles.css?v=20261022-light-ui">
+  <script defer src="menu-data.js?v=20261022-light-ui"></script>
+  <script defer src="menu.js?v=20261022-light-ui"></script>
 </head>
 <body>
   <a class="skip-link" href="#menuHeading" id="skipLink">메뉴로 바로가기</a>
@@ -44,38 +44,41 @@
   </header>
 
   <main class="page-shell">
-    <h1 class="sr-only" id="pageTitle">아주대학교 식단</h1>
+    <div class="page-intro">
+      <h1 class="page-title" id="pageTitle">오늘은 뭐 먹지?</h1>
+      <nav class="date-navigation" aria-label="날짜 탐색" id="dateNavigation">
+        <div class="nav-controls">
+          <div class="date-stepper"><button class="icon-button" id="prevDate" type="button"><span data-icon="left"></span></button><button class="nav-current-date" id="navDateLabel" type="button" aria-haspopup="dialog"><span id="navDateDisplay">—</span></button><button class="icon-button" id="nextDate" type="button"><span data-icon="right"></span></button></div>
+          <button class="date-picker-trigger" id="dateToggle" type="button" aria-haspopup="dialog"><span data-icon="calendar"></span><span id="datePickerLabel">날짜 선택</span></button>
+        </div>
+      </nav>
+    </div>
     <div id="dataStatus" class="status-banner" role="status" hidden></div>
 
-    <section class="selection-panel" aria-label="식당 및 식사 선택" id="selectionPanel">
-      <h2 class="sr-only" id="restaurantLabel">식당 선택</h2>
-      <div id="restaurantTabs" class="restaurant-tabs" role="group" aria-labelledby="restaurantLabel"></div>
-      <h2 class="sr-only" id="mealLabel">식사 선택</h2>
-      <div id="mealTabs" class="meal-tabs" role="group" aria-labelledby="mealLabel"></div>
-    </section>
+    <div class="menu-layout">
+      <section class="selection-panel" aria-label="식당 및 식사 선택" id="selectionPanel">
+        <h2 class="control-label" id="restaurantLabel">식당 선택</h2>
+        <div id="restaurantTabs" class="restaurant-tabs" role="group" aria-labelledby="restaurantLabel"></div>
+        <h2 class="control-label" id="mealLabel">식사 선택</h2>
+        <div id="mealTabs" class="meal-tabs" role="group" aria-labelledby="mealLabel"></div>
+      </section>
 
-    <section class="menu-panel" aria-labelledby="menuHeading">
-      <h2 class="sr-only" id="windowLabel">코너 선택</h2>
-      <div id="windowTabs" class="window-tabs" role="group" aria-labelledby="windowLabel"></div>
-      <div id="restaurantStatus" class="status-banner" role="status" hidden></div>
-      <article class="menu-card">
-        <div class="card-header">
-          <div class="card-title-line"><div class="card-title-copy"><h2 id="menuHeading" tabindex="-1">오늘의 메뉴</h2><span id="dateDisplay" class="date-badge"></span><span id="todayMarker" class="today-marker" hidden></span></div><button id="shareButton" class="icon-button copy-button" type="button" aria-label="메뉴 복사" title="메뉴 복사"><span data-icon="copy"></span></button></div>
-          <div id="serviceMeta" class="service-meta"><p class="service-hours" id="serviceHours" hidden></p><p class="service-state" id="serviceState" role="status" hidden></p></div>
-        </div>
-        <div id="menuContent"></div>
-        <div id="emptyState" class="empty-state" hidden><span data-icon="bowl" class="empty-symbol"></span><h3 id="emptyTitle"></h3><p id="emptyDescription"></p></div>
-      </article>
-    </section>
-  </main>
-
-  <nav class="date-navigation" aria-label="날짜 탐색" id="dateNavigation">
-    <div class="nav-stats"><div class="wide-shell nav-stats-inner"><p id="updatedAt"></p><p id="dateCount"></p></div></div>
-    <div class="wide-shell nav-controls">
-      <div class="date-stepper"><button class="icon-button" id="prevDate" type="button"><span data-icon="left"></span></button><button class="nav-current-date" id="navDateLabel" type="button" aria-haspopup="dialog"><span id="navDateDisplay">—</span></button><button class="icon-button" id="nextDate" type="button"><span data-icon="right"></span></button></div>
-      <button class="date-picker-trigger" id="dateToggle" type="button" aria-haspopup="dialog"><span data-icon="calendar"></span><span id="datePickerLabel">날짜 선택</span></button>
+      <section class="menu-panel" aria-labelledby="menuHeading">
+        <h2 class="sr-only" id="windowLabel">코너 선택</h2>
+        <div id="windowTabs" class="window-tabs" role="group" aria-labelledby="windowLabel"></div>
+        <div id="restaurantStatus" class="status-banner" role="status" hidden></div>
+        <article class="menu-card">
+          <div class="card-header">
+            <div class="card-title-line"><div class="card-title-copy"><h2 id="menuHeading" tabindex="-1">오늘의 메뉴</h2><span id="dateDisplay" class="date-badge"></span><span id="todayMarker" class="today-marker" hidden></span></div><button id="shareButton" class="icon-button copy-button" type="button" aria-label="메뉴 복사" title="메뉴 복사"><span data-icon="copy"></span></button></div>
+            <div id="serviceMeta" class="service-meta"><p class="service-hours" id="serviceHours" hidden></p><p class="service-state" id="serviceState" role="status" hidden></p></div>
+          </div>
+          <div id="menuContent"></div>
+          <div id="emptyState" class="empty-state" hidden><span data-icon="bowl" class="empty-symbol"></span><h3 id="emptyTitle"></h3><p id="emptyDescription"></p></div>
+        </article>
+      </section>
     </div>
-  </nav>
+    <div class="nav-stats"><p id="updatedAt"></p><p id="dateCount"></p></div>
+  </main>
 
   <dialog id="dateDialog" class="app-dialog date-dialog" aria-labelledby="calendarTitle">
     <div class="dialog-heading"><h2 id="calendarTitle">날짜 선택</h2><button class="dialog-close icon-button" type="button" data-close="dateDialog"><span data-icon="close"></span></button></div>

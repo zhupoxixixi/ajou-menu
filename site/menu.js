@@ -398,7 +398,7 @@ function renderAppStatus() {
 function renderText() {
   document.documentElement.lang = isChinese() ? 'zh-CN' : 'ko';
   document.title = `${copy().brand} · Ajou Menu`;
-  const text = { brandSubtitle: 'brand', pageTitle: 'brand', restaurantLabel: 'restaurant', mealLabel: 'meal', windowLabel: 'window', skipLink: 'skip', emptyTitle: 'empty', emptyDescription: 'emptyDescription', calendarTitle: 'calendar', calendarHint: 'calendarHint', datePickerLabel: 'calendar', copyTitle: 'share', copyHint: 'copyHint', toolsTitle: 'tools', dataTitle: 'dataTitle', refreshHint: 'refreshHint', refreshLabel: 'refresh', installTitle: 'installTitle', installButton: 'install', offlineTitle: 'offlineTitle', offlineHint: 'offlineHint' };
+  const text = { brandSubtitle: 'brand', pageTitle: 'pageTitle', restaurantLabel: 'restaurant', mealLabel: 'meal', windowLabel: 'window', skipLink: 'skip', emptyTitle: 'empty', emptyDescription: 'emptyDescription', calendarTitle: 'calendar', calendarHint: 'calendarHint', datePickerLabel: 'calendar', copyTitle: 'share', copyHint: 'copyHint', toolsTitle: 'tools', dataTitle: 'dataTitle', refreshHint: 'refreshHint', refreshLabel: 'refresh', installTitle: 'installTitle', installButton: 'install', offlineTitle: 'offlineTitle', offlineHint: 'offlineHint' };
   for (const [id, key] of Object.entries(text)) $(id).textContent = copy()[key];
   $('languageLabel').textContent = isChinese() ? '한국어' : '中文';
   $('langToggle').setAttribute('aria-label', isChinese() ? '한국어로 전환' : '切换到中文');
@@ -419,7 +419,12 @@ function renderAll() {
   // Keep shared links aligned with subsequent choices, including a language change.
   if (state.linked) window.history.replaceState(null, '', menuLink());
 }
-function renderThemeLabel() { const dark = document.documentElement.classList.contains('dark'); $('themeToggle').replaceChildren(icon(dark ? 'sun' : 'moon')); $('themeToggle').setAttribute('aria-label', dark ? copy().light : copy().dark); }
+function renderThemeLabel() {
+  const dark = document.documentElement.classList.contains('dark');
+  $('themeToggle').replaceChildren(icon(dark ? 'sun' : 'moon'));
+  $('themeToggle').setAttribute('aria-label', dark ? copy().light : copy().dark);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#111b17' : '#f5f7f8');
+}
 function notify(text) { clearTimeout(toastTimer); showStatus('actionStatus', text); toastTimer = setTimeout(() => showStatus('actionStatus', ''), 2400); }
 
 function menuLink() { const url = new URL(window.location.href); url.search = ''; url.hash = ''; for (const [key, value] of Object.entries({ date: state.date, restaurant: state.restaurantId, meal: state.meal, window: state.sectionName, lang: state.lang })) if (value != null) url.searchParams.set(key, value); return url.href; }
