@@ -12,7 +12,7 @@
     { key: 'header', root: '.site-header', targets: '.brand strong,.brand small,.header-actions button,.header-actions a' },
     { key: 'date', root: '.glass-date', targets: '#dateNavigation button' },
     { key: 'selection', root: '#selectionPanel', targets: '.control-label,#restaurantTabs button:not([aria-pressed="true"]),#mealTabs button' },
-    { key: 'windows', root: '.glass-windows', targets: '#windowTabs button:not([aria-pressed="true"])' },
+    { key: 'windows', root: '.glass-windows', targets: '#windowTabs button:not([aria-pressed="true"]),.window-scroll-cue' },
     { key: 'menu', root: '.glass-menu', targets: '#menuHeading,#dateDisplay,#serviceHours,#serviceState,.dish-name strong,.card-notices p,#emptyTitle,#emptyDescription,#shareButton' },
     { key: 'metadata', root: '.nav-stats', targets: '#updatedAt,#dateCount' },
   ];

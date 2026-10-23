@@ -12,7 +12,7 @@ const DEFAULT_SERVICE_HOURS = {
 const COPY = {
   ko: {
     brand: '아주대학교 식단', restaurant: '식당 선택', meal: '식사 선택', window: '코너 선택',
-    tools: '사용 및 업데이트', healthy: '데이터 업데이트됨', delayed: '업데이트 확인 필요', offline: '오프라인 · 저장된 메뉴', automatic: '자동 선택', manual: '직접 선택',
+    tools: '설정', healthy: '데이터 업데이트됨', delayed: '업데이트 확인 필요', offline: '오프라인 · 저장된 메뉴', automatic: '자동 선택', manual: '직접 선택',
     refresh: '새로고침', refreshing: '새로고침 중…', refreshOffline: '오프라인에서는 메뉴를 새로고침할 수 없습니다. 인터넷에 연결된 후 다시 시도해 주세요.',
     offlineBanner: '인터넷에 연결되지 않아 저장된 메뉴를 표시합니다. 새 메뉴와 변경 사항은 연결 후 새로고침해 주세요.',
     notices: '중국어 공지 ↗', serving: '운영시간 내', servingReference: '참고 운영시간 내', upcoming: '운영 시작 전', ended: '운영시간 종료', preview: '예정 메뉴', closed: '이 식사는 운영하지 않아요', emptyService: '등록된 메뉴 없음', unconfirmed: '운영 여부 확인 필요', unknownService: '운영시간은 학교 원문 확인',
@@ -34,7 +34,7 @@ const COPY = {
   },
   cn: {
     brand: '亚洲大学食堂菜单', restaurant: '选择食堂', meal: '选择餐次', window: '选择窗口',
-    tools: '使用与更新', healthy: '数据已更新', delayed: '需要检查更新', offline: '离线 · 已保存菜单', automatic: '自动选餐', manual: '手动查看',
+    tools: '设置', healthy: '数据已更新', delayed: '需要检查更新', offline: '离线 · 已保存菜单', automatic: '自动选餐', manual: '手动查看',
     refresh: '刷新菜单', refreshing: '正在刷新…', refreshOffline: '当前处于离线状态，无法刷新菜单。请联网后重试。',
     offlineBanner: '当前连接不可用，显示已保存菜单；新菜单和临时调整需要联网刷新。',
     notices: '中文公告 ↗', serving: '供餐时段内', servingReference: '参考供餐时段内', upcoming: '尚未开始', ended: '本餐已结束', preview: '预告菜单', closed: '该餐次不供应', emptyService: '暂无菜单', unconfirmed: '供餐情况待核实', unknownService: '供餐时间请查看学校原文',
@@ -69,6 +69,7 @@ const ICONS = {
   left: '<path d="m14 6-6 6 6 6"/>', right: '<path d="m10 6 6 6-6 6"/>', close: '<path d="m6 6 12 12M6 18 18 6"/>',
   external: '<path d="M14 3h7v7m0-7L10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/>',
   copy: '<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',
+  settings: '<path d="M4 21v-7m0-4V3m8 18v-9m0-4V3m8 18v-5m0-4V3M2 14h4m4-6h4m4 8h4"/>',
   github: '<path d="M9 19c-4 1-4-2-6-2m12 5v-4a3 3 0 0 0-1-2c3-.3 6-1.5 6-6a5 5 0 0 0-1.5-3.5A5 5 0 0 0 18 3s-1.5-.5-4 1a14 14 0 0 0-6 0C5.5 2.5 4 3 4 3a5 5 0 0 0-.5 3.5A5 5 0 0 0 2 10c0 4.5 3 5.7 6 6a3 3 0 0 0-1 2v4"/>',
 };
 
@@ -214,6 +215,42 @@ function icon(name) {
   return span.firstChild;
 }
 function button(className, pressed, action) { const node = el('button', className); node.type = 'button'; node.setAttribute('aria-pressed', String(pressed)); node.addEventListener('click', action); return node; }
+function updateWindowOverflowHints(strip = $('windowTabs')) {
+  if (!strip) return;
+  const host = strip.closest('.glass-windows') || strip;
+  const hasOverflow = !strip.hidden && strip.scrollWidth > strip.clientWidth + 2;
+  const hints = {
+    'data-overflow-start': hasOverflow && strip.scrollLeft > 2,
+    'data-overflow-end': hasOverflow && strip.scrollLeft + strip.clientWidth < strip.scrollWidth - 2,
+  };
+  for (const [attribute, value] of Object.entries(hints)) {
+    if (host.getAttribute(attribute) !== String(value)) host.setAttribute(attribute, String(value));
+  }
+}
+function scrollWindowChipIntoView(chip, leaveEdgeRoom = false) {
+  const strip = $('windowTabs');
+  if (!chip || !strip || strip.hidden) return;
+  const getBounds = () => ({ strip: strip.getBoundingClientRect(), chip: chip.getBoundingClientRect() });
+  let { strip: stripBounds, chip: chipBounds } = getBounds();
+  const hasBefore = Boolean(chip.previousElementSibling);
+  const hasAfter = Boolean(chip.nextElementSibling);
+  let startRoom = leaveEdgeRoom && hasBefore ? 26 : 0;
+  let endRoom = leaveEdgeRoom && hasAfter ? 26 : 0;
+  if (chipBounds.width > strip.clientWidth - startRoom - endRoom) { startRoom = 0; endRoom = 0; }
+  if (chipBounds.left < stripBounds.left + startRoom) strip.scrollLeft += Math.floor(chipBounds.left - (stripBounds.left + startRoom));
+  ({ strip: stripBounds, chip: chipBounds } = getBounds());
+  if (chipBounds.right > stripBounds.right - endRoom) strip.scrollLeft += Math.ceil(chipBounds.right - (stripBounds.right - endRoom));
+  updateWindowOverflowHints(strip);
+}
+function observeWindowTabOverflow() {
+  const strip = $('windowTabs');
+  strip.addEventListener('scroll', () => updateWindowOverflowHints(strip), { passive: true });
+  strip.addEventListener('focusin', event => {
+    if (event.target.matches('.window-button')) scrollWindowChipIntoView(event.target, true);
+  });
+  if (typeof ResizeObserver === 'function') new ResizeObserver(() => updateWindowOverflowHints(strip)).observe(strip);
+  else window.addEventListener('resize', () => updateWindowOverflowHints(strip));
+}
 function dateText(date, options) { return date ? new Intl.DateTimeFormat(isChinese() ? 'zh-CN' : 'ko-KR', { timeZone: 'Asia/Seoul', ...options }).format(new Date(`${date}T12:00:00+09:00`)) : ''; }
 function showStatus(id, text) { $(id).textContent = text || ''; $(id).hidden = !text; }
 function closeDialogs() { for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close(); }
@@ -302,12 +339,8 @@ function renderSelectors() {
   }));
   $('windowTabs').scrollLeft = previousScroll;
   const selectedWindow = $('windowTabs').querySelector('[aria-pressed="true"]');
-  if (selectedWindow && !$('windowTabs').hidden) {
-    const strip = $('windowTabs').getBoundingClientRect();
-    const selected = selectedWindow.getBoundingClientRect();
-    if (selected.left < strip.left) $('windowTabs').scrollLeft -= strip.left - selected.left;
-    else if (selected.right > strip.right) $('windowTabs').scrollLeft += selected.right - strip.right;
-  }
+  if (selectedWindow && !$('windowTabs').hidden) scrollWindowChipIntoView(selectedWindow, true);
+  updateWindowOverflowHints($('windowTabs'));
 }
 
 function renderMenu() {
@@ -372,7 +405,7 @@ function renderAppStatus() {
 function renderText() {
   document.documentElement.lang = isChinese() ? 'zh-CN' : 'ko';
   document.title = `${copy().brand} · Ajou Menu`;
-  const text = { brandSubtitle: 'brand', restaurantLabel: 'restaurant', mealLabel: 'meal', windowLabel: 'window', skipLink: 'skip', emptyTitle: 'empty', emptyDescription: 'emptyDescription', calendarTitle: 'calendar', calendarHint: 'calendarHint', datePickerLabel: 'calendar', copyTitle: 'share', copyHint: 'copyHint', toolsTitle: 'tools', refreshLabel: 'refresh' };
+  const text = { brandSubtitle: 'brand', restaurantLabel: 'restaurant', mealLabel: 'meal', windowLabel: 'window', skipLink: 'skip', emptyTitle: 'empty', emptyDescription: 'emptyDescription', calendarTitle: 'calendar', calendarHint: 'calendarHint', datePickerLabel: 'calendar', copyTitle: 'share', copyHint: 'copyHint', toolsTitle: 'tools', toolsLabel: 'tools', refreshLabel: 'refresh' };
   for (const [id, key] of Object.entries(text)) $(id).textContent = copy()[key];
   $('languageLabel').textContent = isChinese() ? '한국어' : '中文';
   $('langToggle').setAttribute('aria-label', isChinese() ? '한국어로 전환' : '切换到中文');
@@ -415,6 +448,7 @@ function init() {
     calendarMonth: null,
   };
   for (const node of document.querySelectorAll('[data-icon]')) node.replaceChildren(icon(node.dataset.icon));
+  observeWindowTabOverflow();
   $('langToggle').addEventListener('click', () => {
     state.lang = isChinese() ? 'ko' : 'cn';
     storageWrite('menuLang', state.lang);
