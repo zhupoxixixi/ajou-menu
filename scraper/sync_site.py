@@ -5,7 +5,7 @@ import shutil
 ASSETS = ('index.html', 'styles.css', 'menu.js', 'appearance.js', 'background.js', 'contrast.js',
           'menu-data.js', 'favicon.svg',
           'manifest.webmanifest', 'sw.js', 'apple-touch-icon.png', 'icon-192.png',
-          'icon-512.png', 'share.png', '404.html', 'THIRD_PARTY_NOTICES.md')
+          'icon-512.png', 'share.png', '404.html', 'THIRD_PARTY_NOTICES.md', 'assets/default-background.svg')
 
 
 def sync_site(base_dir: Path | None = None):

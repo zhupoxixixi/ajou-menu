@@ -149,8 +149,10 @@
   function layoutChanged(width, height) {
     const breakpoint = width < 640 ? 'phone' : width < 900 ? 'tablet' : 'desktop';
     const orientation = width > height ? 'landscape' : 'portrait';
-    if (!toneLayout || breakpoint !== toneLayout.breakpoint || orientation !== toneLayout.orientation || Math.abs(width - toneLayout.width) >= 160) {
-      toneLayout = { width, breakpoint, orientation };
+    const heightThreshold = toneLayout ? Math.max(160, toneLayout.height * 0.25) : 0;
+    if (!toneLayout || breakpoint !== toneLayout.breakpoint || orientation !== toneLayout.orientation ||
+        Math.abs(width - toneLayout.width) >= 160 || Math.abs(height - toneLayout.height) >= heightThreshold) {
+      toneLayout = { width, height, breakpoint, orientation };
       return true;
     }
     return false;

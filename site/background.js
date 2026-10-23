@@ -14,6 +14,7 @@
   const STORE_NAME = 'preferences';
   const RECORD_KEY = 'custom';
   const BACKGROUND_PROPERTY = '--menu-background-image';
+  const PRESET_STORAGE_KEY = 'menuBackgroundStyle';
 
   const COPY = {
     ko: {
@@ -21,11 +22,15 @@
       hint: '기기에서 이미지를 선택하면 이 브라우저에 저장됩니다. 이미지는 서버로 전송되지 않습니다.',
       choose: '이미지 선택',
       reset: '기본 배경으로 복원',
+      white: '흰색 배경',
       busy: '이미지를 처리하고 있습니다…',
       saved: '이 기기에 저장된 배경을 불러왔습니다.',
       applied: '배경을 적용하고 이 기기에 저장했습니다.',
       temporary: '배경을 적용했습니다. 브라우저가 저장하지 못해 페이지를 떠나면 사라집니다.',
       resetDone: '기본 배경으로 복원했습니다.',
+      whiteDone: '흰색 배경으로 변경했습니다.',
+      presetTemporary: '배경을 변경했지만 이 브라우저에 설정을 저장하지 못했습니다.',
+      whiteFailed: '흰색 배경을 적용했지만 저장된 이미지를 지우지 못했습니다.',
       resetFailed: '현재 페이지는 기본 배경으로 복원했지만 저장된 이미지를 지우지 못했습니다.',
       invalid: '사용할 수 있는 이미지 파일을 선택해 주세요.',
       failed: '이미지를 처리하지 못했습니다. 다른 파일을 선택해 주세요.',
@@ -36,11 +41,15 @@
       hint: '选择设备中的图片后会保存在此浏览器中。图片不会上传到服务器。',
       choose: '选择图片',
       reset: '恢复默认背景',
+      white: '纯白背景',
       busy: '正在处理图片…',
       saved: '已载入此设备保存的背景。',
       applied: '背景已应用并保存在此设备。',
       temporary: '背景已应用，但浏览器无法保存；离开页面后将不会保留。',
       resetDone: '已恢复默认背景。',
+      whiteDone: '已切换为纯白背景。',
+      presetTemporary: '背景已切换，但此浏览器无法保存设置。',
+      whiteFailed: '已切换为纯白背景，但无法删除本机保存的图片。',
       resetFailed: '当前页面已恢复默认背景，但无法删除本机保存的图片。',
       invalid: '请选择可用的图片文件。',
       failed: '无法处理这张图片，请尝试其他文件。',
@@ -82,12 +91,24 @@
     const input = doc.getElementById('backgroundFile');
     const chooseButton = doc.getElementById('backgroundChoose');
     const resetButton = doc.getElementById('backgroundReset');
+    const whiteButton = doc.getElementById('backgroundWhite');
     const title = doc.getElementById('backgroundTitle');
     const hint = doc.getElementById('backgroundHint');
     const status = doc.getElementById('backgroundStatus');
     let activeObjectUrl = null;
     let operation = 0;
     let databasePromise = null;
+
+    function applyPreset(style, persist = false) {
+      html.setAttribute('data-background-style', style === 'white' ? 'white' : 'pattern');
+      if (persist) {
+        try { win.localStorage.setItem(PRESET_STORAGE_KEY, style); }
+        catch (_) { return false; }
+      }
+      return true;
+    }
+    try { applyPreset(win.localStorage.getItem(PRESET_STORAGE_KEY)); }
+    catch (_) { applyPreset('pattern'); }
 
     function copy() {
       return getCopy(html.getAttribute('lang'));
@@ -103,6 +124,7 @@
       if (hint) hint.textContent = text.hint;
       if (chooseButton) chooseButton.textContent = text.choose;
       if (resetButton) resetButton.textContent = text.reset;
+      if (whiteButton) whiteButton.textContent = text.white;
       if (status && status.dataset.statusKey) {
         status.textContent = text[status.dataset.statusKey] || '';
       }
@@ -361,17 +383,19 @@
       }
     }
 
-    async function reset() {
+    async function reset(style = 'pattern') {
+      style = style === 'white' ? 'white' : 'pattern';
       const version = ++operation;
+      const persisted = applyPreset(style, true);
       clearObjectUrl();
       try {
         await removeSavedBlob();
         if (version !== operation) return false;
-        showStatus('resetDone');
+        showStatus(persisted ? (style === 'white' ? 'whiteDone' : 'resetDone') : 'presetTemporary');
         return true;
       } catch (_) {
         if (version !== operation) return false;
-        showStatus('resetFailed');
+        showStatus(style === 'white' ? 'whiteFailed' : 'resetFailed');
         return false;
       }
     }
@@ -385,6 +409,7 @@
     }
     if (chooseButton && input) chooseButton.addEventListener('click', () => input.click());
     if (resetButton) resetButton.addEventListener('click', () => { void reset(); });
+    if (whiteButton) whiteButton.addEventListener('click', () => { void reset('white'); });
     updateLanguage();
 
     if (typeof win.MutationObserver === 'function') {
