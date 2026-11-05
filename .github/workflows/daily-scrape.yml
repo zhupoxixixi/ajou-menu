@@ -18,6 +18,7 @@ jobs:
     timeout-minutes: 20
     env:
       PYTHONUNBUFFERED: '1'
+      MENU_FETCH_TRANSPORT: 'reader_first'
       TRANSLATE_MODEL: 'gpt-6-luna'
       TRANSLATE_REASONING_EFFORT: 'max'
       TRANSLATE_API_ENDPOINT: ${{ vars.TRANSLATE_API_ENDPOINT || 'https://factchat-cloud.mindlogic.ai/v1/gateway' }}

@@ -125,5 +125,69 @@ class MenuStateTests(unittest.TestCase):
         self.assertEqual(value['meals']['lunch']['sections'][0]['items'][-1]['kind'], 'note')
 
 
+class ReaderTransportTests(unittest.TestCase):
+    def _reader_response(self, url, html, *, origin_status=200, source_url=None):
+        result = Mock(status_code=200, content=html.encode('utf-8'), headers={})
+        result.json.return_value = {
+            'code': 200,
+            'data': {'url': source_url or url, 'httpStatus': origin_status, 'html': html},
+        }
+        return result
+
+    def test_reader_first_parses_verified_official_html_without_forwarding_translation_key(self):
+        date = '2026-10-16'
+        restaurant_id = 363910
+        url = fetcher.URL_TEMPLATE.format(article_no=restaurant_id, date=date)
+        html = '<div class="b-menu-day lunch"><pre>&lt;A&gt;\n쌀밥\n김치</pre></div>'
+        result = self._reader_response(url, html)
+        with patch.dict('os.environ', {'MENU_FETCH_TRANSPORT': 'reader_first', 'TRANSLATE_API_KEY': 'never-forward-this'}), \
+                patch.object(fetcher, '_pace_reader_request'), \
+                patch.object(fetcher._READER_SESSION, 'get', return_value=result) as reader_get, \
+                patch.object(fetcher._SESSION, 'get') as direct_get:
+            value = fetcher.fetch_menu(date, restaurant_id)
+        self.assertEqual(value['menu_status'], 'available')
+        self.assertEqual(value['meals']['lunch']['sections'][0]['items'][0]['ko'], '쌀밥')
+        self.assertIn('https://r.jina.ai/' + url, reader_get.call_args.args)
+        headers = reader_get.call_args.kwargs['headers']
+        self.assertEqual(headers['Accept'], 'application/json')
+        self.assertEqual(headers['X-No-Cache'], 'true')
+        self.assertNotIn('Authorization', headers)
+        self.assertNotIn('never-forward-this', str(reader_get.call_args))
+        direct_get.assert_not_called()
+
+    def test_reader_failure_falls_back_to_the_official_school_url(self):
+        date = '2026-10-16'
+        restaurant_id = 363910
+        url = fetcher.URL_TEMPLATE.format(article_no=restaurant_id, date=date)
+        invalid = self._reader_response(url, '<div>unrelated content</div>', source_url='https://example.invalid/')
+        html = '<div class="b-menu-day lunch"><pre>쌀밥\n김치</pre></div>'
+        with patch.dict('os.environ', {'MENU_FETCH_TRANSPORT': 'reader_first'}), \
+                patch.object(fetcher, '_pace_reader_request'), \
+                patch.object(fetcher._READER_SESSION, 'get', return_value=invalid), \
+                patch.object(fetcher._SESSION, 'get', return_value=response(html)) as direct_get:
+            value = fetcher.fetch_menu(date, restaurant_id)
+        self.assertEqual(value['menu_status'], 'available')
+        self.assertEqual(direct_get.call_args.args[0], url)
+
+    def test_reader_rejects_wrong_origin_status_before_parsing(self):
+        date = '2026-10-16'
+        restaurant_id = 363910
+        url = fetcher.URL_TEMPLATE.format(article_no=restaurant_id, date=date)
+        result = self._reader_response(url, '<div class="b-menu-day lunch"><pre>쌀밥</pre></div>', origin_status=503)
+        with patch.object(fetcher, '_pace_reader_request'), \
+                patch.object(fetcher._READER_SESSION, 'get', return_value=result):
+            with self.assertRaisesRegex(fetcher.ReaderFetchError, 'official page successfully'):
+                fetcher._read_reader_html(url, restaurant_id, date)
+
+    def test_reader_requests_are_spaced_under_the_anonymous_rate_limit(self):
+        with patch.object(fetcher, '_READER_NEXT_REQUEST', 0), \
+                patch.object(fetcher.time, 'monotonic', side_effect=[100.0, 100.0]), \
+                patch.object(fetcher.time, 'sleep') as sleep:
+            fetcher._pace_reader_request()
+            fetcher._pace_reader_request()
+        self.assertEqual(sleep.call_count, 1)
+        self.assertAlmostEqual(sleep.call_args.args[0], fetcher._READER_INTERVAL)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,4 +1,9 @@
+import os
 import re
+import threading
+import time
+from urllib.parse import urlsplit
+
 import requests
 from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter
@@ -27,6 +32,94 @@ DEFAULT_SERVICE_HOURS = {
 }
 _SESSION = requests.Session()
 _SESSION.mount('https://', HTTPAdapter(max_retries=Retry(total=2, backoff_factor=.75, status_forcelist=(429, 500, 502, 503, 504), allowed_methods=('GET',))))
+_READER_SESSION = requests.Session()
+_READER_URL = 'https://r.jina.ai/'
+_READER_INTERVAL = 3.4  # Anonymous Reader limit is 20 requests per minute.
+_READER_LOCK = threading.Lock()
+_READER_NEXT_REQUEST = 0.0
+
+
+class ReaderFetchError(RuntimeError):
+    """The Reader did not return a verified copy of the official menu page."""
+
+
+def _pace_reader_request():
+    global _READER_NEXT_REQUEST
+    with _READER_LOCK:
+        now = time.monotonic()
+        wait = max(0.0, _READER_NEXT_REQUEST - now)
+        _READER_NEXT_REQUEST = now + wait + _READER_INTERVAL
+    if wait:
+        time.sleep(wait)
+
+
+def _read_reader_html(url: str, restaurant_id: int, date_str: str) -> str:
+    expected_url = URL_TEMPLATE.format(article_no=restaurant_id, date=date_str)
+    parsed = urlsplit(url)
+    if url != expected_url or parsed.scheme != 'https' or parsed.hostname != 'www.ajou.ac.kr':
+        raise ReaderFetchError('Reader source URL is outside the official menu allowlist')
+
+    headers = {
+        'Accept': 'application/json',
+        'X-Respond-With': 'html',
+        'X-Engine': 'direct',
+        'X-No-Cache': 'true',
+        'X-Timeout': '30',
+    }
+    for attempt in range(3):
+        _pace_reader_request()
+        try:
+            response = _READER_SESSION.get(_READER_URL + url, headers=headers, timeout=(10, 50))
+        except requests.RequestException as exc:
+            if attempt < 2:
+                time.sleep(2 ** attempt)
+                continue
+            raise ReaderFetchError('Reader network error: ' + type(exc).__name__) from None
+
+        if response.status_code in (422, 429, 500, 502, 503, 504) and attempt < 2:
+            try:
+                delay = min(30.0, max(3.0, float(response.headers.get('Retry-After', '10'))))
+            except (TypeError, ValueError):
+                delay = 10.0
+            time.sleep(delay)
+            continue
+        if response.status_code != 200:
+            raise ReaderFetchError('Reader HTTP ' + str(response.status_code))
+        if len(response.content) > 4 * 1024 * 1024:
+            raise ReaderFetchError('Reader HTML exceeds size limit')
+        try:
+            payload = response.json()
+            page = payload['data']
+        except (ValueError, KeyError, TypeError):
+            raise ReaderFetchError('Reader returned no structured page') from None
+        if not isinstance(payload, dict) or not isinstance(page, dict):
+            raise ReaderFetchError('Reader returned an invalid page shape')
+        if payload.get('code') != 200 or page.get('httpStatus') != 200:
+            raise ReaderFetchError('Reader could not retrieve the official page successfully')
+        if page.get('url') != url:
+            raise ReaderFetchError('Reader returned a different source URL')
+        html = page.get('html')
+        if not isinstance(html, str) or not html.strip():
+            raise ReaderFetchError('Reader returned no original HTML')
+        return html
+    raise ReaderFetchError('Reader retries exhausted')
+
+
+def _validate_menu_html(html: str) -> BeautifulSoup:
+    soup = BeautifulSoup(html, 'lxml')
+    containers = soup.select('div.b-menu-day')
+    if not containers:
+        raise ValueError('School page does not contain the expected menu structure')
+    daily_text = '\n'.join(container.get_text('\n') for container in containers)
+    no_menu = bool(soup.select_one('div.b-menu-day.b-no-menu') or _NO_MENU_RE.search(daily_text))
+    closure_text = next((line.strip() for line in daily_text.splitlines()
+                         if _DAY_CLOSED_RE.fullmatch(line.strip(' \t*※<>[]'))), '')
+    if not no_menu and not closure_text and not any(
+            soup.select_one(f'div.b-menu-day.{css_class} pre') for css_class in MEAL_CSS_CLASS.values()):
+        raise ValueError('School page does not contain readable meal containers')
+    if not no_menu and not closure_text and not daily_text.strip():
+        raise ValueError('School meal containers are unexpectedly empty')
+    return soup
 
 
 def _parse_menu_text(raw_text: str) -> list[dict]:
@@ -98,21 +191,35 @@ def extract_service_hours(soup: BeautifulSoup, restaurant_id: int) -> dict:
 def fetch_menu(date_str: str, restaurant_id: int) -> dict:
     info = RESTAURANTS[restaurant_id]
     url = URL_TEMPLATE.format(article_no=restaurant_id, date=date_str)
-    response = _SESSION.get(url, timeout=(10, 20))
-    response.raise_for_status()
-    soup = BeautifulSoup(response.text, 'lxml')
+    transport = os.environ.get('MENU_FETCH_TRANSPORT', 'direct').strip().lower()
+    if transport not in {'direct', 'reader_first'}:
+        raise ValueError('MENU_FETCH_TRANSPORT must be direct or reader_first')
+    reader_error = None
+    if transport == 'reader_first':
+        try:
+            soup = _validate_menu_html(_read_reader_html(url, restaurant_id, date_str))
+        except Exception as error:
+            reader_error = error
+            print(f'[fetcher] Reader failed for restaurant {restaurant_id} ({type(error).__name__}: {error}); falling back to the official site')
+            soup = None
+    else:
+        soup = None
+    if soup is None:
+        try:
+            response = _SESSION.get(url, timeout=(10, 20))
+            response.raise_for_status()
+            soup = _validate_menu_html(response.text)
+        except Exception as direct_error:
+            if reader_error:
+                raise RuntimeError(
+                    f'Reader failed ({type(reader_error).__name__}) and the official site failed ({type(direct_error).__name__})'
+                ) from direct_error
+            raise
     containers = soup.select('div.b-menu-day')
-    if not containers:
-        raise ValueError('School page does not contain the expected menu structure')
     daily_text = '\n'.join(container.get_text('\n') for container in containers)
     no_menu = bool(soup.select_one('div.b-menu-day.b-no-menu') or _NO_MENU_RE.search(daily_text))
     closure_text = next((line.strip() for line in daily_text.splitlines()
                          if _DAY_CLOSED_RE.fullmatch(line.strip(' \t*※<>[]'))), '')
-    if not no_menu and not closure_text and not any(
-            soup.select_one(f'div.b-menu-day.{css_class} pre') for css_class in MEAL_CSS_CLASS.values()):
-        raise ValueError('School page does not contain readable meal containers')
-    if not no_menu and not closure_text and not daily_text.strip():
-        raise ValueError('School meal containers are unexpectedly empty')
     meals = {}
     for key, css_class in MEAL_CSS_CLASS.items():
         container = soup.select_one(f'div.b-menu-day.{css_class}')
