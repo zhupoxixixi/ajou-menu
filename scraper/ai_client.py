@@ -12,6 +12,20 @@ class AIRequestError(RuntimeError):
     """Safe API or validation failure, without headers or response bodies."""
 
 
+class RequestBudget:
+    """Count actual HTTP attempts across concurrent translation and review calls."""
+    def __init__(self, limit):
+        self.limit = limit
+        self.used = 0
+        self._lock = threading.Lock()
+
+    def acquire(self):
+        with self._lock:
+            if self.used >= self.limit:
+                raise AIRequestError('Translation request budget exhausted')
+            self.used += 1
+
+
 def _session() -> requests.Session:
     if not hasattr(_CLIENTS, 'session'):
         _CLIENTS.session = requests.Session()
@@ -41,7 +55,7 @@ def _response_text(body, model, effort):
     return ''.join(part['text'] for part in parts)
 
 
-def request_batch(sources, api_key, api_endpoint, model, system_prompt, parse_response, *, reasoning_effort=None, deadline=None):
+def request_batch(sources, api_key, api_endpoint, model, system_prompt, parse_response, *, reasoning_effort=None, deadline=None, budget=None):
     endpoint = api_endpoint.rstrip('/')
     use_responses = endpoint.endswith('/responses') or (model.startswith('gpt-6') and reasoning_effort not in (None, '', 'none'))
     for suffix in ('/chat/completions', '/responses'):
@@ -71,6 +85,8 @@ def request_batch(sources, api_key, api_endpoint, model, system_prompt, parse_re
         if remaining <= 0:
             raise AIRequestError('Translation time budget exhausted')
         delay = 2 ** attempt
+        if budget is not None:
+            budget.acquire()
         try:
             response = _session().post(endpoint, headers={'Authorization': f'Bearer {api_key}'}, json=payload, timeout=(min(10, remaining), min(90, remaining)))
             if response.status_code in (429, 500, 502, 503, 504):

@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
-from .ai_client import AIRequestError, request_batch
+from .ai_client import AIRequestError, RequestBudget, request_batch
 
 CACHE_PATH = Path(__file__).resolve().parent.parent / 'data' / 'translation_cache.json'
 CACHE_VERSION = 4
@@ -434,28 +434,28 @@ def _parse_review_response(content: str, sources: list[str], allow_partial: bool
     return _parse_response(json.dumps(candidates, ensure_ascii=False), sources, allow_partial=allow_partial)
 
 
-def _call_batch(texts: list[str], api_key: str, api_endpoint: str, model: str, *, deadline=None) -> list[str]:
+def _call_batch(texts: list[str], api_key: str, api_endpoint: str, model: str, *, deadline=None, budget=None) -> list[str]:
     # This university's 11:00 notice misspells lunch as 증식. Correct only that
     # known context before translation, while validating/caching the original text.
     sources = [text.replace('증식(', '중식(', 1) if text.startswith('증식(') and '11:00' in text else text for text in texts]
-    return request_batch(sources, api_key, api_endpoint, model, SYSTEM_PROMPT + _reference_prompt(texts), lambda content, _: _parse_response(content, texts, allow_partial=True), reasoning_effort=reasoning_effort(model), deadline=deadline)
+    return request_batch(sources, api_key, api_endpoint, model, SYSTEM_PROMPT + _reference_prompt(texts), lambda content, _: _parse_response(content, texts, allow_partial=True), reasoning_effort=reasoning_effort(model), deadline=deadline, budget=budget)
 
 
-def _call_review_batch(texts: list[str], drafts: list[str], api_key: str, api_endpoint: str, model: str, *, deadline=None) -> list[str]:
+def _call_review_batch(texts: list[str], drafts: list[str], api_key: str, api_endpoint: str, model: str, *, deadline=None, budget=None) -> list[str]:
     if len(texts) != len(drafts):
         raise TranslationError('Review input alignment failed')
     records = [{'id': index, 'source': source, 'translation': draft} for index, (source, draft) in enumerate(zip(texts, drafts))]
-    return request_batch(records, api_key, api_endpoint, model, REVIEW_PROMPT + _reference_prompt(texts), lambda content, _: _parse_review_response(content, texts, allow_partial=True), reasoning_effort=reasoning_effort(model), deadline=deadline)
+    return request_batch(records, api_key, api_endpoint, model, REVIEW_PROMPT + _reference_prompt(texts), lambda content, _: _parse_review_response(content, texts, allow_partial=True), reasoning_effort=reasoning_effort(model), deadline=deadline, budget=budget)
 
 
-def _translate_and_review_batch(texts: list[str], api_key: str, api_endpoint: str, model: str, *, deadline=None) -> list[str]:
-    drafts = _call_batch(texts, api_key, api_endpoint, model, deadline=deadline)
+def _translate_and_review_batch(texts: list[str], api_key: str, api_endpoint: str, model: str, *, deadline=None, budget=None) -> list[str]:
+    drafts = _call_batch(texts, api_key, api_endpoint, model, deadline=deadline, budget=budget)
     if len(drafts) != len(texts):
         raise TranslationError('Draft count validation failed')
     indices = [index for index, (source, draft) in enumerate(zip(texts, drafts)) if is_valid_translation(source, draft)]
     results = [''] * len(texts)
     if indices:
-        reviewed = _call_review_batch([texts[index] for index in indices], [drafts[index] for index in indices], api_key, api_endpoint, model, deadline=deadline)
+        reviewed = _call_review_batch([texts[index] for index in indices], [drafts[index] for index in indices], api_key, api_endpoint, model, deadline=deadline, budget=budget)
         if len(reviewed) != len(indices):
             raise TranslationError('Review count validation failed')
         for index, result in zip(indices, reviewed):
@@ -466,6 +466,7 @@ def _translate_and_review_batch(texts: list[str], api_key: str, api_endpoint: st
 def translate_concurrent(texts: list[str], api_key: str, api_endpoint: str, cache: dict, model: str = DEFAULT_MODEL) -> list[str]:
     """Cache only reviewed results; share a time budget across both API stages."""
     deadline = time.monotonic() + _setting('TRANSLATE_RUN_TIMEOUT_SECONDS', 600, 900)
+    budget = RequestBudget(_setting('TRANSLATE_MAX_REQUESTS', 48, 80))
     for source, result in list(cache.items()):
         if not is_valid_translation(source, result):
             del cache[source]
@@ -474,10 +475,11 @@ def translate_concurrent(texts: list[str], api_key: str, api_endpoint: str, cach
     batch_size = _setting('TRANSLATE_BATCH_SIZE', 20, 40)
     batches = [missing[start:start + batch_size] for start in range(0, len(missing), batch_size)]
     if batches:
+        retryable = []
         workers = min(_setting('TRANSLATE_MAX_WORKERS', 4, 8), len(batches))
         print(f'[translator] {len(missing)} unique texts, {len(batches)} batches, {workers} workers, model={model}')
         with ThreadPoolExecutor(max_workers=workers) as executor:
-            jobs = {executor.submit(_translate_and_review_batch, batch, api_key, api_endpoint, model, deadline=deadline): batch for batch in batches}
+            jobs = {executor.submit(_translate_and_review_batch, batch, api_key, api_endpoint, model, deadline=deadline, budget=budget): batch for batch in batches}
             for future in as_completed(jobs):
                 batch = jobs[future]
                 try:
@@ -485,6 +487,8 @@ def translate_concurrent(texts: list[str], api_key: str, api_endpoint: str, cach
                     for source, result in zip(batch, results):
                         if is_valid_translation(source, result):
                             cache[source] = result
+                        else:
+                            retryable.append(source)
                     # Checkpoint only approved results so an interrupted run can
                     # resume without paying for completed translation/review pairs.
                     _save_cache(cache, model, api_endpoint)
@@ -494,11 +498,11 @@ def translate_concurrent(texts: list[str], api_key: str, api_endpoint: str, cach
                 except Exception as error:
                     print(f'[translator] Batch unavailable: {type(error).__name__}; not cached')
         # Retain valid aligned results; retry only missing texts once as single-item requests.
-        remaining = [text for text in missing if not is_valid_translation(text, cache.get(text, ''))]
+        remaining = [text for text in retryable if not is_valid_translation(text, cache.get(text, ''))][:_setting('TRANSLATE_MAX_SINGLE_RETRIES', 5, 10)]
         if remaining:
             print(f'[translator] Retrying {len(remaining)} missing texts individually')
             with ThreadPoolExecutor(max_workers=min(4, len(remaining))) as executor:
-                retry_jobs = {executor.submit(_translate_and_review_batch, [text], api_key, api_endpoint, model, deadline=deadline): text for text in remaining}
+                retry_jobs = {executor.submit(_translate_and_review_batch, [text], api_key, api_endpoint, model, deadline=deadline, budget=budget): text for text in remaining}
                 for future in as_completed(retry_jobs):
                     source = retry_jobs[future]
                     try:
@@ -509,15 +513,20 @@ def translate_concurrent(texts: list[str], api_key: str, api_endpoint: str, cach
                     except Exception as error:
                         print(f'[translator] Individual translation unavailable: {type(error).__name__}; not cached')
         _save_cache(cache, model, api_endpoint)
+        print(f'[translator] HTTP requests used: {budget.used}/{budget.limit}')
     # Failed translations stay empty and are eligible for retry on the next run.
     return [cache[text] if text in cache and is_valid_translation(text, cache[text]) else '' for text in texts]
 
 
-def translate_menu(menu_data: list[dict], api_key: str, api_endpoint: str, model: str = DEFAULT_MODEL, *, force: bool = False) -> list[dict]:
+def translate_menu(menu_data: list[dict], api_key: str, api_endpoint: str, model: str = DEFAULT_MODEL, *, force: bool = False, approved_cache: dict | None = None) -> list[dict]:
     if not api_key or not api_endpoint:
         print('[translator] Translation credentials missing; retaining Korean originals')
         return menu_data
     cache = {} if force else _load_cache(model, api_endpoint)
+    if not force and approved_cache:
+        for source, result in approved_cache.items():
+            if source not in cache and is_valid_translation(source, result):
+                cache[source] = result
     texts, targets = [], []
     for obj, source_field, target_field, _category in iter_translation_fields(menu_data):
         source = obj.get(source_field, '')

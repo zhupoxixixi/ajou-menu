@@ -35,8 +35,9 @@ class TranslationPipelineTests(unittest.TestCase):
 
                 self.assertEqual(result, [''])
                 self.assertEqual(cache, {})
-                self.assertEqual(translate.call_count, 2)
-                self.assertEqual(reviewer.call_count, 2)
+                expected_calls = 2 if failure == 'reject' else 1
+                self.assertEqual(translate.call_count, expected_calls)
+                self.assertEqual(reviewer.call_count, expected_calls)
                 payload = json.loads(cache_path.read_text(encoding='utf-8'))
                 self.assertEqual(payload['entries'], {})
                 self.assertEqual(payload['pipeline'], 'translate-review-v1')
@@ -61,6 +62,58 @@ class TranslationPipelineTests(unittest.TestCase):
             payload = json.loads(cache_path.read_text(encoding='utf-8'))
             self.assertEqual(payload['entries'], {'김치': '韩式泡菜'})
             self.assertNotIn('泡菜', payload['entries'].values())
+
+    def test_http_budget_counts_retries_and_is_shared_across_threads(self):
+        budget = ai_client.RequestBudget(4)
+        calls = []
+        def attempt():
+            try:
+                budget.acquire()
+                calls.append(True)
+            except ai_client.AIRequestError:
+                calls.append(False)
+        threads = [threading.Thread(target=attempt) for _ in range(30)]
+        for thread in threads: thread.start()
+        for thread in threads: thread.join()
+        self.assertEqual(sum(calls), 4)
+        self.assertEqual(budget.used, 4)
+
+        limited = Mock(ok=False, status_code=429, headers={})
+        client = Mock()
+        client.post.return_value = limited
+        budget = ai_client.RequestBudget(2)
+        with patch.object(ai_client, '_session', return_value=client), patch.object(ai_client.time, 'sleep'):
+            with self.assertRaisesRegex(ai_client.AIRequestError, 'budget exhausted'):
+                ai_client.request_batch(['김치'], 'test-key', ENDPOINT, 'gpt-6-luna', 'test', lambda *_: None, budget=budget)
+        self.assertEqual(client.post.call_count, 2)
+
+    def test_only_matching_reviewed_published_menu_can_replace_lost_cache(self):
+        restaurant = {'name_ko':'기숙사식당','name_cn':'宿舍食堂','location_ko':'식당','location_cn':'食堂',
+            'meals':{'lunch':{'sections':[{'name_ko':'메인','name_cn':'主餐',
+                'items':[{'ko':'김치','cn':'泡菜'}]}]}}}
+        metadata = main.translation_summary([restaurant], translator.DEFAULT_MODEL, ENDPOINT)
+        published = {'translation':metadata, 'days':{'2026-11-02':{'restaurants':[restaurant]}}}
+        approved = main.approved_published_translations(published, translator.DEFAULT_MODEL, ENDPOINT)
+        self.assertEqual(approved, {'메인':'主餐', '김치':'泡菜'})
+        self.assertNotIn('기숙사식당', approved)  # Summary does not count this field.
+        self.assertEqual(main.approved_published_translations(published, translator.DEFAULT_MODEL, 'https://other.invalid'), {})
+        for field, value in [('pipeline','local-codex-manual-v1'), ('policy_hash','old'), ('reviewed',0), ('cache_namespace_hash','old')]:
+            changed = dict(metadata, **{field:value})
+            self.assertEqual(main.approved_published_translations(dict(published, translation=changed), translator.DEFAULT_MODEL, ENDPOINT), {})
+        with patch.object(translator, '_load_cache', return_value={}), patch.object(translator, '_save_cache'), patch.object(translator, '_translate_and_review_batch') as api:
+            menu = [{'meals':{'lunch':{'sections':[{'name_ko':'메인','items':[{'ko':'김치'}]}]}}}]
+            translator.translate_menu(menu, 'test-key', ENDPOINT, approved_cache=approved)
+            self.assertEqual(menu[0]['meals']['lunch']['sections'][0]['items'][0]['cn'], '泡菜')
+            api.assert_not_called()
+
+    def test_failed_batches_do_not_fan_out_and_partial_retries_are_capped(self):
+        texts = [f'식단{i}' for i in range(20)]
+        with patch.object(translator, '_translate_and_review_batch', side_effect=translator.TranslationError('HTTP 429')) as api, patch.object(translator, '_save_cache'):
+            self.assertEqual(translator.translate_concurrent(texts, 'test-key', ENDPOINT, {}), [''] * 20)
+            self.assertEqual(api.call_count, 1)
+        with patch.object(translator, '_translate_and_review_batch', side_effect=lambda sources, *_a, **_kw: [''] * len(sources)) as api, patch.object(translator, '_save_cache'):
+            self.assertEqual(translator.translate_concurrent(texts, 'test-key', ENDPOINT, {}), [''] * 20)
+            self.assertEqual(api.call_count, 6)
 
     def test_completed_review_batches_survive_an_interruption(self):
         with tempfile.TemporaryDirectory(dir=OUTPUT_DIR) as directory:

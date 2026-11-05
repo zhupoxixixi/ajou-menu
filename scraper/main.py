@@ -1,5 +1,6 @@
 """Fetch the week's menus, translate once, and publish complete static assets."""
 import copy
+import hashlib
 import json
 import os
 from datetime import datetime, timezone, timedelta
@@ -15,7 +16,7 @@ if _env_path.exists():
             os.environ.setdefault(key.strip(), value.strip().strip('\"\''))
 
 from .fetcher import fetch_menu, RESTAURANTS, MEAL_MAP, MEAL_CN, classify_menu_items, has_dishes
-from .translator import translate_menu, is_valid_translation, iter_translation_fields, reasoning_effort, DEFAULT_ENDPOINT, DEFAULT_MODEL, PROMPT_HASH
+from .translator import translate_menu, is_valid_translation, iter_translation_fields, reasoning_effort, DEFAULT_ENDPOINT, DEFAULT_MODEL, PROMPT_HASH, _namespace
 from .sync_site import sync_site
 
 KST = timezone(timedelta(hours=9))
@@ -82,7 +83,11 @@ def fetch_single_day(date_str: str, previous: dict | None = None, *, now: dateti
     return {'date': date_str, 'generated_at': checked_at, 'restaurants': restaurants}
 
 
-def translation_summary(restaurants: list[dict], model: str) -> dict:
+def _namespace_hash(model: str, endpoint: str) -> str:
+    return hashlib.sha256(_namespace(model, endpoint).encode('utf-8')).hexdigest()
+
+
+def translation_summary(restaurants: list[dict], model: str, endpoint: str = DEFAULT_ENDPOINT) -> dict:
     # Chinese cafeteria labels come from the static UI config; location fields
     # are not rendered. Coverage follows the translated menu-data fields shown
     # in Chinese: window names plus every dish or notice row.
@@ -96,8 +101,34 @@ def translation_summary(restaurants: list[dict], model: str) -> dict:
     total = len(fields)
     return {'model': model, 'reasoning_effort': reasoning_effort(model), 'total': total, 'translated': translated,
             'pipeline': 'translate-review-v1', 'review_model': model, 'review_reasoning_effort': reasoning_effort(model),
-            'reviewed': translated, 'policy_hash': PROMPT_HASH,
+            'reviewed': translated, 'policy_hash': PROMPT_HASH, 'cache_namespace_hash': _namespace_hash(model, endpoint),
             'status': 'complete' if translated == total else 'partial' if translated else 'unavailable'}
+
+
+def approved_published_translations(previous: dict, model: str, endpoint: str) -> dict:
+    """Recover only translations explicitly attributed to this exact review pipeline."""
+    metadata = previous.get('translation', {})
+    if not (metadata.get('status') == 'complete' and metadata.get('pipeline') == 'translate-review-v1'
+            and metadata.get('model') == model and metadata.get('review_model') == model
+            and metadata.get('reasoning_effort') == reasoning_effort(model)
+            and metadata.get('review_reasoning_effort') == reasoning_effort(model)
+            and metadata.get('policy_hash') == PROMPT_HASH
+            and metadata.get('cache_namespace_hash') == _namespace_hash(model, endpoint)
+            and type(metadata.get('total')) is int and metadata['total'] > 0
+            and metadata.get('reviewed') == metadata['total'] == metadata.get('translated')):
+        return {}
+    days = [*previous.get('days', {}).values(), *previous.get('next_week', {}).get('days', {}).values()]
+    restaurants = [restaurant for day in days for restaurant in day.get('restaurants', [])]
+    fields = [(obj.get(source, ''), obj.get(target, '')) for obj, source, target, category in iter_translation_fields(restaurants)
+              if category in {'window', 'menu_item'} and obj.get(source)]
+    if len(fields) != metadata['total'] or any(not is_valid_translation(source, target) for source, target in fields):
+        return {}
+    approved = {}
+    for source, target in fields:
+        if source in approved and approved[source] != target:
+            return {}  # Ambiguous published translations cannot seed a cache.
+        approved[source] = target
+    return approved
 
 
 def _write_json(path: Path, data: dict, javascript: bool = False):
@@ -129,8 +160,9 @@ def run(date_str: str | None = None):
     require_translation = os.environ.get('REQUIRE_TRANSLATION', '1') != '0'
     if require_translation and not api_key:
         raise RuntimeError('TRANSLATE_API_KEY is required; configure the GitHub Actions secret')
-    translate_menu(restaurants, api_key, endpoint, model)
-    summary = translation_summary(restaurants, model)
+    approved = approved_published_translations(previous, model, endpoint)
+    translate_menu(restaurants, api_key, endpoint, model, approved_cache=approved)
+    summary = translation_summary(restaurants, model, endpoint)
     print(f'[main] Chinese menu coverage: {summary["translated"]}/{summary["total"]}')
     incomplete = any(obj.get(source) and not is_valid_translation(obj[source], obj.get(target, ''))
                      for obj, source, target, _ in iter_translation_fields(restaurants))
