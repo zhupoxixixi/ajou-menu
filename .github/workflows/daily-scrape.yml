@@ -18,7 +18,6 @@ jobs:
     timeout-minutes: 20
     env:
       PYTHONUNBUFFERED: '1'
-      MENU_FETCH_TRANSPORT: 'reader_first'
       TRANSLATE_MODEL: 'gpt-6-luna'
       TRANSLATE_REASONING_EFFORT: 'max'
       TRANSLATE_API_ENDPOINT: ${{ vars.TRANSLATE_API_ENDPOINT || 'https://factchat-cloud.mindlogic.ai/v1/gateway' }}
@@ -48,6 +47,7 @@ jobs:
             menu-translations-v4-review-${{ runner.os }}-${{ env.TRANSLATE_MODEL }}-${{ env.TRANSLATE_REASONING_EFFORT }}-
       - name: Run scraper
         env:
+          MENU_FETCH_TRANSPORT: 'reader_first'
           TRANSLATE_API_KEY: ${{ secrets.TRANSLATE_API_KEY }}
           REQUIRE_TRANSLATION: '1'
         run: python -m scraper.main

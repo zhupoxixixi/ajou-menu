@@ -28,6 +28,17 @@ def published_restaurant(rid):
 
 
 class MenuStateTests(unittest.TestCase):
+    def setUp(self):
+        # Parser fixtures must not depend on the runner's production transport.
+        transport = patch.dict('os.environ', {'MENU_FETCH_TRANSPORT': 'direct'})
+        transport.start()
+        self.addCleanup(transport.stop)
+        reader = patch.object(fetcher._READER_SESSION, 'get',
+                              side_effect=AssertionError('Unit tests must not use the live Reader'))
+        reader_get = reader.start()
+        self.addCleanup(reader.stop)
+        self.addCleanup(reader_get.assert_not_called)
+
     def test_no_menu_html_does_not_claim_a_closure(self):
         with patch.object(fetcher._SESSION, 'get', return_value=response(NO_MENU)):
             value = fetcher.fetch_menu('2026-10-28', 363910)
