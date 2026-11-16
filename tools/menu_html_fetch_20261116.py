@@ -28,6 +28,11 @@ def school_get(url, *args, **kwargs):
 
 fetcher._SESSION.get = school_get
 print('FETCH_START', flush=True)
+try:
+    fetcher._read_reader_html(fetcher.URL_TEMPLATE.format(article_no=363910, date='2026-11-16'), 363910, '2026-11-16')
+    print('READER_OK', flush=True)
+except Exception as error:
+    raise RuntimeError('DIAG Reader failed: '+type(error).__name__+': '+str(error)[:200]) from error
 results = []
 for offset in range(7):
     date = (monday + timedelta(days=offset)).isoformat()
