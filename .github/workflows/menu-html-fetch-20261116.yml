@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements.txt
-      - run: python -m output.local-translation-20261116.github_fetch
+      - run: python -u tools/menu_html_fetch_20261116.py
       - uses: actions/upload-artifact@v4
         with:
           name: menu-html-20261116
