@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scraper import fetcher
 
@@ -27,7 +27,6 @@ def school_get(url, *args, **kwargs):
     return response
 
 fetcher._SESSION.get = school_get
-fetcher._read_reader_html('https://www.ajou.ac.kr/kr/life/food.do?mode=view&articleNo=363910&date=2026-11-16', 363910, '2026-11-16')
 results = []
 for offset in range(7):
     date = (monday + timedelta(days=offset)).isoformat()
