@@ -26,6 +26,7 @@ def school_get(url, *args, **kwargs):
     (source_dir / name).write_bytes(response.content)
     return response
 
+fetcher._read_reader_html = lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError('reader disabled for debug'))
 fetcher._SESSION.get = school_get
 print('FETCH_START', flush=True)
 try:
