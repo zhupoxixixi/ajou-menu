@@ -27,6 +27,7 @@ def school_get(url, *args, **kwargs):
     return response
 
 fetcher._SESSION.get = school_get
+print('FETCH_START', flush=True)
 results = []
 for offset in range(7):
     date = (monday + timedelta(days=offset)).isoformat()
