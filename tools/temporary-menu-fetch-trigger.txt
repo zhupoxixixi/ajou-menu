@@ -1,1 +1,1 @@
-diagnose
+root-path
