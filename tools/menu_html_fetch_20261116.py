@@ -12,7 +12,7 @@ from scraper import fetcher
 KST = timezone(timedelta(hours=9))
 now = datetime.now(KST)
 monday = date(2026, 11, 16)
-source_dir = Path('source-html')
+source_dir = ROOT / 'output/local-translation-20261116/source-html'
 source_dir.mkdir(exist_ok=True)
 original_get = fetcher._SESSION.get
 
@@ -36,5 +36,5 @@ for offset in range(7):
     results.append({'date': date, 'restaurants': restaurants})
     print(json.dumps({'date': date, 'fetched': len(restaurants)}, ensure_ascii=False), flush=True)
 
-Path('github-fetch.json').write_text(json.dumps({'week_start': monday.isoformat(), 'days': results}, ensure_ascii=False, indent=2), encoding='utf-8')
+ROOT / 'output/local-translation-20261116/github-fetch.json'.write_text(json.dumps({'week_start': monday.isoformat(), 'days': results}, ensure_ascii=False, indent=2), encoding='utf-8')
 print(json.dumps({'week_start': monday.isoformat(), 'pages': len(results) * len(fetcher.RESTAURANTS), 'translation_called': False, 'published': False}, ensure_ascii=False), flush=True)
