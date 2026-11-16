@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: ['main']
-    paths: ['.github/workflows/menu-html-fetch-20261116.yml', 'tools/temporary-menu-fetch-trigger.txt']
+    paths: ['.github/workflows/menu-html-fetch-20261116.yml', 'tools/menu_html_fetch_20261116.py', 'tools/temporary-menu-fetch-trigger.txt']
 permissions:
   contents: read
 jobs:
