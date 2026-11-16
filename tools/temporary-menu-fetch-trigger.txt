@@ -1,1 +1,1 @@
-show-reason
+direct-diag
